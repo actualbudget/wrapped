@@ -1,0 +1,134 @@
+.container {
+  width: 100%;
+  max-width: 950px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.heatmap {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 2rem;
+}
+
+.toggleContainer {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.toggleButton {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 0.5rem 1.5rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toggleButton:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.toggleButton.active {
+  background: rgba(102, 126, 234, 0.3);
+  border-color: rgba(102, 126, 234, 0.5);
+  color: white;
+}
+
+.weeks {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.week {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+
+.day {
+  width: 12px;
+  height: 12px;
+  min-height: 12px;
+  border-radius: 3px;
+  transition: all 0.2s;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.day.active:hover {
+  transform: scale(1.3);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+  z-index: 10;
+  position: relative;
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.legendColors {
+  display: flex;
+  gap: 3px;
+}
+
+.legendColors div {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.tooltip {
+  position: fixed;
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  pointer-events: none;
+  transform: translate(-50%, -100%);
+  z-index: 1000;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.tooltip strong {
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  .day {
+    width: 10px;
+    height: 10px;
+  }
+
+  .weeks {
+    gap: 3px;
+  }
+
+  .week {
+    gap: 3px;
+  }
+
+  .heatmap {
+    padding: 1rem;
+  }
+}

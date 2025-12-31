@@ -1,0 +1,46 @@
+{
+  "name": "actual-wrapped",
+  "version": "1.0.0",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "lint": "oxfmt && oxlint --deny-warnings && knip --fix",
+    "lint:check": "oxfmt --check && oxlint --deny-warnings && knip",
+    "knip": "knip",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui"
+  },
+  "dependencies": {
+    "date-fns": "^4.1.0",
+    "framer-motion": "^12.23.26",
+    "jszip": "^3.10.1",
+    "oxfmt": "^0.21.0",
+    "oxlint": "^1.36.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "react-is": "^19.2.3",
+    "recharts": "^3.6.0",
+    "sql.js": "^1.13.0"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.1",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@types/react-is": "^19.2.0",
+    "@vitejs/plugin-react": "^5.1.2",
+    "@vitest/ui": "^4.0.16",
+    "jsdom": "^27.4.0",
+    "knip": "^5.78.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.0",
+    "vitest": "^4.0.16"
+  },
+  "packageManager": "yarn@4.12.0"
+}
