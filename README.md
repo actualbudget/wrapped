@@ -15,7 +15,7 @@ A beautiful year-in-review application for your Actual Budget data, styled like 
 
 ## Prerequisites
 
-- Node.js 18+ and Yarn
+- Node.js 20+ and Yarn
 - An exported Actual Budget file (zip format)
 
 ## Architecture
