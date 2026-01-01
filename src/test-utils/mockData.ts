@@ -32,7 +32,7 @@ const MONTHS = [
   "December",
 ];
 
-export function createMockMonthlyData(overrides?: Partial<MonthlyData>[]): MonthlyData[] {
+function createMockMonthlyData(overrides?: Partial<MonthlyData>[]): MonthlyData[] {
   return MONTHS.map((month, index) => ({
     month,
     income: 5000 + index * 100,
@@ -42,7 +42,7 @@ export function createMockMonthlyData(overrides?: Partial<MonthlyData>[]): Month
   }));
 }
 
-export function createMockTopMonths(
+function createMockTopMonths(
   count: number = 3,
   overrides?: Partial<Array<{ month: string; spending: number }>>,
 ): Array<{ month: string; spending: number }> {
@@ -77,7 +77,7 @@ export function createMockSpendingVelocity(
   };
 }
 
-export function createMockDayOfWeekSpending(
+function createMockDayOfWeekSpending(
   overrides?: Partial<DayOfWeekSpending>[],
 ): DayOfWeekSpending[] {
   const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -111,7 +111,7 @@ export function createMockAccountBreakdown(overrides?: AccountBreakdown[]): Acco
   return overrides || defaultData;
 }
 
-export function createMockSpendingStreaks(overrides?: Partial<SpendingStreaks>): SpendingStreaks {
+function createMockSpendingStreaks(overrides?: Partial<SpendingStreaks>): SpendingStreaks {
   return {
     longestSpendingStreak: {
       days: 15,
@@ -129,7 +129,7 @@ export function createMockSpendingStreaks(overrides?: Partial<SpendingStreaks>):
   };
 }
 
-export function createMockTransactionSizeDistribution(
+function createMockTransactionSizeDistribution(
   overrides?: Partial<TransactionSizeDistribution>,
 ): TransactionSizeDistribution {
   return {
@@ -146,7 +146,7 @@ export function createMockTransactionSizeDistribution(
   };
 }
 
-export function createMockQuarterlyData(overrides?: QuarterlyData[]): QuarterlyData[] {
+function createMockQuarterlyData(overrides?: QuarterlyData[]): QuarterlyData[] {
   const defaultData: QuarterlyData[] = [
     {
       quarter: "Q1",

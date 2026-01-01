@@ -8,6 +8,8 @@ vi.mock("framer-motion", () => ({
   motion: {
     div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
     h1: ({ children, ...props }: any) => <h1 {...props}>{children}</h1>,
+    p: ({ children, ...props }: any) => <p {...props}>{children}</p>,
+    strong: ({ children, ...props }: any) => <strong {...props}>{children}</strong>,
   },
   AnimatePresence: ({ children }: any) => children,
 }));
@@ -34,71 +36,57 @@ describe("IntroPage", () => {
     expect(screen.getByText("Year in Review")).toBeInTheDocument();
   });
 
-  it("displays total income", () => {
-    const mockData = createMockWrappedData({ totalIncome: 60000 });
-    render(<IntroPage data={mockData} />);
-
-    expect(screen.getByText("Total Income")).toBeInTheDocument();
-    expect(screen.getByText("$60,000")).toBeInTheDocument();
-  });
-
-  it("displays total expenses", () => {
-    const mockData = createMockWrappedData({ totalExpenses: 36000 });
-    render(<IntroPage data={mockData} />);
-
-    expect(screen.getByText("Total Expenses")).toBeInTheDocument();
-    expect(screen.getByText("$36,000")).toBeInTheDocument();
-  });
-
-  it("displays net savings", () => {
-    const mockData = createMockWrappedData({ netSavings: 24000 });
-    render(<IntroPage data={mockData} />);
-
-    expect(screen.getByText("Net Savings")).toBeInTheDocument();
-    expect(screen.getByText("$24,000")).toBeInTheDocument();
-  });
-
-  it("displays net savings correctly", () => {
-    const mockData = createMockWrappedData({ netSavings: 24000 });
-    render(<IntroPage data={mockData} />);
-
-    expect(screen.getByText("Net Savings")).toBeInTheDocument();
-    expect(screen.getByText("$24,000")).toBeInTheDocument();
-  });
-
-  it("formats large numbers correctly", () => {
+  it("displays transaction count", () => {
+    const mockTransactions = Array(150)
+      .fill(null)
+      .map((_, i) => ({
+        id: `trans-${i}`,
+        account: "acc1",
+        date: "2025-01-01",
+        amount: -1000,
+      }));
     const mockData = createMockWrappedData({
-      totalIncome: 1234567,
-      totalExpenses: 987654,
+      allTransactions: mockTransactions,
     });
     render(<IntroPage data={mockData} />);
 
-    expect(screen.getByText("$1,234,567")).toBeInTheDocument();
-    expect(screen.getByText("$987,654")).toBeInTheDocument();
+    expect(screen.getByText(/150/)).toBeInTheDocument();
+    expect(screen.getByText(/transactions/)).toBeInTheDocument();
   });
 
-  it("handles zero values", () => {
+  it("displays month count", () => {
     const mockData = createMockWrappedData({
-      totalIncome: 0,
-      totalExpenses: 0,
-      netSavings: 0,
-      savingsRate: 0,
+      monthlyData: [
+        { month: "January", income: 5000, expenses: 3000, netSavings: 2000 },
+        { month: "February", income: 5000, expenses: 3000, netSavings: 2000 },
+        { month: "March", income: 5000, expenses: 3000, netSavings: 2000 },
+      ],
     });
     render(<IntroPage data={mockData} />);
 
-    // $0 appears multiple times, so use getAllByText
-    const zeroValues = screen.getAllByText("$0");
-    expect(zeroValues.length).toBeGreaterThanOrEqual(3);
-    expect(screen.getByText("Net Savings")).toBeInTheDocument();
+    expect(screen.getByText(/3/)).toBeInTheDocument();
+    expect(screen.getByText(/months/)).toBeInTheDocument();
   });
 
-  it("handles negative net savings", () => {
-    const mockData = createMockWrappedData({ netSavings: -5000 });
+  it("displays call to action text", () => {
+    const mockData = createMockWrappedData();
     render(<IntroPage data={mockData} />);
 
-    // Component shows absolute value and "Net Loss" label
-    expect(screen.getByText("$5,000")).toBeInTheDocument();
-    expect(screen.getByText("Net Loss")).toBeInTheDocument();
+    expect(screen.getByText(/Lets see how you did/)).toBeInTheDocument();
+    expect(screen.getByText(/Click/)).toBeInTheDocument();
+    expect(screen.getByText(/Next/)).toBeInTheDocument();
+  });
+
+  it("handles missing transactions", () => {
+    const mockData = createMockWrappedData({
+      allTransactions: undefined,
+    });
+    render(<IntroPage data={mockData} />);
+
+    // Check that transactions text appears (even if count is 0)
+    expect(screen.getByText(/transactions/)).toBeInTheDocument();
+    // The page should still render without crashing
+    expect(screen.getByText(/Your.*Budget/)).toBeInTheDocument();
   });
 
   it("renders page container with correct id", () => {
