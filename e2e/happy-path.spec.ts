@@ -7,8 +7,8 @@ test.describe('Happy Path - Full App Navigation', () => {
     await page.goto('/');
 
     // Wait for the connection form to be visible
-    await expect(page.getByRole('heading', { name: /Actual Budget 2025 Wrapped/i })).toBeVisible();
-    await expect(page.getByText(/Upload your Actual Budget export/i)).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Actual Wrapped/i })).toBeVisible();
+    await expect(page.getByText(/See your year in review/i)).toBeVisible();
 
     // Get the file input
     const fileInput = page.getByLabel('Budget Export File');
@@ -20,8 +20,9 @@ test.describe('Happy Path - Full App Navigation', () => {
     // Upload the file
     await fileInput.setInputFiles(demoBudgetPath);
 
-    // Verify file is selected
-    await expect(page.getByText(/Selected:/i)).toBeVisible();
+    // Verify file is selected - filename should be visible in the input display
+    // The filename appears inside the input area now, so we check for the filename pattern
+    await expect(page.getByText(/demo-budget\.zip/i)).toBeVisible({ timeout: 1000 });
 
     // Click the Load Budget button
     const loadButton = page.getByRole('button', { name: /Load Budget/i });
@@ -113,7 +114,7 @@ test.describe('Happy Path - Full App Navigation', () => {
   test('should handle keyboard navigation', async ({ page }) => {
     // Navigate and upload file (same as above)
     await page.goto('/');
-    await expect(page.getByRole('heading', { name: /Actual Budget 2025 Wrapped/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Actual Wrapped/i })).toBeVisible();
 
     const fileInput = page.getByLabel('Budget Export File');
     const demoBudgetPath = join(process.cwd(), 'demo-budget.zip');

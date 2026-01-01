@@ -49,31 +49,44 @@ export function ConnectionForm({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
+      <div className={styles.backgroundOrbs}>
+        <div className={`${styles.orb} ${styles.orb1}`} />
+        <div className={`${styles.orb} ${styles.orb2}`} />
+        <div className={`${styles.orb} ${styles.orb3}`} />
+        <div className={`${styles.orb} ${styles.orb4}`} />
+      </div>
       <div className={styles.card}>
-        <h1 className={styles.title}>Actual Budget 2025 Wrapped</h1>
-        <p className={styles.subtitle}>
-          Upload your Actual Budget export to see your year in review
-        </p>
+        <h1 className={styles.title}>
+          <span className={styles.titleMain}>Actual Wrapped</span>
+          <span className={styles.titleYear}>2025</span>
+        </h1>
+        <p className={styles.subtitle}>See your year in review</p>
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.field}>
             <label htmlFor="file">Budget Export File</label>
-            <input
-              id="file"
-              type="file"
-              accept=".zip"
-              onChange={handleFileChange}
-              required
-              disabled={loading}
-              className={styles.fileInput}
-              aria-describedby="file-help"
-              aria-invalid={error ? 'true' : 'false'}
-            />
-            {fileName && (
-              <div className={styles.fileName}>
-                Selected: <strong>{fileName}</strong>
+            <div className={styles.fileInputWrapper}>
+              <input
+                id="file"
+                type="file"
+                accept=".zip"
+                onChange={handleFileChange}
+                required
+                disabled={loading}
+                className={styles.fileInput}
+                aria-describedby="file-help"
+                aria-invalid={error ? 'true' : 'false'}
+              />
+              <div className={styles.fileInputDisplay}>
+                {fileName ? (
+                  <span className={styles.fileNameDisplay}>
+                    <strong>{fileName}</strong>
+                  </span>
+                ) : (
+                  <span className={styles.filePlaceholder}>Choose file</span>
+                )}
               </div>
-            )}
+            </div>
             <small id="file-help" className={styles.helpText}>
               Export your budget from Actual Budget (Settings → Advanced → Export budget) and upload
               the .zip file here
