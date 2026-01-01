@@ -1,6 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
-import { transformToWrappedData } from "./dataTransform";
+
 import type { Transaction, Account, Category } from "../types";
+
+import { transformToWrappedData } from "./dataTransform";
 
 // Mock the fileApi function
 vi.mock("../services/fileApi", () => ({

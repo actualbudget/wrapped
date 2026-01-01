@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
+
+import { createMockWrappedData, createMockCategoryGrowth } from "../../test-utils/mockData";
 import { render, screen } from "../../test-utils/test-utils";
 import { CategoryGrowthDeclinePage } from "./CategoryGrowthDeclinePage";
-import { createMockWrappedData, createMockCategoryGrowth } from "../../test-utils/mockData";
 
 // Mock framer-motion
 vi.mock("framer-motion", () => ({

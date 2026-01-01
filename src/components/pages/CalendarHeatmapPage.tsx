@@ -1,7 +1,9 @@
 import { motion } from "framer-motion";
-import { PageContainer } from "../PageContainer";
-import { CalendarHeatmap } from "../charts/CalendarHeatmap";
+
 import type { WrappedData } from "../../types";
+
+import { CalendarHeatmap } from "../charts/CalendarHeatmap";
+import { PageContainer } from "../PageContainer";
 import styles from "./Page.module.css";
 
 interface CalendarHeatmapPageProps {

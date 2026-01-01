@@ -1,19 +1,20 @@
 import { useState } from "react";
+
+import styles from "./App.module.css";
 import { ConnectionForm } from "./components/ConnectionForm";
 import { Navigation } from "./components/Navigation";
-import { IntroPage } from "./components/pages/IntroPage";
-import { SavingsRatePage } from "./components/pages/SavingsRatePage";
 import { AccountBreakdownPage } from "./components/pages/AccountBreakdownPage";
-import { MonthlyBreakdownPage } from "./components/pages/MonthlyBreakdownPage";
-import { TopCategoriesPage } from "./components/pages/TopCategoriesPage";
-import { CategoryTrendsPage } from "./components/pages/CategoryTrendsPage";
-import { TopPayeesPage } from "./components/pages/TopPayeesPage";
 import { CalendarHeatmapPage } from "./components/pages/CalendarHeatmapPage";
-import { SpendingVelocityPage } from "./components/pages/SpendingVelocityPage";
+import { CategoryTrendsPage } from "./components/pages/CategoryTrendsPage";
 import { FutureProjectionPage } from "./components/pages/FutureProjectionPage";
+import { IntroPage } from "./components/pages/IntroPage";
+import { MonthlyBreakdownPage } from "./components/pages/MonthlyBreakdownPage";
 import { OutroPage } from "./components/pages/OutroPage";
+import { SavingsRatePage } from "./components/pages/SavingsRatePage";
+import { SpendingVelocityPage } from "./components/pages/SpendingVelocityPage";
+import { TopCategoriesPage } from "./components/pages/TopCategoriesPage";
+import { TopPayeesPage } from "./components/pages/TopPayeesPage";
 import { useActualData } from "./hooks/useActualData";
-import styles from "./App.module.css";
 
 const PAGES = [
   { component: IntroPage, id: "intro" },

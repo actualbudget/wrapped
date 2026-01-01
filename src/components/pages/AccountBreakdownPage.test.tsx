@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
+
+import { createMockWrappedData, createMockAccountBreakdown } from "../../test-utils/mockData";
 import { render, screen } from "../../test-utils/test-utils";
 import { AccountBreakdownPage } from "./AccountBreakdownPage";
-import { createMockWrappedData, createMockAccountBreakdown } from "../../test-utils/mockData";
 
 // Mock framer-motion
 vi.mock("framer-motion", () => ({

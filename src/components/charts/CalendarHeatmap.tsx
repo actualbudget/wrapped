@@ -1,6 +1,8 @@
-import { useState } from "react";
 import { format, startOfYear, endOfYear, eachDayOfInterval } from "date-fns";
+import { useState } from "react";
+
 import type { CalendarDay } from "../../types";
+
 import styles from "./CalendarHeatmap.module.css";
 
 interface CalendarHeatmapProps {
@@ -109,32 +111,39 @@ export function CalendarHeatmap({ data, year = 2025 }: CalendarHeatmapProps) {
           </button>
         </div>
         <div className={styles.weeks}>
-          {weeks.map((week, weekIndex) => (
-            <div key={weekIndex} className={styles.week}>
-              {week.map(({ date, day }, dayIndex) => {
-                const isValidDay = day !== null && date >= yearStart && date <= yearEnd;
-                const value = viewMode === "count" ? day?.count || 0 : day?.amount || 0;
-                const color = isValidDay ? getColor(value) : "transparent";
+          {weeks.map((week, weekIndex) => {
+            const firstDayDate = week.find((d) => d.day !== null)?.date || week[0]?.date;
+            const weekKey = firstDayDate ? format(firstDayDate, "yyyy-MM-dd") : `week-${weekIndex}`;
+            return (
+              <div key={weekKey} className={styles.week}>
+                {week.map(({ date, day }, dayIndex) => {
+                  const isValidDay = day !== null && date >= yearStart && date <= yearEnd;
+                  const value = viewMode === "count" ? day?.count || 0 : day?.amount || 0;
+                  const color = isValidDay ? getColor(value) : "transparent";
+                  const dayKey = day
+                    ? day.date
+                    : format(date, "yyyy-MM-dd") || `day-${weekIndex}-${dayIndex}`;
 
-                return (
-                  <div
-                    key={`${weekIndex}-${dayIndex}`}
-                    className={`${styles.day} ${isValidDay ? styles.active : ""}`}
-                    style={{ backgroundColor: color }}
-                    onMouseEnter={(e) => isValidDay && handleDayHover(day, date, e)}
-                    onMouseLeave={handleDayLeave}
-                    title={
-                      isValidDay
-                        ? viewMode === "count"
-                          ? `${format(date, "MMM d")}: ${day!.count} transaction${day!.count !== 1 ? "s" : ""}`
-                          : `${format(date, "MMM d")}: $${day!.amount.toLocaleString("en-US", { maximumFractionDigits: 2 })}`
-                        : ""
-                    }
-                  />
-                );
-              })}
-            </div>
-          ))}
+                  return (
+                    <div
+                      key={dayKey}
+                      className={`${styles.day} ${isValidDay ? styles.active : ""}`}
+                      style={{ backgroundColor: color }}
+                      onMouseEnter={(e) => isValidDay && handleDayHover(day, date, e)}
+                      onMouseLeave={handleDayLeave}
+                      title={
+                        isValidDay
+                          ? viewMode === "count"
+                            ? `${format(date, "MMM d")}: ${day!.count} transaction${day!.count !== 1 ? "s" : ""}`
+                            : `${format(date, "MMM d")}: $${day!.amount.toLocaleString("en-US", { maximumFractionDigits: 2 })}`
+                          : ""
+                      }
+                    />
+                  );
+                })}
+              </div>
+            );
+          })}
         </div>
         <div className={styles.legend}>
           <span>Less</span>

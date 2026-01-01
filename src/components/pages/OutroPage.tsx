@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
-import { PageContainer } from "../PageContainer";
+
 import type { WrappedData } from "../../types";
+
+import { PageContainer } from "../PageContainer";
 import styles from "./Page.module.css";
 
 interface OutroPageProps {
@@ -30,7 +32,7 @@ export function OutroPage({ data }: OutroPageProps) {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.3 }}
         >
-          Here's to another great year of budgeting in {data.year + 1}
+          Here&apos;s to another great year of budgeting in {data.year + 1}
         </motion.div>
 
         <motion.div

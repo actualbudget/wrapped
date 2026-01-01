@@ -1,3 +1,16 @@
+import {
+  format,
+  parseISO,
+  startOfYear,
+  endOfYear,
+  eachDayOfInterval,
+  getDay,
+  endOfWeek,
+  eachWeekOfInterval,
+  differenceInDays,
+  endOfMonth,
+} from "date-fns";
+
 import type {
   Transaction,
   MonthlyData,
@@ -18,19 +31,8 @@ import type {
   SavingsMilestone,
   FutureProjection,
 } from "../types";
+
 import { integerToAmount } from "../services/fileApi";
-import {
-  format,
-  parseISO,
-  startOfYear,
-  endOfYear,
-  eachDayOfInterval,
-  getDay,
-  endOfWeek,
-  eachWeekOfInterval,
-  differenceInDays,
-  endOfMonth,
-} from "date-fns";
 
 const YEAR = 2025;
 const MONTHS = [

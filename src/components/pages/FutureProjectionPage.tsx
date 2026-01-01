@@ -10,9 +10,11 @@ import {
   ReferenceLine,
   Label,
 } from "recharts";
-import { PageContainer } from "../PageContainer";
-import { useAnimatedNumber } from "../../hooks/useAnimatedNumber";
+
 import type { WrappedData } from "../../types";
+
+import { useAnimatedNumber } from "../../hooks/useAnimatedNumber";
+import { PageContainer } from "../PageContainer";
 import styles from "./Page.module.css";
 
 interface FutureProjectionPageProps {
@@ -137,7 +139,7 @@ export function FutureProjectionPage({ data }: FutureProjectionPageProps) {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
-          If you continue at this pace, here's what the next year looks like
+          If you continue at this pace, here&apos;s what the next year looks like
         </motion.p>
 
         <div className={styles.chartContainer}>

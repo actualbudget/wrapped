@@ -1,5 +1,27 @@
 {
+  "plugins": ["react"],
+  "settings": {
+    "react": {
+      "version": "19.2"
+    }
+  },
   "rules": {
-    "no-explicit-any": "error"
+    "no-explicit-any": "error",
+    "react/jsx-uses-react": "error",
+    "react/jsx-uses-vars": "error",
+    "react/no-unused-state": "warn",
+    "react/prefer-stateless-function": "warn",
+    "react/no-array-index-key": "warn",
+    "react/no-children-prop": "error",
+    "react/no-danger-with-children": "error",
+    "react/no-deprecated": "warn",
+    "react/no-direct-mutation-state": "error",
+    "react/no-find-dom-node": "error",
+    "react/no-is-mounted": "error",
+    "react/no-render-return-value": "error",
+    "react/no-string-refs": "error",
+    "react/no-unescaped-entities": "error",
+    "react/no-unknown-property": "error",
+    "react/require-render-return": "error"
   }
 }

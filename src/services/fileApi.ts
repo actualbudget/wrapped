@@ -1,4 +1,5 @@
 import JSZip from "jszip";
+
 import type { Transaction, Account, Category } from "../types";
 
 type SqlJsDatabase = Awaited<ReturnType<typeof import("sql.js").default>>["Database"];

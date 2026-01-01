@@ -11,8 +11,10 @@ import {
   ResponsiveContainer,
   TooltipProps,
 } from "recharts";
-import { PageContainer } from "../PageContainer";
+
 import type { WrappedData } from "../../types";
+
+import { PageContainer } from "../PageContainer";
 import styles from "./Page.module.css";
 
 interface CategoryTrendsPageProps {
@@ -126,7 +128,10 @@ export function CategoryTrendsPage({ data }: CategoryTrendsPageProps) {
             if (isHidden && displayValue === 0) return null;
 
             return (
-              <p key={index} style={{ margin: "4px 0", color: entry.color || "#ffffff" }}>
+              <p
+                key={entry.dataKey || entry.name || index}
+                style={{ margin: "4px 0", color: entry.color || "#ffffff" }}
+              >
                 <span style={{ marginRight: "8px" }}>{entry.name}:</span>$
                 {Math.round(displayValue).toLocaleString("en-US", { maximumFractionDigits: 0 })}
               </p>

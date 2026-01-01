@@ -1,7 +1,8 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
-import { useActualData } from "./useActualData";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+
 import { createMockWrappedData } from "../test-utils/mockData";
+import { useActualData } from "./useActualData";
 
 // Mock the fileApi module
 const mockInitialize = vi.fn();

@@ -9,8 +9,10 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
-import { PageContainer } from "../PageContainer";
+
 import type { WrappedData } from "../../types";
+
+import { PageContainer } from "../PageContainer";
 import styles from "./Page.module.css";
 
 interface CategoryGrowthDeclinePageProps {

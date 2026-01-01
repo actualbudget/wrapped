@@ -1,7 +1,9 @@
 import { motion } from "framer-motion";
-import { PageContainer } from "../PageContainer";
-import { ClickableBarChart } from "../charts/ClickableBarChart";
+
 import type { WrappedData } from "../../types";
+
+import { ClickableBarChart } from "../charts/ClickableBarChart";
+import { PageContainer } from "../PageContainer";
 import styles from "./Page.module.css";
 
 interface TopCategoriesPageProps {

@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
-import { PageContainer } from "../PageContainer";
+
 import type { WrappedData } from "../../types";
+
+import { PageContainer } from "../PageContainer";
 import styles from "./Page.module.css";
 
 interface IntroPageProps {
@@ -61,7 +63,7 @@ export function IntroPage({ data, onNext }: IntroPageProps) {
               lineHeight: "1.6",
             }}
           >
-            You've tracked{" "}
+            You&apos;ve tracked{" "}
             <strong style={{ color: "#667eea" }}>{transactionCount.toLocaleString("en-US")}</strong>{" "}
             transactions
             <br />
@@ -114,7 +116,7 @@ export function IntroPage({ data, onNext }: IntroPageProps) {
                 whileHover={onNext ? { scale: 1.1 } : {}}
                 whileTap={onNext ? { scale: 0.95 } : {}}
               >
-                "Next"
+                &quot;Next&quot;
               </motion.strong>{" "}
               to explore your insights →
             </span>

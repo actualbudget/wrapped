@@ -1,8 +1,10 @@
 import { motion } from "framer-motion";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from "recharts";
-import { PageContainer } from "../PageContainer";
-import { useAnimatedNumber } from "../../hooks/useAnimatedNumber";
+
 import type { WrappedData } from "../../types";
+
+import { useAnimatedNumber } from "../../hooks/useAnimatedNumber";
+import { PageContainer } from "../PageContainer";
 import styles from "./Page.module.css";
 
 interface SavingsRatePageProps {

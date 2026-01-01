@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
+
+import { createMockWrappedData, createMockSpendingVelocity } from "../../test-utils/mockData";
 import { render, screen } from "../../test-utils/test-utils";
 import { SpendingVelocityPage } from "./SpendingVelocityPage";
-import { createMockWrappedData, createMockSpendingVelocity } from "../../test-utils/mockData";
 
 // Mock framer-motion
 vi.mock("framer-motion", () => ({
