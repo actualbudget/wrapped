@@ -136,6 +136,27 @@ export function ConnectionForm({
             All data is stored locally in your browser. Your budget file is never sent to any
             server, and we do not track your usage. This product is fully privacy-oriented.
           </p>
+          <motion.a
+            href="https://github.com/actualbudget/wrapped"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              fontSize: '0.85rem',
+              color: '#667eea',
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              marginTop: '0.75rem',
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            whileHover={{ color: '#764ba2', textDecoration: 'underline' }}
+            whileTap={{ scale: 0.95 }}
+          >
+            View source code on GitHub →
+          </motion.a>
         </div>
       </div>
     </motion.div>
