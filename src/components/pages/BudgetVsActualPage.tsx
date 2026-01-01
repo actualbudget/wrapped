@@ -161,7 +161,6 @@ export function BudgetVsActualPage({ data }: BudgetVsActualPageProps) {
   // Overall statistics
   const animatedBudgeted = useAnimatedNumber(budgetComparison.overallBudgeted, 1500, 2);
   const animatedActual = useAnimatedNumber(budgetComparison.overallActual, 1500, 2);
-  const animatedVariance = useAnimatedNumber(Math.abs(budgetComparison.overallVariance), 1500, 2);
 
   const categoriesOverBudget = budgetComparison.categoryBudgets.filter(
     cat => cat.totalVariance > 0,
@@ -316,34 +315,6 @@ export function BudgetVsActualPage({ data }: BudgetVsActualPageProps) {
               ${animatedActual.toLocaleString('en-US', { maximumFractionDigits: 0 })}
             </div>
             <div className={styles.statLabel}>Total Actual</div>
-          </motion.div>
-
-          <motion.div
-            className={styles.statCard}
-            initial={{ scale: 0.9 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.7 }}
-          >
-            <div
-              className={styles.statValue}
-              style={{
-                color: budgetComparison.overallVariance >= 0 ? '#fa709a' : '#43e97b',
-              }}
-            >
-              ${animatedVariance.toLocaleString('en-US', { maximumFractionDigits: 0 })}
-            </div>
-            <div className={styles.statLabel}>
-              {budgetComparison.overallVariance >= 0 ? 'Over Budget' : 'Under Budget'}
-            </div>
-            <div
-              style={{
-                fontSize: '0.9rem',
-                color: 'rgba(255, 255, 255, 0.6)',
-                marginTop: '0.5rem',
-              }}
-            >
-              {budgetComparison.overallVariancePercentage.toFixed(1)}% variance
-            </div>
           </motion.div>
         </motion.div>
 
