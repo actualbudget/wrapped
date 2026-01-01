@@ -3,6 +3,7 @@ import { useState } from 'react';
 import styles from './App.module.css';
 import { ConnectionForm } from './components/ConnectionForm';
 import { Navigation } from './components/Navigation';
+import { OffBudgetToggle } from './components/OffBudgetToggle';
 import { AccountBreakdownPage } from './components/pages/AccountBreakdownPage';
 import { CalendarHeatmapPage } from './components/pages/CalendarHeatmapPage';
 import { CategoryTrendsPage } from './components/pages/CategoryTrendsPage';
@@ -15,6 +16,7 @@ import { SpendingVelocityPage } from './components/pages/SpendingVelocityPage';
 import { TopCategoriesPage } from './components/pages/TopCategoriesPage';
 import { TopPayeesPage } from './components/pages/TopPayeesPage';
 import { useActualData } from './hooks/useActualData';
+import { useLocalStorage } from './hooks/useLocalStorage';
 
 const PAGES = [
   { component: IntroPage, id: 'intro' },
@@ -32,10 +34,16 @@ const PAGES = [
 
 function App() {
   const [currentPage, setCurrentPage] = useState(0);
-  const { data, loading, error, progress, fetchData, retry } = useActualData();
+  const [includeOffBudget, setIncludeOffBudget] = useLocalStorage('includeOffBudget', false);
+  const { data, loading, error, progress, fetchData, retransformData, retry } = useActualData();
 
   const handleConnect = async (file: File) => {
-    await fetchData(file);
+    await fetchData(file, includeOffBudget);
+  };
+
+  const handleToggle = (value: boolean) => {
+    setIncludeOffBudget(value);
+    retransformData(value);
   };
 
   const handleNext = () => {
@@ -87,6 +95,7 @@ function App() {
 
     return (
       <div className={styles.app}>
+        <OffBudgetToggle includeOffBudget={includeOffBudget} onToggle={handleToggle} />
         {isIntroPage ? (
           <IntroPage data={data} onNext={handleNext} />
         ) : (
