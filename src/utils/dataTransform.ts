@@ -72,16 +72,19 @@ export function transformToWrappedData(
       accountIdToName.set(acc.id, acc.name);
     });
 
-    // Build payee mapping early to identify transfers
+    // Build payee mapping early to identify transfers and starting balances
     const payeeIdToTransferAcct = new Map<string, string>(); // payee_id -> transfer_account_id
+    const payeeIdToName = new Map<string, string>(); // payee_id -> payee_name
     payees.forEach(p => {
       // Store transfer_acct if present (indicates this payee is a transfer)
       if (p.transfer_acct) {
         payeeIdToTransferAcct.set(p.id, p.transfer_acct);
       }
+      // Store payee name for starting balance detection
+      payeeIdToName.set(p.id, p.name);
     });
 
-    // Filter transactions for 2025 and exclude transfers
+    // Filter transactions for 2025 and exclude transfers, off-budget, and starting balance
     const yearTransactions = transactions.filter(t => {
       const date = parseISO(t.date);
       if (date < yearStart || date > yearEnd) {
@@ -89,7 +92,21 @@ export function transformToWrappedData(
       }
       // Exclude transfer transactions (payees with transfer_acct field)
       const isTransfer = t.payee && payeeIdToTransferAcct.has(t.payee);
-      return !isTransfer;
+      if (isTransfer) {
+        return false;
+      }
+      // Exclude off-budget transactions
+      const isOffBudget = accountOffbudgetMap.get(t.account) || false;
+      if (isOffBudget) {
+        return false;
+      }
+      // Exclude starting balance transactions
+      const payeeName = t.payee ? payeeIdToName.get(t.payee) || t.payee_name : t.payee_name;
+      const isStartingBalance = payeeName && payeeName.toLowerCase() === 'starting balance';
+      if (isStartingBalance) {
+        return false;
+      }
+      return true;
     });
 
     // Calculate income and expenses
@@ -229,12 +246,10 @@ export function transformToWrappedData(
       };
     });
 
-    // Top payees - map payee IDs to names (including deleted)
+    // Top payees - map payee IDs to tombstone status (payeeIdToName already built earlier)
     // Note: transfer_acct mapping was already built earlier for filtering
-    const payeeIdToName = new Map<string, string>();
     const payeeIdToTombstone = new Map<string, boolean>();
     payees.forEach(p => {
-      payeeIdToName.set(p.id, p.name);
       payeeIdToTombstone.set(p.id, p.tombstone || false);
     });
 

@@ -113,7 +113,7 @@ const transactions2025 = await getAllTransactionsForYear(2025);
 const expenses = transactions2025.filter(t => t.amount < 0);
 ```
 
-**Note:** This function returns all transactions including transfers. Transfer filtering is handled by `transformToWrappedData()`.
+**Note:** This function returns all transactions. Filtering (transfers, off-budget transactions, and starting balances) is handled by `transformToWrappedData()`.
 
 ### `integerToAmount(amount: number): number`
 
@@ -323,9 +323,10 @@ console.log(wrappedData.monthlyData);
 
 - Automatically filters transactions to the specified year (defaults to 2025)
 - Excludes transfer transactions (transactions where the payee has a `transfer_acct` field)
+- Excludes off-budget transactions (transactions from accounts where `offbudget` is true)
+- Excludes starting balance transactions (transactions where payee name is "Starting Balance")
 - Handles deleted categories/payees (marks with "deleted: " prefix)
 - Converts amounts from cents to dollars
-- Handles off-budget accounts appropriately
 - Calculates all derived metrics automatically
 
 ## Type Definitions

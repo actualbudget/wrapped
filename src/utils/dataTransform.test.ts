@@ -203,7 +203,7 @@ describe('transformToWrappedData', () => {
       expect(uncategorized?.amount).toBe(300);
     });
 
-    it('handles off-budget accounts', () => {
+    it('excludes off-budget account transactions', () => {
       const transactions: Transaction[] = [
         createMockTransaction({ id: 't1', account: 'acc1', category: '', amount: -10000 }),
       ];
@@ -212,9 +212,10 @@ describe('transformToWrappedData', () => {
 
       const result = transformToWrappedData(transactions, [], [], accounts);
 
-      const offBudget = result.topCategories.find(c => c.categoryId === 'off-budget');
-      expect(offBudget).toBeDefined();
-      expect(offBudget?.categoryName).toBe('Off Budget');
+      // Off-budget transactions should be excluded
+      expect(result.transactionStats.totalCount).toBe(0);
+      expect(result.totalExpenses).toBe(0);
+      expect(result.topCategories).toHaveLength(0);
     });
 
     it('handles deleted categories', () => {
@@ -493,6 +494,130 @@ describe('transformToWrappedData', () => {
       ];
 
       const result = transformToWrappedData(transactions, [], payees, []);
+
+      expect(result.transactionStats.totalCount).toBe(1);
+      expect(result.totalExpenses).toBe(100);
+    });
+  });
+
+  describe('Off-Budget Filtering', () => {
+    it('excludes transactions from off-budget accounts', () => {
+      const transactions: Transaction[] = [
+        createMockTransaction({ id: 't1', account: 'acc1', amount: -10000 }),
+        createMockTransaction({ id: 't2', account: 'acc2', amount: -20000 }),
+      ];
+
+      const accounts: Account[] = [
+        createMockAccount({ id: 'acc1', name: 'Checking', offbudget: false }),
+        createMockAccount({ id: 'acc2', name: 'Home Value Tracking', offbudget: true }),
+      ];
+
+      const result = transformToWrappedData(transactions, [], [], accounts);
+
+      expect(result.transactionStats.totalCount).toBe(1);
+      expect(result.totalExpenses).toBe(100);
+    });
+
+    it('includes on-budget transactions', () => {
+      const transactions: Transaction[] = [
+        createMockTransaction({ id: 't1', account: 'acc1', amount: -10000 }),
+        createMockTransaction({ id: 't2', account: 'acc2', amount: -20000 }),
+      ];
+
+      const accounts: Account[] = [
+        createMockAccount({ id: 'acc1', name: 'Checking', offbudget: false }),
+        createMockAccount({ id: 'acc2', name: 'Savings', offbudget: false }),
+      ];
+
+      const result = transformToWrappedData(transactions, [], [], accounts);
+
+      expect(result.transactionStats.totalCount).toBe(2);
+      expect(result.totalExpenses).toBe(300);
+    });
+  });
+
+  describe('Starting Balance Filtering', () => {
+    it('excludes starting balance transactions by payee name', () => {
+      const transactions: Transaction[] = [
+        createMockTransaction({ id: 't1', payee: 'payee1', amount: -10000 }),
+        createMockTransaction({ id: 't2', payee: 'payee2', amount: -20000 }),
+      ];
+
+      const payees = [
+        { id: 'payee1', name: 'Regular Payee' },
+        { id: 'payee2', name: 'Starting Balance' },
+      ];
+
+      const result = transformToWrappedData(transactions, [], payees, []);
+
+      expect(result.transactionStats.totalCount).toBe(1);
+      expect(result.totalExpenses).toBe(100);
+    });
+
+    it('excludes starting balance transactions case-insensitively', () => {
+      const transactions: Transaction[] = [
+        createMockTransaction({ id: 't1', payee: 'payee1', amount: -10000 }),
+        createMockTransaction({ id: 't2', payee: 'payee2', amount: -20000 }),
+        createMockTransaction({ id: 't3', payee: 'payee3', amount: -30000 }),
+      ];
+
+      const payees = [
+        { id: 'payee1', name: 'Regular Payee' },
+        { id: 'payee2', name: 'starting balance' },
+        { id: 'payee3', name: 'STARTING BALANCE' },
+      ];
+
+      const result = transformToWrappedData(transactions, [], payees, []);
+
+      expect(result.transactionStats.totalCount).toBe(1);
+      expect(result.totalExpenses).toBe(100);
+    });
+
+    it('excludes starting balance transactions from payee_name field', () => {
+      const transactions: Transaction[] = [
+        createMockTransaction({
+          id: 't1',
+          payee: undefined,
+          payee_name: 'Regular Payee',
+          amount: -10000,
+        }),
+        createMockTransaction({
+          id: 't2',
+          payee: undefined,
+          payee_name: 'Starting Balance',
+          amount: -20000,
+        }),
+      ];
+
+      const result = transformToWrappedData(transactions, [], [], []);
+
+      expect(result.transactionStats.totalCount).toBe(1);
+      expect(result.totalExpenses).toBe(100);
+    });
+  });
+
+  describe('Combined Filtering', () => {
+    it('excludes transfers, off-budget, and starting balance together', () => {
+      const transactions: Transaction[] = [
+        createMockTransaction({ id: 't1', account: 'acc1', payee: 'payee1', amount: -10000 }),
+        createMockTransaction({ id: 't2', account: 'acc2', payee: 'payee2', amount: -20000 }), // off-budget
+        createMockTransaction({ id: 't3', account: 'acc1', payee: 'payee3', amount: -30000 }), // transfer
+        createMockTransaction({ id: 't4', account: 'acc1', payee: 'payee4', amount: -40000 }), // starting balance
+      ];
+
+      const accounts: Account[] = [
+        createMockAccount({ id: 'acc1', name: 'Checking', offbudget: false }),
+        createMockAccount({ id: 'acc2', name: 'Car Value', offbudget: true }),
+      ];
+
+      const payees = [
+        { id: 'payee1', name: 'Regular Payee' },
+        { id: 'payee2', name: 'Regular Payee 2' },
+        { id: 'payee3', name: 'Transfer', transfer_acct: 'acc3' },
+        { id: 'payee4', name: 'Starting Balance' },
+      ];
+
+      const result = transformToWrappedData(transactions, [], payees, accounts);
 
       expect(result.transactionStats.totalCount).toBe(1);
       expect(result.totalExpenses).toBe(100);
