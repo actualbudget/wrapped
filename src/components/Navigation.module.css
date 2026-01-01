@@ -61,6 +61,12 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  user-select: none;
+  pointer-events: auto;
+}
+
+.button * {
+  pointer-events: none;
 }
 
 .button:hover:not(:disabled) {
