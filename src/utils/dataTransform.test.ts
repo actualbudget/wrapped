@@ -203,18 +203,25 @@ describe('transformToWrappedData', () => {
       expect(uncategorized?.amount).toBe(300);
     });
 
-    it('handles off-budget accounts', () => {
+    it('excludes transactions from off-budget accounts', () => {
       const transactions: Transaction[] = [
-        createMockTransaction({ id: 't1', account: 'acc1', category: '', amount: -10000 }),
+        createMockTransaction({ id: 't1', account: 'acc1', category: 'cat1', amount: -10000 }),
+        createMockTransaction({ id: 't2', account: 'acc2', category: 'cat1', amount: -5000 }),
       ];
 
-      const accounts: Account[] = [createMockAccount({ id: 'acc1', offbudget: true })];
+      const accounts: Account[] = [
+        createMockAccount({ id: 'acc1', offbudget: false }),
+        createMockAccount({ id: 'acc2', offbudget: true }),
+      ];
 
-      const result = transformToWrappedData(transactions, [], [], accounts);
+      const categories: Category[] = [createMockCategory({ id: 'cat1', name: 'Groceries' })];
 
-      const offBudget = result.topCategories.find(c => c.categoryId === 'off-budget');
-      expect(offBudget).toBeDefined();
-      expect(offBudget?.categoryName).toBe('Off Budget');
+      const result = transformToWrappedData(transactions, categories, [], accounts);
+
+      // Only the transaction from acc1 (on-budget) should be included
+      expect(result.totalExpenses).toBe(100); // $100 from t1 only
+      expect(result.transactionStats.totalCount).toBe(1);
+      expect(result.topCategories[0].amount).toBe(100);
     });
 
     it('handles deleted categories', () => {

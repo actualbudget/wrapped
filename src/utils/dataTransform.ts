@@ -81,7 +81,7 @@ export function transformToWrappedData(
       }
     });
 
-    // Filter transactions for 2025 and exclude transfers
+    // Filter transactions for 2025 and exclude transfers and off-budget accounts
     const yearTransactions = transactions.filter(t => {
       const date = parseISO(t.date);
       if (date < yearStart || date > yearEnd) {
@@ -89,7 +89,12 @@ export function transformToWrappedData(
       }
       // Exclude transfer transactions (payees with transfer_acct field)
       const isTransfer = t.payee && payeeIdToTransferAcct.has(t.payee);
-      return !isTransfer;
+      if (isTransfer) {
+        return false;
+      }
+      // Exclude transactions from off-budget accounts
+      const isOffBudget = accountOffbudgetMap.get(t.account) || false;
+      return !isOffBudget;
     });
 
     // Calculate income and expenses
@@ -151,22 +156,13 @@ export function transformToWrappedData(
     const categoryMap = new Map<string, { name: string; amount: number }>();
 
     expenseTransactions.forEach(t => {
-      // Check if account is off-budget
-      const isOffBudget = accountOffbudgetMap.get(t.account) || false;
-
-      // If transaction has no category and account is off-budget, use "off budget"
-      // Otherwise, use "uncategorized" for transactions without category
+      // Assign category - use "uncategorized" for transactions without category
       let categoryId: string;
       let categoryName: string;
 
       if (!t.category || t.category === '') {
-        if (isOffBudget) {
-          categoryId = 'off-budget';
-          categoryName = 'Off Budget';
-        } else {
-          categoryId = 'uncategorized';
-          categoryName = 'Uncategorized';
-        }
+        categoryId = 'uncategorized';
+        categoryName = 'Uncategorized';
       } else {
         categoryId = t.category;
         // Get category name from mapping, or use category_name from transaction, or fallback
@@ -205,10 +201,9 @@ export function transformToWrappedData(
       const monthlyAmounts = MONTHS.map((monthName, monthIndex) => {
         const monthTransactions = expenseTransactions.filter(t => {
           const date = parseISO(t.date);
-          const isOffBudget = accountOffbudgetMap.get(t.account) || false;
           let transactionCategoryId: string;
           if (!t.category || t.category === '') {
-            transactionCategoryId = isOffBudget ? 'off-budget' : 'uncategorized';
+            transactionCategoryId = 'uncategorized';
           } else {
             transactionCategoryId = t.category;
           }
@@ -589,13 +584,13 @@ export function transformToWrappedData(
     // Category Growth/Decline
     const categoryGrowth: CategoryGrowth[] = topCategories.map(cat => {
       const firstMonth =
-        cat.categoryId === 'uncategorized' || cat.categoryId === 'off-budget'
+        cat.categoryId === 'uncategorized'
           ? { month: 'January', amount: 0 }
           : categoryTrends
               .find(t => t.categoryId === cat.categoryId)
               ?.monthlyData.find(m => m.month === 'January') || { month: 'January', amount: 0 };
       const lastMonth =
-        cat.categoryId === 'uncategorized' || cat.categoryId === 'off-budget'
+        cat.categoryId === 'uncategorized'
           ? { month: 'December', amount: 0 }
           : categoryTrends
               .find(t => t.categoryId === cat.categoryId)
@@ -603,14 +598,14 @@ export function transformToWrappedData(
 
       const monthlyChanges = MONTHS.map((monthName, monthIndex) => {
         const monthAmount =
-          cat.categoryId === 'uncategorized' || cat.categoryId === 'off-budget'
+          cat.categoryId === 'uncategorized'
             ? 0
             : categoryTrends
                 .find(t => t.categoryId === cat.categoryId)
                 ?.monthlyData.find(m => m.month === monthName)?.amount || 0;
         const prevMonthAmount =
           monthIndex > 0
-            ? cat.categoryId === 'uncategorized' || cat.categoryId === 'off-budget'
+            ? cat.categoryId === 'uncategorized'
               ? 0
               : categoryTrends
                   .find(t => t.categoryId === cat.categoryId)
