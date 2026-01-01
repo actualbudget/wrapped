@@ -40,6 +40,7 @@
     "@types/react-is": "^19.2.0",
     "@vitejs/plugin-react": "^5.1.2",
     "@vitest/ui": "^4.0.16",
+    "babel-plugin-react-compiler": "1.0.0",
     "husky": "^9.1.7",
     "jsdom": "^27.4.0",
     "knip": "^5.78.0",

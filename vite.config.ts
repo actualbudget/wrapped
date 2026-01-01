@@ -5,5 +5,12 @@ import { copyWasmFiles } from "./vite-plugin-copy-wasm";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), copyWasmFiles()],
+  plugins: [
+    react({
+      babel: {
+        plugins: ["babel-plugin-react-compiler"],
+      },
+    }),
+    copyWasmFiles(),
+  ],
 });
