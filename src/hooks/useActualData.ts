@@ -17,82 +17,138 @@ import { getErrorMessage, isFileApiError } from '../types/errors';
 import { DEFAULT_YEAR } from '../utils/constants';
 import { transformToWrappedData } from '../utils/dataTransform';
 
+interface RawBudgetData {
+  transactions: Awaited<ReturnType<typeof getAllTransactionsForYear>>;
+  categories: Awaited<ReturnType<typeof getCategories>>;
+  payees: Awaited<ReturnType<typeof getPayees>>;
+  accounts: Awaited<ReturnType<typeof getAccounts>>;
+}
+
 export function useActualData() {
   const [data, setData] = useState<WrappedData | null>(null);
+  const [rawData, setRawData] = useState<RawBudgetData | null>(null);
+  const [budgetData, setBudgetData] = useState<
+    Array<{ categoryId: string; month: string; budgetedAmount: number }> | undefined
+  >(undefined);
+  const [groupSortOrders, setGroupSortOrders] = useState<Map<string, number>>(new Map());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [progress, setProgress] = useState<number>(0);
 
-  const fetchData = useCallback(async (uploadedFile: File) => {
-    setLoading(true);
-    setError(null);
-    setFile(uploadedFile);
-    setProgress(0);
-
-    try {
-      // Clear old database before initializing new file to ensure fresh data
-      setProgress(10);
-      await clearBudget();
-
-      // Initialize file API (loads and parses the zip file)
-      setProgress(30);
-      await initialize(uploadedFile);
-
-      // Fetch all data
-      setProgress(50);
-      const transactions = await getAllTransactionsForYear(DEFAULT_YEAR);
-      setProgress(60);
-      const categories = await getCategories();
-      const payees = await getPayees();
-      const accounts = await getAccounts();
-      setProgress(70);
-
-      // Fetch budget data and group sort orders (non-blocking - returns empty array/map if unavailable)
-      let budgetData: Array<{ categoryId: string; month: string; budgetedAmount: number }> = [];
-      let groupSortOrders = new Map<string, number>();
-      try {
-        budgetData = await getBudgetedAmounts(DEFAULT_YEAR);
-        groupSortOrders = await getCategoryGroupSortOrders();
-      } catch (error) {
-        // Budget data or group sort order fetch failed, continue without it
-        console.warn('Failed to fetch budget data or group sort orders:', error);
-      }
-
-      setProgress(85);
-      // Transform data
+  const transformData = useCallback(
+    (
+      raw: RawBudgetData,
+      includeOffBudget: boolean,
+      budgetData?: Array<{ categoryId: string; month: string; budgetedAmount: number }>,
+      groupSortOrders: Map<string, number> = new Map(),
+    ) => {
       const wrappedData = transformToWrappedData(
-        transactions,
-        categories,
-        payees,
-        accounts,
+        raw.transactions,
+        raw.categories,
+        raw.payees,
+        raw.accounts,
         DEFAULT_YEAR,
-        budgetData.length > 0 ? budgetData : undefined,
+        includeOffBudget,
+        budgetData,
         groupSortOrders,
       );
-
       setData(wrappedData);
-      setProgress(100);
-      setLoading(false);
-    } catch (err) {
-      let errorMessage: string;
-      if (isFileApiError(err)) {
-        errorMessage = err.message;
-      } else {
-        errorMessage = getErrorMessage(err);
-      }
-      setError(errorMessage);
-      setLoading(false);
-      setProgress(0);
-    }
-  }, []);
+    },
+    [],
+  );
 
-  const refreshData = useCallback(async () => {
-    if (!file) {
-      throw new Error('No file available');
-    }
-    await fetchData(file);
-  }, [file, fetchData]);
+  const fetchData = useCallback(
+    async (uploadedFile: File, includeOffBudget: boolean = false) => {
+      setLoading(true);
+      setError(null);
+      setFile(uploadedFile);
+      setProgress(0);
+
+      try {
+        // Clear old database before initializing new file to ensure fresh data
+        setProgress(10);
+        await clearBudget();
+
+        // Initialize file API (loads and parses the zip file)
+        setProgress(30);
+        await initialize(uploadedFile);
+
+        // Fetch all data
+        setProgress(50);
+        const transactions = await getAllTransactionsForYear(DEFAULT_YEAR);
+        setProgress(60);
+        const categories = await getCategories();
+        const payees = await getPayees();
+        const accounts = await getAccounts();
+        setProgress(70);
+
+        const raw = { transactions, categories, payees, accounts };
+        setRawData(raw);
+
+        // Fetch budget data and group sort orders (non-blocking - returns empty array/map if unavailable)
+        let fetchedBudgetData: Array<{
+          categoryId: string;
+          month: string;
+          budgetedAmount: number;
+        }> = [];
+        let fetchedGroupSortOrders = new Map<string, number>();
+        try {
+          fetchedBudgetData = await getBudgetedAmounts(DEFAULT_YEAR);
+          fetchedGroupSortOrders = await getCategoryGroupSortOrders();
+        } catch (error) {
+          // Budget data or group sort order fetch failed, continue without it
+          console.warn('Failed to fetch budget data or group sort orders:', error);
+        }
+
+        // Store budget data and group sort orders for retransformData
+        setBudgetData(fetchedBudgetData.length > 0 ? fetchedBudgetData : undefined);
+        setGroupSortOrders(fetchedGroupSortOrders);
+
+        // Transform data
+        setProgress(85);
+        transformData(
+          raw,
+          includeOffBudget,
+          fetchedBudgetData.length > 0 ? fetchedBudgetData : undefined,
+          fetchedGroupSortOrders,
+        );
+
+        setProgress(100);
+        setLoading(false);
+      } catch (err) {
+        let errorMessage: string;
+        if (isFileApiError(err)) {
+          errorMessage = err.message;
+        } else {
+          errorMessage = getErrorMessage(err);
+        }
+        setError(errorMessage);
+        setLoading(false);
+        setProgress(0);
+      }
+    },
+    [transformData],
+  );
+
+  const refreshData = useCallback(
+    async (includeOffBudget: boolean = false) => {
+      if (!file) {
+        throw new Error('No file available');
+      }
+      await fetchData(file, includeOffBudget);
+    },
+    [file, fetchData],
+  );
+
+  const retransformData = useCallback(
+    (includeOffBudget: boolean) => {
+      if (rawData) {
+        transformData(rawData, includeOffBudget, budgetData, groupSortOrders);
+      }
+    },
+    [rawData, transformData, budgetData, groupSortOrders],
+  );
 
   // Cleanup on unmount
   useEffect(() => {
@@ -114,6 +170,7 @@ export function useActualData() {
     progress,
     fetchData,
     refreshData,
+    retransformData,
     retry,
   };
 }
