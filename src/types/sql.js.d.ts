@@ -1,4 +1,4 @@
-declare module "sql.js" {
+declare module 'sql.js' {
   interface Database {
     prepare(sql: string): Statement;
     close(): void;

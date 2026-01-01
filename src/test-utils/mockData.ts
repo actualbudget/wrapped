@@ -15,21 +15,21 @@ import type {
   CategoryGrowth,
   SavingsMilestone,
   FutureProjection,
-} from "../types";
+} from '../types';
 
 const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ];
 
 function createMockMonthlyData(overrides?: Partial<MonthlyData>[]): MonthlyData[] {
@@ -60,18 +60,18 @@ export function createMockSpendingVelocity(
   return {
     dailyAverage: 100,
     fastestPeriod: {
-      period: "Week 15",
+      period: 'Week 15',
       amount: 2000,
       averagePerDay: 285.71,
     },
     slowestPeriod: {
-      period: "Week 3",
+      period: 'Week 3',
       amount: 500,
       averagePerDay: 71.43,
     },
     weeklyData: [
-      { week: "Week 1", totalSpending: 1500, averagePerDay: 214.29 },
-      { week: "Week 2", totalSpending: 1200, averagePerDay: 171.43 },
+      { week: 'Week 1', totalSpending: 1500, averagePerDay: 214.29 },
+      { week: 'Week 2', totalSpending: 1200, averagePerDay: 171.43 },
     ],
     ...overrides,
   };
@@ -80,7 +80,7 @@ export function createMockSpendingVelocity(
 function createMockDayOfWeekSpending(
   overrides?: Partial<DayOfWeekSpending>[],
 ): DayOfWeekSpending[] {
-  const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   return dayNames.map((dayName, index) => ({
     dayOfWeek: index,
     dayName,
@@ -94,15 +94,15 @@ function createMockDayOfWeekSpending(
 export function createMockAccountBreakdown(overrides?: AccountBreakdown[]): AccountBreakdown[] {
   const defaultData: AccountBreakdown[] = [
     {
-      accountId: "acc1",
-      accountName: "Checking",
+      accountId: 'acc1',
+      accountName: 'Checking',
       totalSpending: 20000,
       transactionCount: 50,
       percentage: 55.6,
     },
     {
-      accountId: "acc2",
-      accountName: "Credit Card",
+      accountId: 'acc2',
+      accountName: 'Credit Card',
       totalSpending: 16000,
       transactionCount: 40,
       percentage: 44.4,
@@ -115,13 +115,13 @@ function createMockSpendingStreaks(overrides?: Partial<SpendingStreaks>): Spendi
   return {
     longestSpendingStreak: {
       days: 15,
-      startDate: "2025-03-01",
-      endDate: "2025-03-15",
+      startDate: '2025-03-01',
+      endDate: '2025-03-15',
     },
     longestNoSpendingStreak: {
       days: 5,
-      startDate: "2025-06-10",
-      endDate: "2025-06-14",
+      startDate: '2025-06-10',
+      endDate: '2025-06-14',
     },
     totalSpendingDays: 200,
     totalNoSpendingDays: 165,
@@ -134,14 +134,14 @@ function createMockTransactionSizeDistribution(
 ): TransactionSizeDistribution {
   return {
     buckets: [
-      { range: "$0-$10", min: 0, max: 10, count: 20, percentage: 20 },
-      { range: "$10-$50", min: 10, max: 50, count: 40, percentage: 40 },
-      { range: "$50-$100", min: 50, max: 100, count: 25, percentage: 25 },
-      { range: "$100+", min: 100, max: Infinity, count: 15, percentage: 15 },
+      { range: '$0-$10', min: 0, max: 10, count: 20, percentage: 20 },
+      { range: '$10-$50', min: 10, max: 50, count: 40, percentage: 40 },
+      { range: '$50-$100', min: 50, max: 100, count: 25, percentage: 25 },
+      { range: '$100+', min: 100, max: Infinity, count: 15, percentage: 15 },
     ],
     median: 45,
     mode: 25,
-    mostCommonRange: "$10-$50",
+    mostCommonRange: '$10-$50',
     ...overrides,
   };
 }
@@ -149,32 +149,32 @@ function createMockTransactionSizeDistribution(
 function createMockQuarterlyData(overrides?: QuarterlyData[]): QuarterlyData[] {
   const defaultData: QuarterlyData[] = [
     {
-      quarter: "Q1",
+      quarter: 'Q1',
       income: 15000,
       expenses: 9000,
       netSavings: 6000,
-      months: ["January", "February", "March"],
+      months: ['January', 'February', 'March'],
     },
     {
-      quarter: "Q2",
+      quarter: 'Q2',
       income: 15000,
       expenses: 9000,
       netSavings: 6000,
-      months: ["April", "May", "June"],
+      months: ['April', 'May', 'June'],
     },
     {
-      quarter: "Q3",
+      quarter: 'Q3',
       income: 15000,
       expenses: 9000,
       netSavings: 6000,
-      months: ["July", "August", "September"],
+      months: ['July', 'August', 'September'],
     },
     {
-      quarter: "Q4",
+      quarter: 'Q4',
       income: 15000,
       expenses: 9000,
       netSavings: 6000,
-      months: ["October", "November", "December"],
+      months: ['October', 'November', 'December'],
     },
   ];
   return overrides || defaultData;
@@ -183,16 +183,16 @@ function createMockQuarterlyData(overrides?: QuarterlyData[]): QuarterlyData[] {
 export function createMockCategoryGrowth(overrides?: CategoryGrowth[]): CategoryGrowth[] {
   const defaultData: CategoryGrowth[] = [
     {
-      categoryId: "cat1",
-      categoryName: "Groceries",
+      categoryId: 'cat1',
+      categoryName: 'Groceries',
       firstMonthAmount: 400,
       lastMonthAmount: 600,
       totalChange: 200,
       percentageChange: 50,
       monthlyChanges: [
-        { month: "January", amount: 400, change: 0, percentageChange: 0 },
-        { month: "February", amount: 450, change: 50, percentageChange: 12.5 },
-        { month: "March", amount: 500, change: 50, percentageChange: 11.1 },
+        { month: 'January', amount: 400, change: 0, percentageChange: 0 },
+        { month: 'February', amount: 450, change: 50, percentageChange: 12.5 },
+        { month: 'March', amount: 500, change: 50, percentageChange: 11.1 },
       ],
     },
   ];
@@ -202,15 +202,15 @@ export function createMockCategoryGrowth(overrides?: CategoryGrowth[]): Category
 export function createMockSavingsMilestones(overrides?: SavingsMilestone[]): SavingsMilestone[] {
   const defaultData: SavingsMilestone[] = [
     {
-      milestone: "$10k",
+      milestone: '$10k',
       amount: 10000,
-      date: "2025-04-15",
+      date: '2025-04-15',
       cumulativeSavings: 10000,
     },
     {
-      milestone: "$25k",
+      milestone: '$25k',
       amount: 25000,
-      date: "2025-08-20",
+      date: '2025-08-20',
       cumulativeSavings: 25000,
     },
   ];
@@ -225,29 +225,29 @@ export function createMockFutureProjection(
     dailyAverageExpenses: 98.63,
     dailyNetSavings: 65.75,
     actual2025Data: [
-      { month: "January", cumulativeSavings: 2000 },
-      { month: "February", cumulativeSavings: 4000 },
-      { month: "March", cumulativeSavings: 6000 },
-      { month: "April", cumulativeSavings: 8000 },
-      { month: "May", cumulativeSavings: 10000 },
-      { month: "June", cumulativeSavings: 12000 },
-      { month: "July", cumulativeSavings: 14000 },
-      { month: "August", cumulativeSavings: 16000 },
-      { month: "September", cumulativeSavings: 18000 },
-      { month: "October", cumulativeSavings: 20000 },
-      { month: "November", cumulativeSavings: 22000 },
-      { month: "December", cumulativeSavings: 24000 },
+      { month: 'January', cumulativeSavings: 2000 },
+      { month: 'February', cumulativeSavings: 4000 },
+      { month: 'March', cumulativeSavings: 6000 },
+      { month: 'April', cumulativeSavings: 8000 },
+      { month: 'May', cumulativeSavings: 10000 },
+      { month: 'June', cumulativeSavings: 12000 },
+      { month: 'July', cumulativeSavings: 14000 },
+      { month: 'August', cumulativeSavings: 16000 },
+      { month: 'September', cumulativeSavings: 18000 },
+      { month: 'October', cumulativeSavings: 20000 },
+      { month: 'November', cumulativeSavings: 22000 },
+      { month: 'December', cumulativeSavings: 24000 },
     ],
     monthlyProjections: [
       {
-        month: "January",
+        month: 'January',
         projectedIncome: 5000,
         projectedExpenses: 3000,
         projectedNetSavings: 2000,
         cumulativeSavings: 26000,
       },
       {
-        month: "February",
+        month: 'February',
         projectedIncome: 5000,
         projectedExpenses: 3000,
         projectedNetSavings: 2000,
@@ -273,14 +273,14 @@ export function createMockWrappedData(overrides?: Partial<WrappedData>): Wrapped
     monthlyData,
     topCategories: [
       {
-        categoryId: "cat1",
-        categoryName: "Groceries",
+        categoryId: 'cat1',
+        categoryName: 'Groceries',
         amount: 5000,
         percentage: 13.9,
       },
       {
-        categoryId: "cat2",
-        categoryName: "Rent",
+        categoryId: 'cat2',
+        categoryName: 'Rent',
         amount: 12000,
         percentage: 33.3,
       },
@@ -288,7 +288,7 @@ export function createMockWrappedData(overrides?: Partial<WrappedData>): Wrapped
     categoryTrends: [] as CategoryTrend[],
     topPayees: [
       {
-        payee: "Store A",
+        payee: 'Store A',
         amount: 2000,
         transactionCount: 10,
       },

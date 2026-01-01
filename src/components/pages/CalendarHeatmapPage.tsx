@@ -1,23 +1,23 @@
-import { motion } from "framer-motion";
-import { useState } from "react";
+import { motion } from 'framer-motion';
+import { useState } from 'react';
 
-import type { WrappedData } from "../../types";
+import type { WrappedData } from '../../types';
 
-import { CalendarHeatmap } from "../charts/CalendarHeatmap";
-import heatmapStyles from "../charts/CalendarHeatmap.module.css";
-import { PageContainer } from "../PageContainer";
-import styles from "./Page.module.css";
+import { CalendarHeatmap } from '../charts/CalendarHeatmap';
+import heatmapStyles from '../charts/CalendarHeatmap.module.css';
+import { PageContainer } from '../PageContainer';
+import styles from './Page.module.css';
 
 interface CalendarHeatmapPageProps {
   data: WrappedData;
 }
 
 export function CalendarHeatmapPage({ data }: CalendarHeatmapPageProps) {
-  const [viewMode, setViewMode] = useState<"count" | "amount">("count");
+  const [viewMode, setViewMode] = useState<'count' | 'amount'>('count');
   const totalTransactions = data.calendarData.reduce((sum, day) => sum + day.count, 0);
   const busiestDay = data.calendarData.reduce(
     (max, day) => (day.count > max.count ? day : max),
-    data.calendarData[0] || { date: "", count: 0, amount: 0 },
+    data.calendarData[0] || { date: '', count: 0, amount: 0 },
   );
 
   return (
@@ -53,14 +53,14 @@ export function CalendarHeatmapPage({ data }: CalendarHeatmapPageProps) {
           transition={{ delay: 0.35 }}
         >
           <button
-            className={`${heatmapStyles.toggleButton} ${viewMode === "count" ? heatmapStyles.active : ""}`}
-            onClick={() => setViewMode("count")}
+            className={`${heatmapStyles.toggleButton} ${viewMode === 'count' ? heatmapStyles.active : ''}`}
+            onClick={() => setViewMode('count')}
           >
             Count
           </button>
           <button
-            className={`${heatmapStyles.toggleButton} ${viewMode === "amount" ? heatmapStyles.active : ""}`}
-            onClick={() => setViewMode("amount")}
+            className={`${heatmapStyles.toggleButton} ${viewMode === 'amount' ? heatmapStyles.active : ''}`}
+            onClick={() => setViewMode('amount')}
           >
             Amount
           </button>
@@ -71,10 +71,10 @@ export function CalendarHeatmapPage({ data }: CalendarHeatmapPageProps) {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.4 }}
           style={{
-            width: "100%",
-            overflowX: "auto",
-            overflowY: "hidden",
-            WebkitOverflowScrolling: "touch",
+            width: '100%',
+            overflowX: 'auto',
+            overflowY: 'hidden',
+            WebkitOverflowScrolling: 'touch',
           }}
         >
           <CalendarHeatmap data={data.calendarData} year={data.year} viewMode={viewMode} />
@@ -94,11 +94,11 @@ export function CalendarHeatmapPage({ data }: CalendarHeatmapPageProps) {
             <div className={styles.statValue}>{busiestDay.count}</div>
             <div className={styles.statLabel}>Busiest Day</div>
             <div
-              style={{ fontSize: "0.9rem", color: "rgba(255, 255, 255, 0.6)", marginTop: "0.5rem" }}
+              style={{ fontSize: '0.9rem', color: 'rgba(255, 255, 255, 0.6)', marginTop: '0.5rem' }}
             >
-              {new Date(busiestDay.date).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
+              {new Date(busiestDay.date).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
               })}
             </div>
           </div>

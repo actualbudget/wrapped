@@ -1,5 +1,5 @@
-import { motion } from "framer-motion";
-import { useState, useMemo } from "react";
+import { motion } from 'framer-motion';
+import { useState, useMemo } from 'react';
 import {
   BarChart,
   Bar,
@@ -9,14 +9,14 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-} from "recharts";
+} from 'recharts';
 
-import type { WrappedData } from "../../types";
+import type { WrappedData } from '../../types';
 
-import { useAnimatedNumber } from "../../hooks/useAnimatedNumber";
-import { integerToAmount } from "../../services/fileApi";
-import { PageContainer } from "../PageContainer";
-import styles from "./Page.module.css";
+import { useAnimatedNumber } from '../../hooks/useAnimatedNumber';
+import { integerToAmount } from '../../services/fileApi';
+import { PageContainer } from '../PageContainer';
+import styles from './Page.module.css';
 
 interface MonthlyBreakdownPageProps {
   data: WrappedData;
@@ -35,14 +35,14 @@ export function MonthlyBreakdownPage({ data }: MonthlyBreakdownPageProps) {
 
   const formatAmount = (value: number) => {
     if (value >= 10000) {
-      return value.toLocaleString("en-US", { maximumFractionDigits: 0 });
+      return value.toLocaleString('en-US', { maximumFractionDigits: 0 });
     }
-    return value.toLocaleString("en-US", { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+    return value.toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
   };
 
   // Create chart data - always include all keys for bars to render
   const chartData = useMemo(() => {
-    return data.monthlyData.map((month) => ({
+    return data.monthlyData.map(month => ({
       month: month.month.substring(0, 3),
       Income: month.income,
       Expenses: month.expenses,
@@ -54,14 +54,14 @@ export function MonthlyBreakdownPage({ data }: MonthlyBreakdownPageProps) {
   const yAxisDomain = useMemo(() => {
     const visibleValues: number[] = [];
 
-    chartData.forEach((dataPoint) => {
-      if (!hiddenSeries.has("Income")) {
+    chartData.forEach(dataPoint => {
+      if (!hiddenSeries.has('Income')) {
         visibleValues.push(dataPoint.Income);
       }
-      if (!hiddenSeries.has("Expenses")) {
+      if (!hiddenSeries.has('Expenses')) {
         visibleValues.push(dataPoint.Expenses);
       }
-      if (!hiddenSeries.has("Savings")) {
+      if (!hiddenSeries.has('Savings')) {
         visibleValues.push(dataPoint.Savings);
       }
     });
@@ -78,7 +78,7 @@ export function MonthlyBreakdownPage({ data }: MonthlyBreakdownPageProps) {
   }, [chartData, hiddenSeries]);
 
   const handleSeriesClick = (seriesName: string) => {
-    setHiddenSeries((prev) => {
+    setHiddenSeries(prev => {
       const newSet = new Set(prev);
       if (newSet.has(seriesName)) {
         newSet.delete(seriesName);
@@ -117,7 +117,7 @@ export function MonthlyBreakdownPage({ data }: MonthlyBreakdownPageProps) {
         <div className={styles.chartContainer}>
           <ResponsiveContainer width="100%" height={500}>
             <BarChart
-              key={Array.from(hiddenSeries).sort().join(",")}
+              key={Array.from(hiddenSeries).sort().join(',')}
               data={chartData}
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
             >
@@ -126,33 +126,33 @@ export function MonthlyBreakdownPage({ data }: MonthlyBreakdownPageProps) {
               <YAxis
                 stroke="rgba(255, 255, 255, 0.8)"
                 domain={yAxisDomain}
-                tickFormatter={(value) => `$${Math.round(value).toLocaleString("en-US")}`}
+                tickFormatter={value => `$${Math.round(value).toLocaleString('en-US')}`}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "rgba(0, 0, 0, 0.9)",
-                  border: "none",
-                  borderRadius: "8px",
-                  color: "white",
+                  backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: 'white',
                 }}
                 formatter={(value: number | undefined, name: string | undefined) => [
-                  `$${Math.round(value ?? 0).toLocaleString("en-US")}`,
-                  name ?? "",
+                  `$${Math.round(value ?? 0).toLocaleString('en-US')}`,
+                  name ?? '',
                 ]}
               />
               <Legend
-                wrapperStyle={{ paddingTop: "20px" }}
+                wrapperStyle={{ paddingTop: '20px' }}
                 content={({ payload }) => (
                   <div
                     style={{
-                      display: "flex",
-                      flexWrap: "wrap",
-                      justifyContent: "center",
-                      gap: "16px",
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      justifyContent: 'center',
+                      gap: '16px',
                     }}
                   >
                     {payload?.map((entry, index) => {
-                      const dataKey = typeof entry.dataKey === "string" ? entry.dataKey : undefined;
+                      const dataKey = typeof entry.dataKey === 'string' ? entry.dataKey : undefined;
                       const isHidden = dataKey && hiddenSeries.has(dataKey);
                       return (
                         <button
@@ -160,35 +160,35 @@ export function MonthlyBreakdownPage({ data }: MonthlyBreakdownPageProps) {
                           type="button"
                           onClick={() => dataKey && handleSeriesClick(dataKey)}
                           style={{
-                            display: "flex",
-                            alignItems: "center",
-                            cursor: "pointer",
+                            display: 'flex',
+                            alignItems: 'center',
+                            cursor: 'pointer',
                             opacity: isHidden ? 0.3 : 1,
-                            padding: "4px 8px",
-                            borderRadius: "4px",
-                            transition: "opacity 0.2s",
-                            border: "none",
-                            background: "transparent",
-                            font: "inherit",
-                            color: "inherit",
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            transition: 'opacity 0.2s',
+                            border: 'none',
+                            background: 'transparent',
+                            font: 'inherit',
+                            color: 'inherit',
                           }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
+                          onMouseEnter={e => {
+                            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
                           }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = "transparent";
+                          onMouseLeave={e => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
                           }}
                         >
                           <div
                             style={{
-                              width: "12px",
-                              height: "12px",
+                              width: '12px',
+                              height: '12px',
                               backgroundColor: entry.color as string,
-                              marginRight: "6px",
+                              marginRight: '6px',
                               opacity: isHidden ? 0.3 : 1,
                             }}
                           />
-                          <span style={{ color: "rgba(255, 255, 255, 0.8)", fontSize: "0.9rem" }}>
+                          <span style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '0.9rem' }}>
                             {entry.value}
                           </span>
                         </button>
@@ -201,25 +201,25 @@ export function MonthlyBreakdownPage({ data }: MonthlyBreakdownPageProps) {
                 dataKey="Income"
                 fill="#43e97b"
                 animationDuration={1000}
-                opacity={hiddenSeries.has("Income") ? 0 : 1}
-                style={{ cursor: "pointer" }}
-                onClick={() => handleSeriesClick("Income")}
+                opacity={hiddenSeries.has('Income') ? 0 : 1}
+                style={{ cursor: 'pointer' }}
+                onClick={() => handleSeriesClick('Income')}
               />
               <Bar
                 dataKey="Expenses"
                 fill="#764ba2"
                 animationDuration={1000}
-                opacity={hiddenSeries.has("Expenses") ? 0 : 1}
-                style={{ cursor: "pointer" }}
-                onClick={() => handleSeriesClick("Expenses")}
+                opacity={hiddenSeries.has('Expenses') ? 0 : 1}
+                style={{ cursor: 'pointer' }}
+                onClick={() => handleSeriesClick('Expenses')}
               />
               <Bar
                 dataKey="Savings"
                 fill="#667eea"
                 animationDuration={1000}
-                opacity={hiddenSeries.has("Savings") ? 0 : 1}
-                style={{ cursor: "pointer" }}
-                onClick={() => handleSeriesClick("Savings")}
+                opacity={hiddenSeries.has('Savings') ? 0 : 1}
+                style={{ cursor: 'pointer' }}
+                onClick={() => handleSeriesClick('Savings')}
               />
             </BarChart>
           </ResponsiveContainer>
@@ -237,8 +237,8 @@ export function MonthlyBreakdownPage({ data }: MonthlyBreakdownPageProps) {
             animate={{ scale: 1 }}
             transition={{ delay: 0.6 }}
           >
-            <div className={styles.largeNumber} style={{ fontSize: "clamp(1.8rem, 5vw, 3.5rem)" }}>
-              {animatedCount.toLocaleString("en-US")}
+            <div className={styles.largeNumber} style={{ fontSize: 'clamp(1.8rem, 5vw, 3.5rem)' }}>
+              {animatedCount.toLocaleString('en-US')}
             </div>
             <div className={styles.statLabel}>Total Transactions</div>
           </motion.div>
@@ -249,7 +249,7 @@ export function MonthlyBreakdownPage({ data }: MonthlyBreakdownPageProps) {
             animate={{ scale: 1 }}
             transition={{ delay: 0.7 }}
           >
-            <div className={styles.largeNumber} style={{ fontSize: "clamp(1.8rem, 5vw, 3.5rem)" }}>
+            <div className={styles.largeNumber} style={{ fontSize: 'clamp(1.8rem, 5vw, 3.5rem)' }}>
               ${formatAmount(animatedAverage)}
             </div>
             <div className={styles.statLabel}>Average Transaction</div>
@@ -261,20 +261,20 @@ export function MonthlyBreakdownPage({ data }: MonthlyBreakdownPageProps) {
             animate={{ scale: 1 }}
             transition={{ delay: 0.8 }}
           >
-            <div className={styles.largeNumber} style={{ fontSize: "clamp(1.8rem, 5vw, 3.5rem)" }}>
+            <div className={styles.largeNumber} style={{ fontSize: 'clamp(1.8rem, 5vw, 3.5rem)' }}>
               ${formatAmount(animatedLargest)}
             </div>
             <div className={styles.statLabel}>Largest Transaction</div>
             {data.transactionStats.largestTransaction && (
               <div
                 style={{
-                  fontSize: "0.9rem",
-                  color: "rgba(255, 255, 255, 0.6)",
-                  marginTop: "0.5rem",
-                  textAlign: "center",
+                  fontSize: '0.9rem',
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  marginTop: '0.5rem',
+                  textAlign: 'center',
                 }}
               >
-                {data.transactionStats.largestTransaction.payee_name || "Unknown payee"}
+                {data.transactionStats.largestTransaction.payee_name || 'Unknown payee'}
               </div>
             )}
           </motion.div>

@@ -1,7 +1,7 @@
-import { motion } from "framer-motion";
-import { useState, FormEvent, ChangeEvent } from "react";
+import { motion } from 'framer-motion';
+import { useState, FormEvent, ChangeEvent } from 'react';
 
-import styles from "./ConnectionForm.module.css";
+import styles from './ConnectionForm.module.css';
 
 interface ConnectionFormProps {
   onConnect: (file: File) => void;
@@ -19,18 +19,18 @@ export function ConnectionForm({
   onRetry,
 }: ConnectionFormProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [fileName, setFileName] = useState<string>("");
+  const [fileName, setFileName] = useState<string>('');
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.name.endsWith(".zip")) {
+      if (file.name.endsWith('.zip')) {
         setSelectedFile(file);
         setFileName(file.name);
       } else {
         setSelectedFile(null);
-        setFileName("");
-        alert("Please select a .zip file");
+        setFileName('');
+        alert('Please select a .zip file');
       }
     }
   };
@@ -67,7 +67,7 @@ export function ConnectionForm({
               disabled={loading}
               className={styles.fileInput}
               aria-describedby="file-help"
-              aria-invalid={error ? "true" : "false"}
+              aria-invalid={error ? 'true' : 'false'}
             />
             {fileName && (
               <div className={styles.fileName}>
@@ -124,9 +124,9 @@ export function ConnectionForm({
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             aria-busy={loading}
-            aria-label={loading ? "Loading budget data" : "Load budget file"}
+            aria-label={loading ? 'Loading budget data' : 'Load budget file'}
           >
-            {loading ? "Loading..." : "Load Budget"}
+            {loading ? 'Loading...' : 'Load Budget'}
           </motion.button>
         </form>
 

@@ -9,7 +9,7 @@ import {
   eachWeekOfInterval,
   differenceInDays,
   endOfMonth,
-} from "date-fns";
+} from 'date-fns';
 
 import type {
   Transaction,
@@ -30,26 +30,26 @@ import type {
   CategoryGrowth,
   SavingsMilestone,
   FutureProjection,
-} from "../types";
+} from '../types';
 
-import { integerToAmount } from "../services/fileApi";
-import { DataTransformError, getErrorMessage, isDataTransformError } from "../types/errors";
-import { SAVINGS_MILESTONE_THRESHOLDS, DEFAULT_YEAR, DAYS_PER_MONTH } from "./constants";
+import { integerToAmount } from '../services/fileApi';
+import { DataTransformError, getErrorMessage, isDataTransformError } from '../types/errors';
+import { SAVINGS_MILESTONE_THRESHOLDS, DEFAULT_YEAR, DAYS_PER_MONTH } from './constants';
 
 // Use DEFAULT_YEAR constant instead of hardcoded value
 const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ];
 
 export function transformToWrappedData(
@@ -67,14 +67,14 @@ export function transformToWrappedData(
     const accountOffbudgetMap = new Map<string, boolean>();
     // Create map of account ID to account name
     const accountIdToName = new Map<string, string>();
-    accounts.forEach((acc) => {
+    accounts.forEach(acc => {
       accountOffbudgetMap.set(acc.id, acc.offbudget || false);
       accountIdToName.set(acc.id, acc.name);
     });
 
     // Build payee mapping early to identify transfers
     const payeeIdToTransferAcct = new Map<string, string>(); // payee_id -> transfer_account_id
-    payees.forEach((p) => {
+    payees.forEach(p => {
       // Store transfer_acct if present (indicates this payee is a transfer)
       if (p.transfer_acct) {
         payeeIdToTransferAcct.set(p.id, p.transfer_acct);
@@ -82,7 +82,7 @@ export function transformToWrappedData(
     });
 
     // Filter transactions for 2025 and exclude transfers
-    const yearTransactions = transactions.filter((t) => {
+    const yearTransactions = transactions.filter(t => {
       const date = parseISO(t.date);
       if (date < yearStart || date > yearEnd) {
         return false;
@@ -99,7 +99,7 @@ export function transformToWrappedData(
     const incomeTransactions: Transaction[] = [];
     const expenseTransactions: Transaction[] = [];
 
-    yearTransactions.forEach((t) => {
+    yearTransactions.forEach(t => {
       const amount = integerToAmount(Math.abs(t.amount));
       if (t.amount < 0) {
         totalExpenses += amount;
@@ -115,7 +115,7 @@ export function transformToWrappedData(
 
     // Monthly breakdown
     const monthlyData: MonthlyData[] = MONTHS.map((monthName, index) => {
-      const monthTransactions = yearTransactions.filter((t) => {
+      const monthTransactions = yearTransactions.filter(t => {
         const date = parseISO(t.date);
         return date.getMonth() === index;
       });
@@ -123,7 +123,7 @@ export function transformToWrappedData(
       let monthIncome = 0;
       let monthExpenses = 0;
 
-      monthTransactions.forEach((t) => {
+      monthTransactions.forEach(t => {
         const amount = integerToAmount(Math.abs(t.amount));
         if (t.amount < 0) {
           monthExpenses += amount;
@@ -143,14 +143,14 @@ export function transformToWrappedData(
     // Top categories by spending - create ID to name mapping (including deleted)
     const categoryIdToName = new Map<string, string>();
     const categoryIdToTombstone = new Map<string, boolean>();
-    categories.forEach((c) => {
+    categories.forEach(c => {
       categoryIdToName.set(c.id, c.name);
       categoryIdToTombstone.set(c.id, c.tombstone || false);
     });
 
     const categoryMap = new Map<string, { name: string; amount: number }>();
 
-    expenseTransactions.forEach((t) => {
+    expenseTransactions.forEach(t => {
       // Check if account is off-budget
       const isOffBudget = accountOffbudgetMap.get(t.account) || false;
 
@@ -159,19 +159,19 @@ export function transformToWrappedData(
       let categoryId: string;
       let categoryName: string;
 
-      if (!t.category || t.category === "") {
+      if (!t.category || t.category === '') {
         if (isOffBudget) {
-          categoryId = "off-budget";
-          categoryName = "Off Budget";
+          categoryId = 'off-budget';
+          categoryName = 'Off Budget';
         } else {
-          categoryId = "uncategorized";
-          categoryName = "Uncategorized";
+          categoryId = 'uncategorized';
+          categoryName = 'Uncategorized';
         }
       } else {
         categoryId = t.category;
         // Get category name from mapping, or use category_name from transaction, or fallback
         const baseCategoryName =
-          categoryIdToName.get(categoryId) || t.category_name || categoryId || "Uncategorized";
+          categoryIdToName.get(categoryId) || t.category_name || categoryId || 'Uncategorized';
         // Check if category is deleted (from mapping or transaction)
         const isDeleted = categoryIdToTombstone.get(categoryId) || t.category_tombstone || false;
         categoryName = isDeleted ? `deleted: ${baseCategoryName}` : baseCategoryName;
@@ -195,20 +195,20 @@ export function transformToWrappedData(
       }))
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 10)
-      .map((cat) => ({
+      .map(cat => ({
         ...cat,
         percentage: (cat.amount / totalExpenses) * 100,
       }));
 
     // Category trends
-    const categoryTrends: CategoryTrend[] = topCategories.slice(0, 10).map((cat) => {
+    const categoryTrends: CategoryTrend[] = topCategories.slice(0, 10).map(cat => {
       const monthlyAmounts = MONTHS.map((monthName, monthIndex) => {
-        const monthTransactions = expenseTransactions.filter((t) => {
+        const monthTransactions = expenseTransactions.filter(t => {
           const date = parseISO(t.date);
           const isOffBudget = accountOffbudgetMap.get(t.account) || false;
           let transactionCategoryId: string;
-          if (!t.category || t.category === "") {
-            transactionCategoryId = isOffBudget ? "off-budget" : "uncategorized";
+          if (!t.category || t.category === '') {
+            transactionCategoryId = isOffBudget ? 'off-budget' : 'uncategorized';
           } else {
             transactionCategoryId = t.category;
           }
@@ -233,24 +233,24 @@ export function transformToWrappedData(
     // Note: transfer_acct mapping was already built earlier for filtering
     const payeeIdToName = new Map<string, string>();
     const payeeIdToTombstone = new Map<string, boolean>();
-    payees.forEach((p) => {
+    payees.forEach(p => {
       payeeIdToName.set(p.id, p.name);
       payeeIdToTombstone.set(p.id, p.tombstone || false);
     });
 
     const payeeMap = new Map<string, { amount: number; count: number; name: string }>();
 
-    expenseTransactions.forEach((t) => {
+    expenseTransactions.forEach(t => {
       const payeeId = t.payee;
       // Get payee name - prioritize: mapping > transaction payee_name > "Unknown" (never use ID)
       let basePayeeName: string;
       if (payeeId && payeeIdToName.has(payeeId)) {
         // Found in mapping
         basePayeeName = payeeIdToName.get(payeeId)!;
-      } else if (t.payee_name && t.payee_name.trim() !== "") {
+      } else if (t.payee_name && t.payee_name.trim() !== '') {
         // Check if payee_name is "unknown" (case-insensitive)
-        if (t.payee_name.trim().toLowerCase() === "unknown") {
-          basePayeeName = "Unknown";
+        if (t.payee_name.trim().toLowerCase() === 'unknown') {
+          basePayeeName = 'Unknown';
         } else {
           // Check if payee_name looks like an ID (exists in our mapping but as a key, not a name)
           // If it's the same as payeeId, it's likely an ID, not a name
@@ -263,12 +263,12 @@ export function transformToWrappedData(
             basePayeeName = t.payee_name;
           } else {
             // It looks like an ID but we can't find it in mapping, use "Unknown"
-            basePayeeName = "Unknown";
+            basePayeeName = 'Unknown';
           }
         }
       } else {
         // Fallback to "Unknown" instead of showing the ID
-        basePayeeName = "Unknown";
+        basePayeeName = 'Unknown';
       }
 
       // Note: Transfer transactions are already filtered out earlier,
@@ -290,8 +290,8 @@ export function transformToWrappedData(
 
     // Create all payees list (sorted by amount for default display)
     const allPayees: PayeeSpending[] = Array.from(payeeMap.values())
-      .map((data) => ({
-        payee: data.name && data.name.trim() !== "" ? data.name : "Unknown",
+      .map(data => ({
+        payee: data.name && data.name.trim() !== '' ? data.name : 'Unknown',
         amount: data.amount,
         transactionCount: data.count,
       }))
@@ -322,15 +322,15 @@ export function transformToWrappedData(
 
     // Top spending months
     const topMonths = monthlyData
-      .map((m) => ({ month: m.month, spending: m.expenses }))
+      .map(m => ({ month: m.month, spending: m.expenses }))
       .sort((a, b) => b.spending - a.spending)
       .slice(0, 3);
 
     // Calendar data
     const allDays = eachDayOfInterval({ start: yearStart, end: yearEnd });
-    const calendarData: CalendarDay[] = allDays.map((day) => {
-      const dayStr = format(day, "yyyy-MM-dd");
-      const dayTransactions = yearTransactions.filter((t) => t.date === dayStr);
+    const calendarData: CalendarDay[] = allDays.map(day => {
+      const dayStr = format(day, 'yyyy-MM-dd');
+      const dayTransactions = yearTransactions.filter(t => t.date === dayStr);
 
       return {
         date: dayStr,
@@ -345,9 +345,9 @@ export function transformToWrappedData(
 
     // Calculate weekly data for velocity
     const weeks = eachWeekOfInterval({ start: yearStart, end: yearEnd }, { weekStartsOn: 0 });
-    const weeklyData = weeks.map((weekStart) => {
+    const weeklyData = weeks.map(weekStart => {
       const weekEnd = endOfWeek(weekStart, { weekStartsOn: 0 });
-      const weekTransactions = expenseTransactions.filter((t) => {
+      const weekTransactions = expenseTransactions.filter(t => {
         const date = parseISO(t.date);
         return date >= weekStart && date <= weekEnd;
       });
@@ -366,11 +366,11 @@ export function transformToWrappedData(
 
     const fastestPeriod = weeklyData.reduce(
       (max, week) => (week.averagePerDay > max.averagePerDay ? week : max),
-      weeklyData[0] || { week: "N/A", totalSpending: 0, averagePerDay: 0 },
+      weeklyData[0] || { week: 'N/A', totalSpending: 0, averagePerDay: 0 },
     );
     const slowestPeriod = weeklyData.reduce(
       (min, week) => (week.averagePerDay < min.averagePerDay ? week : min),
-      weeklyData[0] || { week: "N/A", totalSpending: 0, averagePerDay: 0 },
+      weeklyData[0] || { week: 'N/A', totalSpending: 0, averagePerDay: 0 },
     );
 
     const spendingVelocity: SpendingVelocity = {
@@ -390,9 +390,9 @@ export function transformToWrappedData(
 
     // Day of Week Analysis
     const dayOfWeekMap = new Map<number, { totalSpending: number; transactionCount: number }>();
-    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-    expenseTransactions.forEach((t) => {
+    expenseTransactions.forEach(t => {
       const date = parseISO(t.date);
       const dayOfWeek = getDay(date);
       const amount = integerToAmount(Math.abs(t.amount));
@@ -417,7 +417,7 @@ export function transformToWrappedData(
 
     // Account Breakdown
     const accountMap = new Map<string, { totalSpending: number; transactionCount: number }>();
-    expenseTransactions.forEach((t) => {
+    expenseTransactions.forEach(t => {
       const amount = integerToAmount(Math.abs(t.amount));
       const existing = accountMap.get(t.account) || { totalSpending: 0, transactionCount: 0 };
       accountMap.set(t.account, {
@@ -435,26 +435,26 @@ export function transformToWrappedData(
         percentage: 0, // Will calculate after sorting
       }))
       .sort((a, b) => b.totalSpending - a.totalSpending)
-      .map((acc) => ({
+      .map(acc => ({
         ...acc,
         percentage: totalExpenses > 0 ? (acc.totalSpending / totalExpenses) * 100 : 0,
       }));
 
     // Spending Streaks
     const daysWithTransactions = new Set<string>();
-    expenseTransactions.forEach((t) => {
+    expenseTransactions.forEach(t => {
       daysWithTransactions.add(t.date);
     });
 
-    let longestSpendingStreak = { days: 0, startDate: "", endDate: "" };
-    let longestNoSpendingStreak = { days: 0, startDate: "", endDate: "" };
+    let longestSpendingStreak = { days: 0, startDate: '', endDate: '' };
+    let longestNoSpendingStreak = { days: 0, startDate: '', endDate: '' };
     let currentSpendingStreak = 0;
     let currentNoSpendingStreak = 0;
-    let currentSpendingStart = "";
-    let currentNoSpendingStart = "";
+    let currentSpendingStart = '';
+    let currentNoSpendingStart = '';
 
-    allDays.forEach((day) => {
-      const dayStr = format(day, "yyyy-MM-dd");
+    allDays.forEach(day => {
+      const dayStr = format(day, 'yyyy-MM-dd');
       const hasTransaction = daysWithTransactions.has(dayStr);
 
       if (hasTransaction) {
@@ -463,7 +463,7 @@ export function transformToWrappedData(
         }
         currentSpendingStreak++;
         currentNoSpendingStreak = 0;
-        currentNoSpendingStart = "";
+        currentNoSpendingStart = '';
 
         if (currentSpendingStreak > longestSpendingStreak.days) {
           longestSpendingStreak = {
@@ -478,7 +478,7 @@ export function transformToWrappedData(
         }
         currentNoSpendingStreak++;
         currentSpendingStreak = 0;
-        currentSpendingStart = "";
+        currentSpendingStart = '';
 
         if (currentNoSpendingStreak > longestNoSpendingStreak.days) {
           longestNoSpendingStreak = {
@@ -499,18 +499,18 @@ export function transformToWrappedData(
 
     // Transaction Size Distribution
     const transactionAmounts = expenseTransactions
-      .map((t) => integerToAmount(Math.abs(t.amount)))
+      .map(t => integerToAmount(Math.abs(t.amount)))
       .sort((a, b) => a - b);
 
     const buckets = [
-      { range: "$0-$10", min: 0, max: 10 },
-      { range: "$10-$50", min: 10, max: 50 },
-      { range: "$50-$100", min: 50, max: 100 },
-      { range: "$100-$500", min: 100, max: 500 },
-      { range: "$500+", min: 500, max: Infinity },
-    ].map((bucket) => {
+      { range: '$0-$10', min: 0, max: 10 },
+      { range: '$10-$50', min: 10, max: 50 },
+      { range: '$50-$100', min: 50, max: 100 },
+      { range: '$100-$500', min: 100, max: 500 },
+      { range: '$500+', min: 500, max: Infinity },
+    ].map(bucket => {
       const count = transactionAmounts.filter(
-        (amt) => amt >= bucket.min && (bucket.max === Infinity || amt < bucket.max),
+        amt => amt >= bucket.min && (bucket.max === Infinity || amt < bucket.max),
       ).length;
       return {
         ...bucket,
@@ -546,38 +546,38 @@ export function transformToWrappedData(
     // Quarterly Comparison
     const quarterlyData: QuarterlyData[] = [
       {
-        quarter: "Q1",
-        months: ["January", "February", "March"],
+        quarter: 'Q1',
+        months: ['January', 'February', 'March'],
         income: 0,
         expenses: 0,
         netSavings: 0,
       },
       {
-        quarter: "Q2",
-        months: ["April", "May", "June"],
+        quarter: 'Q2',
+        months: ['April', 'May', 'June'],
         income: 0,
         expenses: 0,
         netSavings: 0,
       },
       {
-        quarter: "Q3",
-        months: ["July", "August", "September"],
+        quarter: 'Q3',
+        months: ['July', 'August', 'September'],
         income: 0,
         expenses: 0,
         netSavings: 0,
       },
       {
-        quarter: "Q4",
-        months: ["October", "November", "December"],
+        quarter: 'Q4',
+        months: ['October', 'November', 'December'],
         income: 0,
         expenses: 0,
         netSavings: 0,
       },
     ];
 
-    quarterlyData.forEach((quarter) => {
-      quarter.months.forEach((monthName) => {
-        const monthData = monthlyData.find((m) => m.month === monthName);
+    quarterlyData.forEach(quarter => {
+      quarter.months.forEach(monthName => {
+        const monthData = monthlyData.find(m => m.month === monthName);
         if (monthData) {
           quarter.income += monthData.income;
           quarter.expenses += monthData.expenses;
@@ -587,34 +587,34 @@ export function transformToWrappedData(
     });
 
     // Category Growth/Decline
-    const categoryGrowth: CategoryGrowth[] = topCategories.map((cat) => {
+    const categoryGrowth: CategoryGrowth[] = topCategories.map(cat => {
       const firstMonth =
-        cat.categoryId === "uncategorized" || cat.categoryId === "off-budget"
-          ? { month: "January", amount: 0 }
+        cat.categoryId === 'uncategorized' || cat.categoryId === 'off-budget'
+          ? { month: 'January', amount: 0 }
           : categoryTrends
-              .find((t) => t.categoryId === cat.categoryId)
-              ?.monthlyData.find((m) => m.month === "January") || { month: "January", amount: 0 };
+              .find(t => t.categoryId === cat.categoryId)
+              ?.monthlyData.find(m => m.month === 'January') || { month: 'January', amount: 0 };
       const lastMonth =
-        cat.categoryId === "uncategorized" || cat.categoryId === "off-budget"
-          ? { month: "December", amount: 0 }
+        cat.categoryId === 'uncategorized' || cat.categoryId === 'off-budget'
+          ? { month: 'December', amount: 0 }
           : categoryTrends
-              .find((t) => t.categoryId === cat.categoryId)
-              ?.monthlyData.find((m) => m.month === "December") || { month: "December", amount: 0 };
+              .find(t => t.categoryId === cat.categoryId)
+              ?.monthlyData.find(m => m.month === 'December') || { month: 'December', amount: 0 };
 
       const monthlyChanges = MONTHS.map((monthName, monthIndex) => {
         const monthAmount =
-          cat.categoryId === "uncategorized" || cat.categoryId === "off-budget"
+          cat.categoryId === 'uncategorized' || cat.categoryId === 'off-budget'
             ? 0
             : categoryTrends
-                .find((t) => t.categoryId === cat.categoryId)
-                ?.monthlyData.find((m) => m.month === monthName)?.amount || 0;
+                .find(t => t.categoryId === cat.categoryId)
+                ?.monthlyData.find(m => m.month === monthName)?.amount || 0;
         const prevMonthAmount =
           monthIndex > 0
-            ? cat.categoryId === "uncategorized" || cat.categoryId === "off-budget"
+            ? cat.categoryId === 'uncategorized' || cat.categoryId === 'off-budget'
               ? 0
               : categoryTrends
-                  .find((t) => t.categoryId === cat.categoryId)
-                  ?.monthlyData.find((m) => m.month === MONTHS[monthIndex - 1])?.amount || 0
+                  .find(t => t.categoryId === cat.categoryId)
+                  ?.monthlyData.find(m => m.month === MONTHS[monthIndex - 1])?.amount || 0
             : 0;
         const change = monthAmount - prevMonthAmount;
         const percentageChange = prevMonthAmount > 0 ? (change / prevMonthAmount) * 100 : 0;
@@ -646,20 +646,20 @@ export function transformToWrappedData(
     let cumulativeSavingsForMilestones = 0;
 
     // Track cumulative savings month by month to find when milestones are reached
-    monthlyData.forEach((monthData) => {
+    monthlyData.forEach(monthData => {
       const previousCumulative = cumulativeSavingsForMilestones;
       cumulativeSavingsForMilestones += monthData.netSavings;
 
       // Check each threshold to see if we crossed it this month
-      SAVINGS_MILESTONE_THRESHOLDS.forEach((threshold) => {
+      SAVINGS_MILESTONE_THRESHOLDS.forEach(threshold => {
         if (
           previousCumulative < threshold &&
           cumulativeSavingsForMilestones >= threshold &&
-          !savingsMilestones.find((m) => m.amount === threshold)
+          !savingsMilestones.find(m => m.amount === threshold)
         ) {
           // Use the last day of the month as the milestone date
           const monthIndex = MONTHS.indexOf(monthData.month);
-          const milestoneDate = format(endOfMonth(new Date(year, monthIndex, 1)), "yyyy-MM-dd");
+          const milestoneDate = format(endOfMonth(new Date(year, monthIndex, 1)), 'yyyy-MM-dd');
           savingsMilestones.push({
             milestone: `$${(threshold / 1000).toFixed(0)}k`,
             amount: threshold,
@@ -678,7 +678,7 @@ export function transformToWrappedData(
 
     // Calculate actual 2025 cumulative savings by month
     let actualCumulativeSavings = 0;
-    const actual2025Data = monthlyData.map((monthData) => {
+    const actual2025Data = monthlyData.map(monthData => {
       actualCumulativeSavings += monthData.netSavings;
       return {
         month: monthData.month,
@@ -694,18 +694,18 @@ export function transformToWrappedData(
         : netSavings;
 
     const nextYearMonths = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     const daysPerMonth = DAYS_PER_MONTH;
     let cumulativeSavings = december2025CumulativeSavings; // Start from December 2025

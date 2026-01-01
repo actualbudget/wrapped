@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 
 export function useAnimatedNumber(target: number, duration = 1000, decimals = 0): number {
   const [current, setCurrent] = useState(0);
@@ -8,19 +8,19 @@ export function useAnimatedNumber(target: number, duration = 1000, decimals = 0)
     let animationFrame: number;
 
     const raf =
-      typeof requestAnimationFrame !== "undefined"
+      typeof requestAnimationFrame !== 'undefined'
         ? requestAnimationFrame
-        : typeof globalThis !== "undefined" &&
+        : typeof globalThis !== 'undefined' &&
             (globalThis as unknown as { requestAnimationFrame?: typeof requestAnimationFrame })
               .requestAnimationFrame
           ? (globalThis as unknown as { requestAnimationFrame: typeof requestAnimationFrame })
               .requestAnimationFrame
-          : typeof window !== "undefined" && window.requestAnimationFrame
+          : typeof window !== 'undefined' && window.requestAnimationFrame
             ? window.requestAnimationFrame
             : null;
 
     if (!raf) {
-      console.error("requestAnimationFrame is not available");
+      console.error('requestAnimationFrame is not available');
       setCurrent(target);
       return;
     }
@@ -45,17 +45,17 @@ export function useAnimatedNumber(target: number, duration = 1000, decimals = 0)
 
     return () => {
       if (animationFrame) {
-        if (typeof cancelAnimationFrame !== "undefined") {
+        if (typeof cancelAnimationFrame !== 'undefined') {
           cancelAnimationFrame(animationFrame);
         } else if (
-          typeof globalThis !== "undefined" &&
+          typeof globalThis !== 'undefined' &&
           (globalThis as unknown as { cancelAnimationFrame?: typeof cancelAnimationFrame })
             .cancelAnimationFrame
         ) {
           (
             globalThis as unknown as { cancelAnimationFrame: typeof cancelAnimationFrame }
           ).cancelAnimationFrame(animationFrame);
-        } else if (typeof window !== "undefined" && window.cancelAnimationFrame) {
+        } else if (typeof window !== 'undefined' && window.cancelAnimationFrame) {
           window.cancelAnimationFrame(animationFrame);
         }
       }

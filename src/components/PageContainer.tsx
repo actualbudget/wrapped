@@ -1,7 +1,7 @@
-import { motion, AnimatePresence } from "framer-motion";
-import { ReactNode } from "react";
+import { motion, AnimatePresence } from 'framer-motion';
+import { ReactNode } from 'react';
 
-import styles from "./PageContainer.module.css";
+import styles from './PageContainer.module.css';
 
 interface PageContainerProps {
   id: string;
@@ -29,12 +29,12 @@ export function PageContainer({ id, children, className }: PageContainerProps) {
     <AnimatePresence mode="wait">
       <motion.div
         id={id}
-        className={`${styles.container} ${className || ""}`}
+        className={`${styles.container} ${className || ''}`}
         variants={pageVariants}
         initial="initial"
         animate="animate"
         exit="exit"
-        transition={{ duration: 0.3, ease: "easeInOut" }}
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
       >
         {children}
       </motion.div>

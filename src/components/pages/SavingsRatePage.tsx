@@ -1,17 +1,17 @@
-import { motion } from "framer-motion";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from "recharts";
+import { motion } from 'framer-motion';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
 
-import type { WrappedData } from "../../types";
+import type { WrappedData } from '../../types';
 
-import { useAnimatedNumber } from "../../hooks/useAnimatedNumber";
-import { PageContainer } from "../PageContainer";
-import styles from "./Page.module.css";
+import { useAnimatedNumber } from '../../hooks/useAnimatedNumber';
+import { PageContainer } from '../PageContainer';
+import styles from './Page.module.css';
 
 interface SavingsRatePageProps {
   data: WrappedData;
 }
 
-const SAVINGS_COLORS = ["#43e97b", "#764ba2"];
+const SAVINGS_COLORS = ['#43e97b', '#764ba2'];
 
 export function SavingsRatePage({ data }: SavingsRatePageProps) {
   const animatedRate = useAnimatedNumber(data.savingsRate, 1500, 1);
@@ -19,8 +19,8 @@ export function SavingsRatePage({ data }: SavingsRatePageProps) {
   const expensesAmount = data.totalExpenses;
 
   const chartData = [
-    { name: "Saved", value: savingsAmount },
-    { name: "Spent", value: expensesAmount },
+    { name: 'Saved', value: savingsAmount },
+    { name: 'Spent', value: expensesAmount },
   ];
 
   return (
@@ -46,7 +46,7 @@ export function SavingsRatePage({ data }: SavingsRatePageProps) {
           transition={{ delay: 0.3 }}
         >
           {data.netSavings >= 0
-            ? "Great job saving this year!"
+            ? 'Great job saving this year!'
             : "Let's work on improving this next year"}
         </motion.p>
 
@@ -54,9 +54,9 @@ export function SavingsRatePage({ data }: SavingsRatePageProps) {
           className={styles.percentage}
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
+          transition={{ delay: 0.4, type: 'spring', stiffness: 200 }}
         >
-          {animatedRate >= 0 ? "+" : ""}
+          {animatedRate >= 0 ? '+' : ''}
           {animatedRate.toFixed(1)}%
         </motion.div>
 
@@ -95,19 +95,19 @@ export function SavingsRatePage({ data }: SavingsRatePageProps) {
         >
           <div className={styles.statCard}>
             <div className={styles.statValue}>
-              ${savingsAmount.toLocaleString("en-US", { maximumFractionDigits: 0 })}
+              ${savingsAmount.toLocaleString('en-US', { maximumFractionDigits: 0 })}
             </div>
             <div className={styles.statLabel}>Total Saved</div>
           </div>
           <div className={styles.statCard}>
             <div className={styles.statValue}>
-              ${expensesAmount.toLocaleString("en-US", { maximumFractionDigits: 0 })}
+              ${expensesAmount.toLocaleString('en-US', { maximumFractionDigits: 0 })}
             </div>
             <div className={styles.statLabel}>Total Spent</div>
           </div>
           <div className={styles.statCard}>
             <div className={styles.statValue}>
-              ${data.totalIncome.toLocaleString("en-US", { maximumFractionDigits: 0 })}
+              ${data.totalIncome.toLocaleString('en-US', { maximumFractionDigits: 0 })}
             </div>
             <div className={styles.statLabel}>Total Income</div>
           </div>
@@ -115,10 +115,10 @@ export function SavingsRatePage({ data }: SavingsRatePageProps) {
 
         <motion.p
           style={{
-            marginTop: "2rem",
-            fontSize: "1rem",
-            color: "rgba(255, 255, 255, 0.7)",
-            textAlign: "center",
+            marginTop: '2rem',
+            fontSize: '1rem',
+            color: 'rgba(255, 255, 255, 0.7)',
+            textAlign: 'center',
           }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

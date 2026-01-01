@@ -1,6 +1,6 @@
-import "@testing-library/jest-dom";
-import { cleanup } from "@testing-library/react";
-import { afterEach } from "vitest";
+import '@testing-library/jest-dom';
+import { cleanup } from '@testing-library/react';
+import { afterEach } from 'vitest';
 
 // Polyfill requestAnimationFrame and cancelAnimationFrame for test environment
 // These need to be available before any modules that use them are imported
@@ -26,7 +26,7 @@ const defineGlobal = (name: string, value: unknown) => {
     value,
   });
 
-  if (typeof window !== "undefined") {
+  if (typeof window !== 'undefined') {
     Object.defineProperty(window, name, {
       writable: true,
       configurable: true,
@@ -35,8 +35,8 @@ const defineGlobal = (name: string, value: unknown) => {
   }
 };
 
-defineGlobal("requestAnimationFrame", rafPolyfill);
-defineGlobal("cancelAnimationFrame", cafPolyfill);
+defineGlobal('requestAnimationFrame', rafPolyfill);
+defineGlobal('cancelAnimationFrame', cafPolyfill);
 
 // Cleanup after each test
 afterEach(() => {

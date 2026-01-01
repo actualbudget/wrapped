@@ -1,37 +1,37 @@
-import JSZip from "jszip";
+import JSZip from 'jszip';
 
-import type { Transaction, Account, Category } from "../types";
+import type { Transaction, Account, Category } from '../types';
 
 import {
   DatabaseError,
   FileValidationError,
   getErrorMessage,
   isFileApiError,
-} from "../types/errors";
-import { MAX_FILE_SIZE } from "../utils/constants";
+} from '../types/errors';
+import { MAX_FILE_SIZE } from '../utils/constants';
 
-type SqlJsDatabase = Awaited<ReturnType<typeof import("sql.js").default>>["Database"];
+type SqlJsDatabase = Awaited<ReturnType<typeof import('sql.js').default>>['Database'];
 
-let sqlJs: Awaited<ReturnType<typeof import("sql.js").default>> | null = null;
+let sqlJs: Awaited<ReturnType<typeof import('sql.js').default>> | null = null;
 let db: InstanceType<SqlJsDatabase> | null = null; // sql.js Database instance
 
 /**
  * Initialize sql.js
  */
-async function initSqlJsLib(): Promise<Awaited<ReturnType<typeof import("sql.js").default>>> {
+async function initSqlJsLib(): Promise<Awaited<ReturnType<typeof import('sql.js').default>>> {
   if (sqlJs) {
     return sqlJs;
   }
 
-  console.log("Initializing sql.js...");
+  console.log('Initializing sql.js...');
 
   // Dynamically import sql.js
-  const sqlJsModule = await import("sql.js");
+  const sqlJsModule = await import('sql.js');
 
   // The default export is the initSqlJs function
   const initFn = sqlJsModule.default;
 
-  if (typeof initFn !== "function") {
+  if (typeof initFn !== 'function') {
     throw new DatabaseError(
       `Failed to load sql.js: default export is not a function. Got type: ${typeof initFn}`,
     );
@@ -46,7 +46,7 @@ async function initSqlJsLib(): Promise<Awaited<ReturnType<typeof import("sql.js"
     },
   });
 
-  console.log("sql.js initialized");
+  console.log('sql.js initialized');
   return sqlJs;
 }
 
@@ -63,7 +63,7 @@ export async function initialize(file: File): Promise<void> {
     }
 
     if (file.size === 0) {
-      throw new FileValidationError("File is empty");
+      throw new FileValidationError('File is empty');
     }
 
     // Close existing database if any
@@ -77,14 +77,14 @@ export async function initialize(file: File): Promise<void> {
     const zip = await JSZip.loadAsync(arrayBuffer);
 
     // Extract db.sqlite
-    const dbFile = zip.file("db.sqlite");
+    const dbFile = zip.file('db.sqlite');
     if (!dbFile) {
-      throw new FileValidationError("db.sqlite not found in zip file");
+      throw new FileValidationError('db.sqlite not found in zip file');
     }
 
-    const dbData = await dbFile.async("uint8array");
+    const dbData = await dbFile.async('uint8array');
     if (dbData.length === 0) {
-      throw new FileValidationError("db.sqlite file is empty");
+      throw new FileValidationError('db.sqlite file is empty');
     }
 
     // Load the database into sql.js
@@ -104,7 +104,7 @@ export async function initialize(file: File): Promise<void> {
  */
 function query(sql: string, params: unknown[] = []): Record<string, unknown>[] {
   if (!db) {
-    throw new DatabaseError("Database not loaded. Call initialize() first.");
+    throw new DatabaseError('Database not loaded. Call initialize() first.');
   }
 
   const stmt = db.prepare(sql);
@@ -125,12 +125,12 @@ function query(sql: string, params: unknown[] = []): Record<string, unknown>[] {
  */
 export async function getAccounts(): Promise<Account[]> {
   if (!db) {
-    throw new DatabaseError("Database not loaded. Call initialize() first.");
+    throw new DatabaseError('Database not loaded. Call initialize() first.');
   }
 
   try {
-    const accounts = query("SELECT id, name, type, offbudget FROM accounts WHERE tombstone = 0");
-    return accounts.map((acc) => ({
+    const accounts = query('SELECT id, name, type, offbudget FROM accounts WHERE tombstone = 0');
+    return accounts.map(acc => ({
       id: String(acc.id),
       name: String(acc.name),
       type: String(acc.type),
@@ -140,7 +140,7 @@ export async function getAccounts(): Promise<Account[]> {
     if (isFileApiError(error)) {
       throw error;
     }
-    throw new DatabaseError("Failed to get accounts", error);
+    throw new DatabaseError('Failed to get accounts', error);
   }
 }
 
@@ -149,24 +149,24 @@ export async function getAccounts(): Promise<Account[]> {
  */
 export async function getCategories(): Promise<Category[]> {
   if (!db) {
-    throw new DatabaseError("Database not loaded. Call initialize() first.");
+    throw new DatabaseError('Database not loaded. Call initialize() first.');
   }
 
   try {
     // Categories table uses 'cat_group' column (not 'group_id')
     // Fetch both active and deleted categories
-    const categories = query("SELECT id, name, is_income, cat_group, tombstone FROM categories");
+    const categories = query('SELECT id, name, is_income, cat_group, tombstone FROM categories');
 
     // Get category groups
     let groupMap = new Map<string, string>();
     try {
-      const groups = query("SELECT id, name FROM category_groups WHERE tombstone = 0");
-      groupMap = new Map(groups.map((g) => [String(g.id), String(g.name)]));
+      const groups = query('SELECT id, name FROM category_groups WHERE tombstone = 0');
+      groupMap = new Map(groups.map(g => [String(g.id), String(g.name)]));
     } catch {
       // No category_groups table, that's okay
     }
 
-    return categories.map((cat) => ({
+    return categories.map(cat => ({
       id: String(cat.id),
       name: String(cat.name),
       group: cat.cat_group ? groupMap.get(String(cat.cat_group)) : undefined,
@@ -177,7 +177,7 @@ export async function getCategories(): Promise<Category[]> {
     if (isFileApiError(error)) {
       throw error;
     }
-    throw new DatabaseError("Failed to get categories", error);
+    throw new DatabaseError('Failed to get categories', error);
   }
 }
 
@@ -190,7 +190,7 @@ async function getTransactions(
   endDate?: string,
 ): Promise<Transaction[]> {
   if (!db) {
-    throw new DatabaseError("Database not loaded. Call initialize() first.");
+    throw new DatabaseError('Database not loaded. Call initialize() first.');
   }
 
   try {
@@ -200,20 +200,20 @@ async function getTransactions(
     // - payee_mapping.id = transactions.description, payee_mapping.targetId = payees.id
 
     // Convert date strings to YYYYMMDD integer format for comparison
-    let dateFilter = "";
+    let dateFilter = '';
     const params: unknown[] = [accountId];
 
     if (startDate) {
       // Convert YYYY-MM-DD to YYYYMMDD integer
-      const startDateInt = parseInt(startDate.replace(/-/g, ""), 10);
-      dateFilter += " AND date >= ?";
+      const startDateInt = parseInt(startDate.replace(/-/g, ''), 10);
+      dateFilter += ' AND date >= ?';
       params.push(startDateInt);
     }
 
     if (endDate) {
       // Convert YYYY-MM-DD to YYYYMMDD integer
-      const endDateInt = parseInt(endDate.replace(/-/g, ""), 10);
-      dateFilter += " AND date <= ?";
+      const endDateInt = parseInt(endDate.replace(/-/g, ''), 10);
+      dateFilter += ' AND date <= ?';
       params.push(endDateInt);
     }
 
@@ -228,15 +228,15 @@ async function getTransactions(
 
     try {
       // Get all payees (including deleted ones)
-      const payees = query("SELECT id, name, tombstone FROM payees");
+      const payees = query('SELECT id, name, tombstone FROM payees');
       payeeInfoMap = new Map(
-        payees.map((p) => [String(p.id), { name: String(p.name), tombstone: p.tombstone === 1 }]),
+        payees.map(p => [String(p.id), { name: String(p.name), tombstone: p.tombstone === 1 }]),
       );
-      payeeMap = new Map(payees.map((p) => [String(p.id), String(p.name)]));
+      payeeMap = new Map(payees.map(p => [String(p.id), String(p.name)]));
 
       // Get payee mappings: description UUID -> payee ID
-      const payeeMappings = query("SELECT id, targetId FROM payee_mapping");
-      payeeMappings.forEach((pm) => {
+      const payeeMappings = query('SELECT id, targetId FROM payee_mapping');
+      payeeMappings.forEach(pm => {
         descriptionToPayeeMap.set(String(pm.id), String(pm.targetId));
       });
     } catch {
@@ -245,9 +245,9 @@ async function getTransactions(
     }
 
     // Get category names (including deleted ones)
-    const categories = query("SELECT id, name, tombstone FROM categories");
+    const categories = query('SELECT id, name, tombstone FROM categories');
     const categoryMap = new Map(
-      categories.map((c) => [String(c.id), { name: String(c.name), tombstone: c.tombstone === 1 }]),
+      categories.map(c => [String(c.id), { name: String(c.name), tombstone: c.tombstone === 1 }]),
     );
 
     const result: Transaction[] = [];
@@ -296,7 +296,7 @@ async function getTransactions(
     if (isFileApiError(error)) {
       throw error;
     }
-    throw new DatabaseError("Failed to get transactions", error);
+    throw new DatabaseError('Failed to get transactions', error);
   }
 }
 
@@ -305,7 +305,7 @@ async function getTransactions(
  */
 export async function getAllTransactionsForYear(year: number): Promise<Transaction[]> {
   if (!db) {
-    throw new DatabaseError("Database not loaded. Call initialize() first.");
+    throw new DatabaseError('Database not loaded. Call initialize() first.');
   }
 
   try {
@@ -330,7 +330,7 @@ export async function getAllTransactionsForYear(year: number): Promise<Transacti
     if (isFileApiError(error)) {
       throw error;
     }
-    throw new DatabaseError("Failed to get all transactions", error);
+    throw new DatabaseError('Failed to get all transactions', error);
   }
 }
 
@@ -341,13 +341,13 @@ export async function getPayees(): Promise<
   Array<{ id: string; name: string; tombstone?: boolean; transfer_acct?: string }>
 > {
   if (!db) {
-    throw new DatabaseError("Database not loaded. Call initialize() first.");
+    throw new DatabaseError('Database not loaded. Call initialize() first.');
   }
 
   try {
     // Fetch both active and deleted payees, including transfer_acct field
-    const payees = query("SELECT id, name, tombstone, transfer_acct FROM payees");
-    return payees.map((p) => ({
+    const payees = query('SELECT id, name, tombstone, transfer_acct FROM payees');
+    return payees.map(p => ({
       id: String(p.id),
       name: String(p.name),
       tombstone: p.tombstone === 1, // Include tombstone flag
@@ -357,7 +357,7 @@ export async function getPayees(): Promise<
     if (isFileApiError(error)) {
       throw error;
     }
-    throw new DatabaseError("Failed to get payees", error);
+    throw new DatabaseError('Failed to get payees', error);
   }
 }
 

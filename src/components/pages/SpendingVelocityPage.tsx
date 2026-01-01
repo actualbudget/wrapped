@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion } from 'framer-motion';
 import {
   LineChart,
   Line,
@@ -7,13 +7,13 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-} from "recharts";
+} from 'recharts';
 
-import type { WrappedData } from "../../types";
+import type { WrappedData } from '../../types';
 
-import { useAnimatedNumber } from "../../hooks/useAnimatedNumber";
-import { PageContainer } from "../PageContainer";
-import styles from "./Page.module.css";
+import { useAnimatedNumber } from '../../hooks/useAnimatedNumber';
+import { PageContainer } from '../PageContainer';
+import styles from './Page.module.css';
 
 interface SpendingVelocityPageProps {
   data: WrappedData;
@@ -22,8 +22,8 @@ interface SpendingVelocityPageProps {
 export function SpendingVelocityPage({ data }: SpendingVelocityPageProps) {
   const animatedDailyAverage = useAnimatedNumber(data.spendingVelocity.dailyAverage, 1500, 2);
 
-  const chartData = data.spendingVelocity.weeklyData.map((week) => ({
-    week: week.week.replace("Week ", "W"),
+  const chartData = data.spendingVelocity.weeklyData.map(week => ({
+    week: week.week.replace('Week ', 'W'),
     averagePerDay: week.averagePerDay,
   }));
 
@@ -56,7 +56,7 @@ export function SpendingVelocityPage({ data }: SpendingVelocityPageProps) {
           className={styles.largeNumber}
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
+          transition={{ delay: 0.4, type: 'spring', stiffness: 200 }}
         >
           ${animatedDailyAverage.toFixed(2)}/day
         </motion.div>
@@ -68,18 +68,18 @@ export function SpendingVelocityPage({ data }: SpendingVelocityPageProps) {
               <XAxis dataKey="week" stroke="rgba(255, 255, 255, 0.8)" />
               <YAxis
                 stroke="rgba(255, 255, 255, 0.8)"
-                tickFormatter={(value) => `$${Math.round(value).toLocaleString("en-US")}`}
+                tickFormatter={value => `$${Math.round(value).toLocaleString('en-US')}`}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "rgba(0, 0, 0, 0.9)",
-                  border: "none",
-                  borderRadius: "8px",
-                  color: "white",
+                  backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: 'white',
                 }}
                 formatter={(value: number | undefined) => [
                   `$${Math.round((value ?? 0) * 100) / 100}`,
-                  "Avg/Day",
+                  'Avg/Day',
                 ]}
               />
               <Line
@@ -105,9 +105,9 @@ export function SpendingVelocityPage({ data }: SpendingVelocityPageProps) {
             <div className={styles.statLabel}>Fastest Spending Period</div>
             <div
               style={{
-                fontSize: "0.9rem",
-                color: "rgba(255, 255, 255, 0.6)",
-                marginTop: "0.5rem",
+                fontSize: '0.9rem',
+                color: 'rgba(255, 255, 255, 0.6)',
+                marginTop: '0.5rem',
               }}
             >
               ${data.spendingVelocity.fastestPeriod.averagePerDay.toFixed(2)}/day
@@ -118,9 +118,9 @@ export function SpendingVelocityPage({ data }: SpendingVelocityPageProps) {
             <div className={styles.statLabel}>Slowest Spending Period</div>
             <div
               style={{
-                fontSize: "0.9rem",
-                color: "rgba(255, 255, 255, 0.6)",
-                marginTop: "0.5rem",
+                fontSize: '0.9rem',
+                color: 'rgba(255, 255, 255, 0.6)',
+                marginTop: '0.5rem',
               }}
             >
               ${data.spendingVelocity.slowestPeriod.averagePerDay.toFixed(2)}/day

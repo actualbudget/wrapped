@@ -1,5 +1,5 @@
-import { motion } from "framer-motion";
-import { useState } from "react";
+import { motion } from 'framer-motion';
+import { useState } from 'react';
 import {
   LineChart,
   Line,
@@ -10,42 +10,42 @@ import {
   Legend,
   ResponsiveContainer,
   TooltipProps,
-} from "recharts";
+} from 'recharts';
 
-import type { WrappedData } from "../../types";
+import type { WrappedData } from '../../types';
 
-import { PageContainer } from "../PageContainer";
-import styles from "./Page.module.css";
+import { PageContainer } from '../PageContainer';
+import styles from './Page.module.css';
 
 interface CategoryTrendsPageProps {
   data: WrappedData;
 }
 
 const TREND_COLORS = [
-  "#667eea",
-  "#764ba2",
-  "#f093fb",
-  "#4facfe",
-  "#43e97b",
-  "#fa709a",
-  "#fee140",
-  "#30cfd0",
-  "#a8edea",
-  "#fed6e3",
+  '#667eea',
+  '#764ba2',
+  '#f093fb',
+  '#4facfe',
+  '#43e97b',
+  '#fa709a',
+  '#fee140',
+  '#30cfd0',
+  '#a8edea',
+  '#fed6e3',
 ];
 
 export function CategoryTrendsPage({ data }: CategoryTrendsPageProps) {
   const [hiddenCategories, setHiddenCategories] = useState<Set<string>>(new Set());
 
   // Transform data for the chart
-  const months = data.categoryTrends[0]?.monthlyData.map((m) => m.month.substring(0, 3)) || [];
+  const months = data.categoryTrends[0]?.monthlyData.map(m => m.month.substring(0, 3)) || [];
 
   const chartData = months.map((month, index) => {
     const dataPoint: Record<string, string | number> = { month };
 
     // First, collect all visible category values for this month to find the max
     const visibleValues: number[] = [];
-    data.categoryTrends.forEach((trend) => {
+    data.categoryTrends.forEach(trend => {
       const isHidden = hiddenCategories.has(trend.categoryId);
       if (!isHidden) {
         const value = trend.monthlyData[index]?.amount || 0;
@@ -56,7 +56,7 @@ export function CategoryTrendsPage({ data }: CategoryTrendsPageProps) {
 
     // Now set values - use max visible value for hidden categories
     // Also store original values for tooltip
-    data.categoryTrends.forEach((trend) => {
+    data.categoryTrends.forEach(trend => {
       const isHidden = hiddenCategories.has(trend.categoryId);
       const originalValue = trend.monthlyData[index]?.amount || 0;
 
@@ -73,7 +73,7 @@ export function CategoryTrendsPage({ data }: CategoryTrendsPageProps) {
   });
 
   const handleCategoryClick = (categoryId: string) => {
-    setHiddenCategories((prev) => {
+    setHiddenCategories(prev => {
       const newSet = new Set(prev);
       if (newSet.has(categoryId)) {
         newSet.delete(categoryId);
@@ -97,14 +97,14 @@ export function CategoryTrendsPage({ data }: CategoryTrendsPageProps) {
     return (
       <div
         style={{
-          backgroundColor: "rgba(0, 0, 0, 0.9)",
-          border: "none",
-          borderRadius: "8px",
-          padding: "12px",
-          color: "#ffffff",
+          backgroundColor: 'rgba(0, 0, 0, 0.9)',
+          border: 'none',
+          borderRadius: '8px',
+          padding: '12px',
+          color: '#ffffff',
         }}
       >
-        <p style={{ margin: "0 0 8px 0", color: "#ffffff", fontWeight: "bold" }}>{label}</p>
+        <p style={{ margin: '0 0 8px 0', color: '#ffffff', fontWeight: 'bold' }}>{label}</p>
         {payload.map(
           (
             entry: { value?: number; dataKey?: string; name?: string; color?: string },
@@ -112,11 +112,11 @@ export function CategoryTrendsPage({ data }: CategoryTrendsPageProps) {
           ) => {
             if (!entry.value && entry.value !== 0) return null;
 
-            const trend = data.categoryTrends.find((t) => t.categoryName === entry.dataKey);
+            const trend = data.categoryTrends.find(t => t.categoryName === entry.dataKey);
             const isHidden = trend && hiddenCategories.has(trend.categoryId);
 
             // Find the month index to get original value
-            const monthIndex = chartData.findIndex((d) => d.month === label);
+            const monthIndex = chartData.findIndex(d => d.month === label);
             let displayValue = entry.value;
 
             if (isHidden && trend && monthIndex >= 0) {
@@ -130,10 +130,10 @@ export function CategoryTrendsPage({ data }: CategoryTrendsPageProps) {
             return (
               <p
                 key={entry.dataKey || entry.name || index}
-                style={{ margin: "4px 0", color: entry.color || "#ffffff" }}
+                style={{ margin: '4px 0', color: entry.color || '#ffffff' }}
               >
-                <span style={{ marginRight: "8px" }}>{entry.name}:</span>$
-                {Math.round(displayValue).toLocaleString("en-US", { maximumFractionDigits: 0 })}
+                <span style={{ marginRight: '8px' }}>{entry.name}:</span>$
+                {Math.round(displayValue).toLocaleString('en-US', { maximumFractionDigits: 0 })}
               </p>
             );
           },
@@ -174,24 +174,22 @@ export function CategoryTrendsPage({ data }: CategoryTrendsPageProps) {
               <XAxis dataKey="month" stroke="rgba(255, 255, 255, 0.8)" />
               <YAxis
                 stroke="rgba(255, 255, 255, 0.8)"
-                tickFormatter={(value) => `$${Math.round(value).toLocaleString("en-US")}`}
+                tickFormatter={value => `$${Math.round(value).toLocaleString('en-US')}`}
               />
               <Tooltip content={<CustomTooltip />} />
               <Legend
-                wrapperStyle={{ paddingTop: "20px" }}
+                wrapperStyle={{ paddingTop: '20px' }}
                 content={({ payload }) => (
                   <div
                     style={{
-                      display: "flex",
-                      flexWrap: "wrap",
-                      justifyContent: "center",
-                      gap: "16px",
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      justifyContent: 'center',
+                      gap: '16px',
                     }}
                   >
                     {payload?.map((entry, index) => {
-                      const trend = data.categoryTrends.find(
-                        (t) => t.categoryName === entry.dataKey,
-                      );
+                      const trend = data.categoryTrends.find(t => t.categoryName === entry.dataKey);
                       const isHidden = trend && hiddenCategories.has(trend.categoryId);
                       return (
                         <button
@@ -199,35 +197,35 @@ export function CategoryTrendsPage({ data }: CategoryTrendsPageProps) {
                           type="button"
                           onClick={() => trend && handleCategoryClick(trend.categoryId)}
                           style={{
-                            display: "flex",
-                            alignItems: "center",
-                            cursor: "pointer",
+                            display: 'flex',
+                            alignItems: 'center',
+                            cursor: 'pointer',
                             opacity: isHidden ? 0.3 : 1,
-                            padding: "4px 8px",
-                            borderRadius: "4px",
-                            transition: "opacity 0.2s",
-                            border: "none",
-                            background: "transparent",
-                            font: "inherit",
-                            color: "inherit",
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            transition: 'opacity 0.2s',
+                            border: 'none',
+                            background: 'transparent',
+                            font: 'inherit',
+                            color: 'inherit',
                           }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
+                          onMouseEnter={e => {
+                            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
                           }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = "transparent";
+                          onMouseLeave={e => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
                           }}
                         >
                           <div
                             style={{
-                              width: "12px",
-                              height: "12px",
+                              width: '12px',
+                              height: '12px',
                               backgroundColor: entry.color as string,
-                              marginRight: "6px",
+                              marginRight: '6px',
                               opacity: isHidden ? 0.3 : 1,
                             }}
                           />
-                          <span style={{ color: "rgba(255, 255, 255, 0.8)", fontSize: "0.9rem" }}>
+                          <span style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '0.9rem' }}>
                             {entry.value}
                           </span>
                         </button>
@@ -249,7 +247,7 @@ export function CategoryTrendsPage({ data }: CategoryTrendsPageProps) {
                     dot={{ r: isHidden ? 0 : 4 }}
                     activeDot={{ r: isHidden ? 0 : 6 }}
                     onClick={() => handleCategoryClick(trend.categoryId)}
-                    style={{ cursor: "pointer" }}
+                    style={{ cursor: 'pointer' }}
                     animationDuration={1000}
                   />
                 );

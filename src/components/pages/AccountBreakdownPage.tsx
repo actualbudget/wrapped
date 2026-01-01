@@ -1,25 +1,25 @@
-import { motion } from "framer-motion";
-import { useState, useMemo } from "react";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, TooltipProps } from "recharts";
+import { motion } from 'framer-motion';
+import { useState, useMemo } from 'react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, TooltipProps } from 'recharts';
 
-import type { WrappedData } from "../../types";
+import type { WrappedData } from '../../types';
 
-import { PageContainer } from "../PageContainer";
-import styles from "./Page.module.css";
+import { PageContainer } from '../PageContainer';
+import styles from './Page.module.css';
 
 interface AccountBreakdownPageProps {
   data: WrappedData;
 }
 
 const ACCOUNT_COLORS = [
-  "#667eea",
-  "#764ba2",
-  "#f093fb",
-  "#4facfe",
-  "#43e97b",
-  "#fa709a",
-  "#fee140",
-  "#30cfd0",
+  '#667eea',
+  '#764ba2',
+  '#f093fb',
+  '#4facfe',
+  '#43e97b',
+  '#fa709a',
+  '#fee140',
+  '#30cfd0',
 ];
 
 const CustomTooltip = ({
@@ -44,22 +44,22 @@ const CustomTooltip = ({
   return (
     <div
       style={{
-        backgroundColor: "rgba(0, 0, 0, 0.9)",
-        border: "none",
-        borderRadius: "8px",
-        padding: "12px",
-        color: "white",
+        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+        border: 'none',
+        borderRadius: '8px',
+        padding: '12px',
+        color: 'white',
       }}
     >
-      <p style={{ margin: "0 0 8px 0", color: "#ffffff", fontWeight: "bold" }}>
-        {data.name || "Account"}
+      <p style={{ margin: '0 0 8px 0', color: '#ffffff', fontWeight: 'bold' }}>
+        {data.name || 'Account'}
       </p>
-      <p style={{ margin: "4px 0", color: data.color || "#ffffff" }}>
-        <span style={{ marginRight: "8px" }}>Spending:</span>$
-        {Math.round(data.value ?? 0).toLocaleString("en-US")}
+      <p style={{ margin: '4px 0', color: data.color || '#ffffff' }}>
+        <span style={{ marginRight: '8px' }}>Spending:</span>$
+        {Math.round(data.value ?? 0).toLocaleString('en-US')}
       </p>
       {transactionCount !== undefined && (
-        <p style={{ margin: "4px 0", color: "rgba(255, 255, 255, 0.8)" }}>
+        <p style={{ margin: '4px 0', color: 'rgba(255, 255, 255, 0.8)' }}>
           {transactionCount} transactions
           {percentage !== undefined && ` (${percentage.toFixed(1)}%)`}
         </p>
@@ -73,7 +73,7 @@ export function AccountBreakdownPage({ data }: AccountBreakdownPageProps) {
 
   // Create full chart data with account IDs for tracking
   const fullChartData = useMemo(() => {
-    return data.accountBreakdown.map((account) => ({
+    return data.accountBreakdown.map(account => ({
       accountId: account.accountId,
       name: account.accountName,
       value: account.totalSpending,
@@ -84,11 +84,11 @@ export function AccountBreakdownPage({ data }: AccountBreakdownPageProps) {
 
   // Filter out hidden accounts for the pie chart
   const chartData = useMemo(() => {
-    return fullChartData.filter((account) => !hiddenAccounts.has(account.accountId));
+    return fullChartData.filter(account => !hiddenAccounts.has(account.accountId));
   }, [fullChartData, hiddenAccounts]);
 
   const handleAccountClick = (accountId: string) => {
-    setHiddenAccounts((prev) => {
+    setHiddenAccounts(prev => {
       const newSet = new Set(prev);
       if (newSet.has(accountId)) {
         newSet.delete(accountId);
@@ -124,10 +124,10 @@ export function AccountBreakdownPage({ data }: AccountBreakdownPageProps) {
           Spending distribution across your accounts
         </motion.p>
 
-        <div className={styles.chartContainer} style={{ overflow: "hidden" }}>
+        <div className={styles.chartContainer} style={{ overflow: 'hidden' }}>
           <ResponsiveContainer width="100%" height={450}>
             <PieChart
-              key={Array.from(hiddenAccounts).sort().join(",")}
+              key={Array.from(hiddenAccounts).sort().join(',')}
               margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
             >
               <Pie
@@ -142,10 +142,10 @@ export function AccountBreakdownPage({ data }: AccountBreakdownPageProps) {
                 animationBegin={0}
                 animationDuration={1000}
               >
-                {chartData.map((entry) => {
+                {chartData.map(entry => {
                   // Find the original index in fullChartData to maintain color consistency
                   const originalIndex = fullChartData.findIndex(
-                    (a) => a.accountId === entry.accountId,
+                    a => a.accountId === entry.accountId,
                   );
                   return (
                     <Cell
@@ -157,14 +157,14 @@ export function AccountBreakdownPage({ data }: AccountBreakdownPageProps) {
               </Pie>
               <Tooltip content={<CustomTooltip />} />
               <Legend
-                wrapperStyle={{ paddingTop: "10px" }}
+                wrapperStyle={{ paddingTop: '10px' }}
                 content={() => (
                   <div
                     style={{
-                      display: "flex",
-                      flexWrap: "wrap",
-                      justifyContent: "center",
-                      gap: "8px",
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      justifyContent: 'center',
+                      gap: '8px',
                     }}
                   >
                     {fullChartData.map((account, index) => {
@@ -176,35 +176,35 @@ export function AccountBreakdownPage({ data }: AccountBreakdownPageProps) {
                           type="button"
                           onClick={() => handleAccountClick(account.accountId)}
                           style={{
-                            display: "flex",
-                            alignItems: "center",
-                            cursor: "pointer",
+                            display: 'flex',
+                            alignItems: 'center',
+                            cursor: 'pointer',
                             opacity: isHidden ? 0.3 : 1,
-                            padding: "2px 4px",
-                            borderRadius: "4px",
-                            transition: "opacity 0.2s",
-                            border: "none",
-                            background: "transparent",
-                            font: "inherit",
-                            color: "inherit",
+                            padding: '2px 4px',
+                            borderRadius: '4px',
+                            transition: 'opacity 0.2s',
+                            border: 'none',
+                            background: 'transparent',
+                            font: 'inherit',
+                            color: 'inherit',
                           }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
+                          onMouseEnter={e => {
+                            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
                           }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = "transparent";
+                          onMouseLeave={e => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
                           }}
                         >
                           <div
                             style={{
-                              width: "12px",
-                              height: "12px",
+                              width: '12px',
+                              height: '12px',
                               backgroundColor: color,
-                              marginRight: "3px",
+                              marginRight: '3px',
                               opacity: isHidden ? 0.3 : 1,
                             }}
                           />
-                          <span style={{ color: "rgba(255, 255, 255, 0.8)", fontSize: "0.9rem" }}>
+                          <span style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '0.9rem' }}>
                             {account.name}
                           </span>
                         </button>
@@ -223,17 +223,17 @@ export function AccountBreakdownPage({ data }: AccountBreakdownPageProps) {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
         >
-          {data.accountBreakdown.slice(0, 3).map((account) => (
+          {data.accountBreakdown.slice(0, 3).map(account => (
             <div key={account.accountId} className={styles.statCard}>
               <div className={styles.statValue}>
-                ${account.totalSpending.toLocaleString("en-US", { maximumFractionDigits: 0 })}
+                ${account.totalSpending.toLocaleString('en-US', { maximumFractionDigits: 0 })}
               </div>
               <div className={styles.statLabel}>{account.accountName}</div>
               <div
                 style={{
-                  fontSize: "0.9rem",
-                  color: "rgba(255, 255, 255, 0.6)",
-                  marginTop: "0.5rem",
+                  fontSize: '0.9rem',
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  marginTop: '0.5rem',
                 }}
               >
                 {account.transactionCount} transactions ({account.percentage.toFixed(1)}%)

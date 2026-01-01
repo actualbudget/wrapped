@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion } from 'framer-motion';
 import {
   LineChart,
   Line,
@@ -9,13 +9,13 @@ import {
   ResponsiveContainer,
   ReferenceLine,
   Label,
-} from "recharts";
+} from 'recharts';
 
-import type { WrappedData } from "../../types";
+import type { WrappedData } from '../../types';
 
-import { useAnimatedNumber } from "../../hooks/useAnimatedNumber";
-import { PageContainer } from "../PageContainer";
-import styles from "./Page.module.css";
+import { useAnimatedNumber } from '../../hooks/useAnimatedNumber';
+import { PageContainer } from '../PageContainer';
+import styles from './Page.module.css';
 
 interface FutureProjectionPageProps {
   data: WrappedData;
@@ -36,28 +36,28 @@ export function FutureProjectionPage({ data }: FutureProjectionPageProps) {
       : 0;
 
   // Prepare 2025 actual data (first 11 months, only actual values)
-  const actual2025Data = data.futureProjection.actual2025Data.slice(0, -1).map((item) => ({
+  const actual2025Data = data.futureProjection.actual2025Data.slice(0, -1).map(item => ({
     month: item.month.substring(0, 3),
     fullMonth: item.month,
-    "2025 Actual": item.cumulativeSavings,
-    "2026 Projected": null as number | null,
+    '2025 Actual': item.cumulativeSavings,
+    '2026 Projected': null as number | null,
   }));
 
   // Add December 2025 as a connecting point with both values equal
   const december2025Point = {
-    month: "Dec",
-    fullMonth: "December",
-    "2025 Actual": december2025Value,
-    "2026 Projected": december2025Value,
+    month: 'Dec',
+    fullMonth: 'December',
+    '2025 Actual': december2025Value,
+    '2026 Projected': december2025Value,
   };
 
   // Prepare 2026 projected data (all 12 months starting from January 2026)
   // The data transformation already ensures January 2026 starts at December 2025's value
-  const projected2026Data = data.futureProjection.monthlyProjections.map((projection) => ({
+  const projected2026Data = data.futureProjection.monthlyProjections.map(projection => ({
     month: projection.month.substring(0, 3),
     fullMonth: projection.month,
-    "2025 Actual": null as number | null,
-    "2026 Projected": projection.cumulativeSavings,
+    '2025 Actual': null as number | null,
+    '2026 Projected': projection.cumulativeSavings,
   }));
 
   // Combine both datasets with the connecting point
@@ -65,50 +65,50 @@ export function FutureProjectionPage({ data }: FutureProjectionPageProps) {
 
   // Find milestone points on the chart - map milestones to chart data points
   const milestonePoints = data.savingsMilestones
-    .map((milestone) => {
+    .map(milestone => {
       // Find the month when the milestone was reached by checking actual2025Data
       const milestoneDate = new Date(milestone.date);
       const monthNames = [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
       ];
       const milestoneMonth = monthNames[milestoneDate.getMonth()];
 
       // Find the corresponding data point in chartData where the milestone was reached
       // Check actual2025Data first, then projected data
       const actualDataPoint = chartData.find(
-        (point) => point.month === milestoneMonth && point["2025 Actual"] !== null,
+        point => point.month === milestoneMonth && point['2025 Actual'] !== null,
       );
 
       if (actualDataPoint) {
         return {
           ...milestone,
           month: milestoneMonth,
-          value: actualDataPoint["2025 Actual"] ?? 0,
+          value: actualDataPoint['2025 Actual'] ?? 0,
           dataPoint: actualDataPoint,
         };
       }
 
       // If not found in actual data, check projected data
       const projectedDataPoint = chartData.find(
-        (point) => point.month === milestoneMonth && point["2026 Projected"] !== null,
+        point => point.month === milestoneMonth && point['2026 Projected'] !== null,
       );
 
       if (projectedDataPoint) {
         return {
           ...milestone,
           month: milestoneMonth,
-          value: projectedDataPoint["2026 Projected"] ?? 0,
+          value: projectedDataPoint['2026 Projected'] ?? 0,
           dataPoint: projectedDataPoint,
         };
       }
@@ -149,15 +149,15 @@ export function FutureProjectionPage({ data }: FutureProjectionPageProps) {
               <XAxis dataKey="month" stroke="rgba(255, 255, 255, 0.8)" />
               <YAxis
                 stroke="rgba(255, 255, 255, 0.8)"
-                tickFormatter={(value) => `$${Math.round(value).toLocaleString("en-US")}`}
+                tickFormatter={value => `$${Math.round(value).toLocaleString('en-US')}`}
               />
               <Tooltip
                 content={() => null}
-                cursor={{ stroke: "rgba(255, 255, 255, 0.3)", strokeWidth: 1 }}
+                cursor={{ stroke: 'rgba(255, 255, 255, 0.3)', strokeWidth: 1 }}
               />
               <ReferenceLine y={0} stroke="rgba(255, 255, 255, 0.3)" strokeDasharray="3 3" />
               {/* Add reference lines and labels for savings milestones */}
-              {milestonePoints.map((milestone) => (
+              {milestonePoints.map(milestone => (
                 <ReferenceLine
                   key={milestone.milestone}
                   y={milestone.amount}
@@ -169,7 +169,7 @@ export function FutureProjectionPage({ data }: FutureProjectionPageProps) {
                     value={milestone.milestone}
                     position="right"
                     fill="rgba(255, 215, 0, 0.9)"
-                    style={{ fontSize: "12px", fontWeight: "bold" }}
+                    style={{ fontSize: '12px', fontWeight: 'bold' }}
                   />
                 </ReferenceLine>
               ))}
@@ -181,14 +181,14 @@ export function FutureProjectionPage({ data }: FutureProjectionPageProps) {
                 dot={(props: {
                   cx?: number;
                   cy?: number;
-                  payload?: { month?: string; "2025 Actual"?: number };
+                  payload?: { month?: string; '2025 Actual'?: number };
                 }) => {
                   // Add custom dots for milestone points
                   if (!props.cx || !props.cy) return null;
                   const isMilestone = milestonePoints.some(
-                    (mp) =>
+                    mp =>
                       mp.dataPoint.month === props.payload?.month &&
-                      Math.abs((props.payload?.["2025 Actual"] ?? 0) - mp.amount) < 500,
+                      Math.abs((props.payload?.['2025 Actual'] ?? 0) - mp.amount) < 500,
                   );
                   if (isMilestone) {
                     return (
@@ -219,14 +219,14 @@ export function FutureProjectionPage({ data }: FutureProjectionPageProps) {
                 dot={(props: {
                   cx?: number;
                   cy?: number;
-                  payload?: { month?: string; "2026 Projected"?: number };
+                  payload?: { month?: string; '2026 Projected'?: number };
                 }) => {
                   // Add custom dots for milestone points on projected line
                   if (!props.cx || !props.cy) return null;
                   const isMilestone = milestonePoints.some(
-                    (mp) =>
+                    mp =>
                       mp.dataPoint.month === props.payload?.month &&
-                      Math.abs((props.payload?.["2026 Projected"] ?? 0) - mp.amount) < 500,
+                      Math.abs((props.payload?.['2026 Projected'] ?? 0) - mp.amount) < 500,
                   );
                   if (isMilestone) {
                     return (
@@ -263,7 +263,7 @@ export function FutureProjectionPage({ data }: FutureProjectionPageProps) {
               className={`${styles.statValue} ${animatedProjectedSavings >= 0 ? styles.positive : styles.negative}`}
             >
               $
-              {Math.abs(animatedProjectedSavings).toLocaleString("en-US", {
+              {Math.abs(animatedProjectedSavings).toLocaleString('en-US', {
                 maximumFractionDigits: 0,
               })}
             </div>
@@ -276,9 +276,9 @@ export function FutureProjectionPage({ data }: FutureProjectionPageProps) {
             <div className={styles.statLabel}>Daily Net Savings</div>
             <div
               style={{
-                fontSize: "0.9rem",
-                color: "rgba(255, 255, 255, 0.6)",
-                marginTop: "0.5rem",
+                fontSize: '0.9rem',
+                color: 'rgba(255, 255, 255, 0.6)',
+                marginTop: '0.5rem',
               }}
             >
               ${data.futureProjection.dailyAverageIncome.toFixed(2)} income - $
@@ -287,14 +287,14 @@ export function FutureProjectionPage({ data }: FutureProjectionPageProps) {
           </div>
           {data.futureProjection.monthsUntilZero !== null ? (
             <div className={styles.statCard}>
-              <div className={styles.statValue} style={{ color: "#f87171" }}>
+              <div className={styles.statValue} style={{ color: '#f87171' }}>
                 {data.futureProjection.monthsUntilZero}
               </div>
               <div className={styles.statLabel}>Months Until Zero Savings</div>
             </div>
           ) : (
             <div className={styles.statCard}>
-              <div className={styles.statValue} style={{ color: "#4ade80" }}>
+              <div className={styles.statValue} style={{ color: '#4ade80' }}>
                 ∞
               </div>
               <div className={styles.statLabel}>Savings Will Continue Growing</div>

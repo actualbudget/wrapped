@@ -8,12 +8,12 @@ export class FileApiError extends Error {
     public readonly cause?: unknown,
   ) {
     super(message);
-    this.name = "FileApiError";
+    this.name = 'FileApiError';
     // Maintains proper stack trace for where our error was thrown (only available on V8)
     const ErrorConstructor = Error as unknown as {
       captureStackTrace?: (error: Error, constructor: typeof FileApiError) => void;
     };
-    if (typeof ErrorConstructor.captureStackTrace === "function") {
+    if (typeof ErrorConstructor.captureStackTrace === 'function') {
       ErrorConstructor.captureStackTrace(this, FileApiError);
     }
   }
@@ -22,14 +22,14 @@ export class FileApiError extends Error {
 export class DatabaseError extends FileApiError {
   constructor(message: string, cause?: unknown) {
     super(message, cause);
-    this.name = "DatabaseError";
+    this.name = 'DatabaseError';
   }
 }
 
 export class FileValidationError extends FileApiError {
   constructor(message: string, cause?: unknown) {
     super(message, cause);
-    this.name = "FileValidationError";
+    this.name = 'FileValidationError';
   }
 }
 
@@ -39,11 +39,11 @@ export class DataTransformError extends Error {
     public readonly cause?: unknown,
   ) {
     super(message);
-    this.name = "DataTransformError";
+    this.name = 'DataTransformError';
     const ErrorConstructor = Error as unknown as {
       captureStackTrace?: (error: Error, constructor: typeof DataTransformError) => void;
     };
-    if (typeof ErrorConstructor.captureStackTrace === "function") {
+    if (typeof ErrorConstructor.captureStackTrace === 'function') {
       ErrorConstructor.captureStackTrace(this, DataTransformError);
     }
   }
@@ -84,8 +84,8 @@ export function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
     return error.message;
   }
-  if (typeof error === "string") {
+  if (typeof error === 'string') {
     return error;
   }
-  return "An unknown error occurred";
+  return 'An unknown error occurred';
 }

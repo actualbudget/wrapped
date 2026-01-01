@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion } from 'framer-motion';
 import {
   BarChart,
   Bar,
@@ -8,21 +8,21 @@ import {
   Tooltip,
   ResponsiveContainer,
   Cell,
-} from "recharts";
+} from 'recharts';
 
-import type { WrappedData } from "../../types";
+import type { WrappedData } from '../../types';
 
-import { PageContainer } from "../PageContainer";
-import styles from "./Page.module.css";
+import { PageContainer } from '../PageContainer';
+import styles from './Page.module.css';
 
 interface CategoryGrowthDeclinePageProps {
   data: WrappedData;
 }
 
 const GROWTH_COLORS = {
-  positive: "#43e97b",
-  negative: "#fa709a",
-  neutral: "#667eea",
+  positive: '#43e97b',
+  negative: '#fa709a',
+  neutral: '#667eea',
 };
 
 export function CategoryGrowthDeclinePage({ data }: CategoryGrowthDeclinePageProps) {
@@ -31,20 +31,20 @@ export function CategoryGrowthDeclinePage({ data }: CategoryGrowthDeclinePagePro
     .sort((a, b) => Math.abs(b.percentageChange) - Math.abs(a.percentageChange))
     .slice(0, 10);
 
-  const chartData = sortedGrowth.map((cat) => ({
+  const chartData = sortedGrowth.map(cat => ({
     name:
-      cat.categoryName.length > 15 ? cat.categoryName.substring(0, 15) + "..." : cat.categoryName,
+      cat.categoryName.length > 15 ? cat.categoryName.substring(0, 15) + '...' : cat.categoryName,
     fullName: cat.categoryName,
     percentageChange: cat.percentageChange,
     totalChange: cat.totalChange,
   }));
 
   const topGrowing = sortedGrowth
-    .filter((cat) => cat.percentageChange > 0)
+    .filter(cat => cat.percentageChange > 0)
     .sort((a, b) => b.percentageChange - a.percentageChange)
     .slice(0, 3);
   const topDeclining = sortedGrowth
-    .filter((cat) => cat.percentageChange < 0)
+    .filter(cat => cat.percentageChange < 0)
     .sort((a, b) => a.percentageChange - b.percentageChange)
     .slice(0, 3);
 
@@ -81,10 +81,10 @@ export function CategoryGrowthDeclinePage({ data }: CategoryGrowthDeclinePagePro
               <YAxis stroke="rgba(255, 255, 255, 0.8)" />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "rgba(0, 0, 0, 0.9)",
-                  border: "none",
-                  borderRadius: "8px",
-                  color: "white",
+                  backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: 'white',
                 }}
                 formatter={(
                   value: number | undefined,
@@ -92,7 +92,7 @@ export function CategoryGrowthDeclinePage({ data }: CategoryGrowthDeclinePagePro
                   props: { payload?: { totalChange?: number } },
                 ) => [
                   `${(value ?? 0).toFixed(1)}%`,
-                  `Change: $${(props.payload?.totalChange ?? 0).toLocaleString("en-US", { maximumFractionDigits: 0 })}`,
+                  `Change: $${(props.payload?.totalChange ?? 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}`,
                 ]}
               />
               <Bar dataKey="percentageChange" animationDuration={1000}>
@@ -126,14 +126,14 @@ export function CategoryGrowthDeclinePage({ data }: CategoryGrowthDeclinePagePro
           {topGrowing.length > 0 && (
             <div className={styles.statCard}>
               <div className={styles.statValue} style={{ color: GROWTH_COLORS.positive }}>
-                {topGrowing[0]?.categoryName || "N/A"}
+                {topGrowing[0]?.categoryName || 'N/A'}
               </div>
               <div className={styles.statLabel}>Top Growing Category</div>
               <div
                 style={{
-                  fontSize: "0.9rem",
-                  color: "rgba(255, 255, 255, 0.6)",
-                  marginTop: "0.5rem",
+                  fontSize: '0.9rem',
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  marginTop: '0.5rem',
                 }}
               >
                 +{topGrowing[0]?.percentageChange.toFixed(1)}% increase
@@ -143,14 +143,14 @@ export function CategoryGrowthDeclinePage({ data }: CategoryGrowthDeclinePagePro
           {topDeclining.length > 0 && (
             <div className={styles.statCard}>
               <div className={styles.statValue} style={{ color: GROWTH_COLORS.negative }}>
-                {topDeclining[0]?.categoryName || "N/A"}
+                {topDeclining[0]?.categoryName || 'N/A'}
               </div>
               <div className={styles.statLabel}>Top Declining Category</div>
               <div
                 style={{
-                  fontSize: "0.9rem",
-                  color: "rgba(255, 255, 255, 0.6)",
-                  marginTop: "0.5rem",
+                  fontSize: '0.9rem',
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  marginTop: '0.5rem',
                 }}
               >
                 {topDeclining[0]?.percentageChange.toFixed(1)}% decrease

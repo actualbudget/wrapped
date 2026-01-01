@@ -1,9 +1,9 @@
-import { motion } from "framer-motion";
+import { motion } from 'framer-motion';
 
-import type { WrappedData } from "../../types";
+import type { WrappedData } from '../../types';
 
-import { PageContainer } from "../PageContainer";
-import styles from "./Page.module.css";
+import { PageContainer } from '../PageContainer';
+import styles from './Page.module.css';
 
 interface OutroPageProps {
   data: WrappedData;
@@ -43,13 +43,13 @@ export function OutroPage({ data }: OutroPageProps) {
         >
           <div className={styles.statCard}>
             <div className={styles.statValue}>
-              ${data.totalIncome.toLocaleString("en-US", { maximumFractionDigits: 0 })}
+              ${data.totalIncome.toLocaleString('en-US', { maximumFractionDigits: 0 })}
             </div>
             <div className={styles.statLabel}>Income</div>
           </div>
           <div className={styles.statCard}>
             <div className={styles.statValue}>
-              ${data.totalExpenses.toLocaleString("en-US", { maximumFractionDigits: 0 })}
+              ${data.totalExpenses.toLocaleString('en-US', { maximumFractionDigits: 0 })}
             </div>
             <div className={styles.statLabel}>Expenses</div>
           </div>
@@ -57,18 +57,18 @@ export function OutroPage({ data }: OutroPageProps) {
             <div
               className={`${styles.statValue} ${data.netSavings >= 0 ? styles.positive : styles.negative}`}
             >
-              ${Math.abs(data.netSavings).toLocaleString("en-US", { maximumFractionDigits: 0 })}
+              ${Math.abs(data.netSavings).toLocaleString('en-US', { maximumFractionDigits: 0 })}
             </div>
-            <div className={styles.statLabel}>{data.netSavings >= 0 ? "Saved" : "Overspent"}</div>
+            <div className={styles.statLabel}>{data.netSavings >= 0 ? 'Saved' : 'Overspent'}</div>
           </div>
         </motion.div>
 
         <motion.div
           style={{
-            marginTop: "3rem",
-            display: "flex",
-            justifyContent: "center",
-            width: "100%",
+            marginTop: '3rem',
+            display: 'flex',
+            justifyContent: 'center',
+            width: '100%',
           }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -76,11 +76,11 @@ export function OutroPage({ data }: OutroPageProps) {
         >
           <p
             style={{
-              fontSize: "1.2rem",
-              color: "rgba(255, 255, 255, 0.8)",
-              textAlign: "center",
-              maxWidth: "600px",
-              margin: "0 auto",
+              fontSize: '1.2rem',
+              color: 'rgba(255, 255, 255, 0.8)',
+              textAlign: 'center',
+              maxWidth: '600px',
+              margin: '0 auto',
             }}
           >
             Keep tracking, keep budgeting, and keep achieving your financial goals! 🎉

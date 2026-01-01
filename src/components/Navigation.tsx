@@ -1,7 +1,7 @@
-import { motion } from "framer-motion";
-import { useEffect } from "react";
+import { motion } from 'framer-motion';
+import { useEffect } from 'react';
 
-import styles from "./Navigation.module.css";
+import styles from './Navigation.module.css';
 
 interface NavigationProps {
   currentPage: number;
@@ -13,15 +13,15 @@ interface NavigationProps {
 export function Navigation({ currentPage, totalPages, onNext, onPrevious }: NavigationProps) {
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.key === "ArrowLeft" && currentPage > 0) {
+      if (e.key === 'ArrowLeft' && currentPage > 0) {
         onPrevious();
-      } else if (e.key === "ArrowRight" && currentPage < totalPages - 1) {
+      } else if (e.key === 'ArrowRight' && currentPage < totalPages - 1) {
         onNext();
       }
     };
 
-    window.addEventListener("keydown", handleKeyPress);
-    return () => window.removeEventListener("keydown", handleKeyPress);
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
   }, [currentPage, totalPages, onNext, onPrevious]);
 
   useEffect(() => {

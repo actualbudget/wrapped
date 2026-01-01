@@ -1,8 +1,8 @@
-import { renderHook, waitFor, act } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, waitFor, act } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-import { createMockWrappedData } from "../test-utils/mockData";
-import { useActualData } from "./useActualData";
+import { createMockWrappedData } from '../test-utils/mockData';
+import { useActualData } from './useActualData';
 
 // Mock the fileApi module
 const mockInitialize = vi.fn();
@@ -13,7 +13,7 @@ const mockGetAccounts = vi.fn();
 const mockShutdown = vi.fn(() => Promise.resolve());
 const mockClearBudget = vi.fn();
 
-vi.mock("../services/fileApi", () => ({
+vi.mock('../services/fileApi', () => ({
   initialize: (file: File) => mockInitialize(file),
   getAllTransactionsForYear: (year: number) => mockGetAllTransactionsForYear(year),
   getCategories: () => mockGetCategories(),
@@ -25,7 +25,7 @@ vi.mock("../services/fileApi", () => ({
 
 // Mock transformToWrappedData
 const mockTransformToWrappedData = vi.fn();
-vi.mock("../utils/dataTransform", () => ({
+vi.mock('../utils/dataTransform', () => ({
   transformToWrappedData: (
     transactions: unknown[],
     categories: unknown[],
@@ -35,9 +35,9 @@ vi.mock("../utils/dataTransform", () => ({
   ) => mockTransformToWrappedData(transactions, categories, payees, accounts, year),
 }));
 
-describe("useActualData", () => {
+describe('useActualData', () => {
   const createMockFile = (): File => {
-    return new File(["test content"], "test.zip", { type: "application/zip" });
+    return new File(['test content'], 'test.zip', { type: 'application/zip' });
   };
 
   beforeEach(() => {
@@ -56,8 +56,8 @@ describe("useActualData", () => {
     vi.restoreAllMocks();
   });
 
-  describe("Initial State", () => {
-    it("starts with null data", () => {
+  describe('Initial State', () => {
+    it('starts with null data', () => {
       const { result } = renderHook(() => useActualData());
 
       expect(result.current.data).toBeNull();
@@ -67,14 +67,14 @@ describe("useActualData", () => {
     });
   });
 
-  describe("fetchData", () => {
-    it("sets loading to true when fetching", async () => {
+  describe('fetchData', () => {
+    it('sets loading to true when fetching', async () => {
       const { result } = renderHook(() => useActualData());
       const file = createMockFile();
 
       // Make the async operations take some time to ensure loading state is visible
       let resolveClearBudget: () => void;
-      const clearBudgetPromise = new Promise<void>((resolve) => {
+      const clearBudgetPromise = new Promise<void>(resolve => {
         resolveClearBudget = resolve;
       });
       mockClearBudget.mockReturnValue(clearBudgetPromise);
@@ -101,7 +101,7 @@ describe("useActualData", () => {
       expect(result.current.progress).toBe(100);
     });
 
-    it("fetches and transforms data successfully", async () => {
+    it('fetches and transforms data successfully', async () => {
       const { result } = renderHook(() => useActualData());
       const file = createMockFile();
       const mockData = createMockWrappedData();
@@ -117,7 +117,7 @@ describe("useActualData", () => {
       });
     });
 
-    it("calls clearBudget and initialize", async () => {
+    it('calls clearBudget and initialize', async () => {
       const { result } = renderHook(() => useActualData());
       const file = createMockFile();
 
@@ -127,7 +127,7 @@ describe("useActualData", () => {
       expect(mockInitialize).toHaveBeenCalled();
     });
 
-    it("calls initialize with file", async () => {
+    it('calls initialize with file', async () => {
       const { result } = renderHook(() => useActualData());
       const file = createMockFile();
 
@@ -136,7 +136,7 @@ describe("useActualData", () => {
       expect(mockInitialize).toHaveBeenCalled();
     });
 
-    it("fetches all required data", async () => {
+    it('fetches all required data', async () => {
       const { result } = renderHook(() => useActualData());
       const file = createMockFile();
 
@@ -148,13 +148,13 @@ describe("useActualData", () => {
       expect(mockGetAccounts).toHaveBeenCalled();
     });
 
-    it("transforms data with fetched values", async () => {
+    it('transforms data with fetched values', async () => {
       const { result } = renderHook(() => useActualData());
       const file = createMockFile();
-      const mockTransactions = [{ id: "t1", account: "acc1", date: "2025-01-01", amount: -10000 }];
-      const mockCategories = [{ id: "cat1", name: "Test" }];
-      const mockPayees = [{ id: "payee1", name: "Payee" }];
-      const mockAccounts = [{ id: "acc1", name: "Account", type: "checking" }];
+      const mockTransactions = [{ id: 't1', account: 'acc1', date: '2025-01-01', amount: -10000 }];
+      const mockCategories = [{ id: 'cat1', name: 'Test' }];
+      const mockPayees = [{ id: 'payee1', name: 'Payee' }];
+      const mockAccounts = [{ id: 'acc1', name: 'Account', type: 'checking' }];
 
       mockGetAllTransactionsForYear.mockResolvedValue(mockTransactions);
       mockGetCategories.mockResolvedValue(mockCategories);
@@ -172,10 +172,10 @@ describe("useActualData", () => {
       );
     });
 
-    it("handles errors during fetch", async () => {
+    it('handles errors during fetch', async () => {
       const { result } = renderHook(() => useActualData());
       const file = createMockFile();
-      const errorMessage = "Failed to load file";
+      const errorMessage = 'Failed to load file';
       mockInitialize.mockRejectedValue(new Error(errorMessage));
 
       await result.current.fetchData(file);
@@ -188,10 +188,10 @@ describe("useActualData", () => {
       });
     });
 
-    it("handles errors during data fetching", async () => {
+    it('handles errors during data fetching', async () => {
       const { result } = renderHook(() => useActualData());
       const file = createMockFile();
-      const errorMessage = "Failed to get transactions";
+      const errorMessage = 'Failed to get transactions';
       mockGetAllTransactionsForYear.mockRejectedValue(new Error(errorMessage));
 
       await result.current.fetchData(file);
@@ -203,22 +203,22 @@ describe("useActualData", () => {
       });
     });
 
-    it("handles non-Error exceptions", async () => {
+    it('handles non-Error exceptions', async () => {
       const { result } = renderHook(() => useActualData());
       const file = createMockFile();
-      mockInitialize.mockRejectedValue("String error");
+      mockInitialize.mockRejectedValue('String error');
 
       await result.current.fetchData(file);
 
       await waitFor(() => {
         // getErrorMessage returns the string as-is for string errors
-        expect(result.current.error).toBe("String error");
+        expect(result.current.error).toBe('String error');
         expect(result.current.loading).toBe(false);
         expect(result.current.progress).toBe(0);
       });
     });
 
-    it("stores file reference", async () => {
+    it('stores file reference', async () => {
       const { result } = renderHook(() => useActualData());
       const file = createMockFile();
 
@@ -234,8 +234,8 @@ describe("useActualData", () => {
     });
   });
 
-  describe("refreshData", () => {
-    it("refreshes data using stored file", async () => {
+  describe('refreshData', () => {
+    it('refreshes data using stored file', async () => {
       const { result } = renderHook(() => useActualData());
       const file = createMockFile();
 
@@ -254,15 +254,15 @@ describe("useActualData", () => {
       expect(mockGetAllTransactionsForYear).toHaveBeenCalled();
     });
 
-    it("throws error if no file available", async () => {
+    it('throws error if no file available', async () => {
       const { result } = renderHook(() => useActualData());
 
-      await expect(result.current.refreshData()).rejects.toThrow("No file available");
+      await expect(result.current.refreshData()).rejects.toThrow('No file available');
     });
   });
 
-  describe("retry", () => {
-    it("retries loading when file is available", async () => {
+  describe('retry', () => {
+    it('retries loading when file is available', async () => {
       const { result } = renderHook(() => useActualData());
       const file = createMockFile();
 
@@ -274,7 +274,7 @@ describe("useActualData", () => {
       });
 
       // Set an error state
-      mockInitialize.mockRejectedValueOnce(new Error("Test error"));
+      mockInitialize.mockRejectedValueOnce(new Error('Test error'));
       vi.clearAllMocks();
       mockInitialize.mockResolvedValue(undefined);
 
@@ -283,7 +283,7 @@ describe("useActualData", () => {
       expect(mockInitialize).toHaveBeenCalled();
     });
 
-    it("does nothing when no file is available", () => {
+    it('does nothing when no file is available', () => {
       const { result } = renderHook(() => useActualData());
 
       expect(result.current.retry).toBeDefined();
@@ -291,7 +291,7 @@ describe("useActualData", () => {
       expect(() => result.current.retry?.()).not.toThrow();
     });
 
-    it("updates data after refresh", async () => {
+    it('updates data after refresh', async () => {
       const { result } = renderHook(() => useActualData());
       const file = createMockFile();
       const initialData = createMockWrappedData({ year: 2025 });
@@ -314,8 +314,8 @@ describe("useActualData", () => {
     });
   });
 
-  describe("Cleanup", () => {
-    it("calls shutdown on unmount", () => {
+  describe('Cleanup', () => {
+    it('calls shutdown on unmount', () => {
       const { unmount } = renderHook(() => useActualData());
 
       unmount();
@@ -323,16 +323,16 @@ describe("useActualData", () => {
       expect(mockShutdown).toHaveBeenCalled();
     });
 
-    it("handles shutdown errors gracefully", async () => {
-      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-      mockShutdown.mockRejectedValue(new Error("Shutdown error"));
+    it('handles shutdown errors gracefully', async () => {
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      mockShutdown.mockRejectedValue(new Error('Shutdown error'));
 
       const { unmount } = renderHook(() => useActualData());
 
       unmount();
 
       // Wait for async cleanup
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // Should not throw, error is caught and logged
       expect(consoleErrorSpy).toHaveBeenCalled();
@@ -340,8 +340,8 @@ describe("useActualData", () => {
     });
   });
 
-  describe("Multiple Calls", () => {
-    it("handles multiple fetchData calls", async () => {
+  describe('Multiple Calls', () => {
+    it('handles multiple fetchData calls', async () => {
       const { result } = renderHook(() => useActualData());
       const file1 = createMockFile();
       const file2 = createMockFile();
@@ -352,7 +352,7 @@ describe("useActualData", () => {
       expect(mockInitialize).toHaveBeenCalledTimes(2);
     });
 
-    it("handles rapid successive calls", async () => {
+    it('handles rapid successive calls', async () => {
       const { result } = renderHook(() => useActualData());
       const file = createMockFile();
 

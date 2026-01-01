@@ -1,7 +1,7 @@
-import { renderHook, act } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, act } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-import { useAnimatedNumber } from "./useAnimatedNumber";
+import { useAnimatedNumber } from './useAnimatedNumber';
 
 // Mock requestAnimationFrame to work with fake timers
 const mockRAF = vi.fn((cb: FrameRequestCallback) => {
@@ -12,7 +12,7 @@ const mockCAF = vi.fn((id: number) => {
   clearTimeout(id);
 });
 
-describe("useAnimatedNumber", () => {
+describe('useAnimatedNumber', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     // Override the polyfills with mocks for testing
@@ -22,7 +22,7 @@ describe("useAnimatedNumber", () => {
     (
       globalThis as unknown as { cancelAnimationFrame: typeof cancelAnimationFrame }
     ).cancelAnimationFrame = mockCAF;
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.requestAnimationFrame = mockRAF;
       window.cancelAnimationFrame = mockCAF;
     }
@@ -33,12 +33,12 @@ describe("useAnimatedNumber", () => {
     vi.useRealTimers();
   });
 
-  it("starts at 0", () => {
+  it('starts at 0', () => {
     const { result } = renderHook(() => useAnimatedNumber(100));
     expect(result.current).toBe(0);
   });
 
-  it("animates to target value", async () => {
+  it('animates to target value', async () => {
     const { result } = renderHook(() => useAnimatedNumber(100, 1000));
 
     // Initially should be 0
@@ -71,7 +71,7 @@ describe("useAnimatedNumber", () => {
     expect(result.current).toBe(100);
   });
 
-  it("reaches target value after duration", async () => {
+  it('reaches target value after duration', async () => {
     const { result } = renderHook(() => useAnimatedNumber(200, 1000));
 
     act(() => {
@@ -82,7 +82,7 @@ describe("useAnimatedNumber", () => {
     expect(result.current).toBe(200);
   });
 
-  it("handles decimal places correctly", async () => {
+  it('handles decimal places correctly', async () => {
     const { result } = renderHook(() => useAnimatedNumber(123.456, 1000, 2));
 
     act(() => {
@@ -93,7 +93,7 @@ describe("useAnimatedNumber", () => {
     expect(result.current).toBeCloseTo(123.46, 1);
   });
 
-  it("updates when target changes", async () => {
+  it('updates when target changes', async () => {
     const { result, rerender } = renderHook(({ target }) => useAnimatedNumber(target, 1000), {
       initialProps: { target: 100 },
     });
@@ -114,7 +114,7 @@ describe("useAnimatedNumber", () => {
     expect(result.current).toBe(200);
   });
 
-  it("handles zero target", async () => {
+  it('handles zero target', async () => {
     const { result } = renderHook(() => useAnimatedNumber(0, 1000));
 
     act(() => {
@@ -125,7 +125,7 @@ describe("useAnimatedNumber", () => {
     expect(result.current).toBe(0);
   });
 
-  it("handles negative target", async () => {
+  it('handles negative target', async () => {
     const { result } = renderHook(() => useAnimatedNumber(-100, 1000));
 
     act(() => {
@@ -136,7 +136,7 @@ describe("useAnimatedNumber", () => {
     expect(result.current).toBe(-100);
   });
 
-  it("handles very large target", async () => {
+  it('handles very large target', async () => {
     const { result } = renderHook(() => useAnimatedNumber(1000000, 1000));
 
     act(() => {
@@ -147,7 +147,7 @@ describe("useAnimatedNumber", () => {
     expect(result.current).toBe(1000000);
   });
 
-  it("uses custom duration", async () => {
+  it('uses custom duration', async () => {
     const { result } = renderHook(() => useAnimatedNumber(100, 500));
 
     act(() => {
@@ -158,8 +158,8 @@ describe("useAnimatedNumber", () => {
     expect(result.current).toBe(100);
   });
 
-  it("cleans up animation frame on unmount", () => {
-    const cancelAnimationFrameSpy = vi.spyOn(window, "cancelAnimationFrame");
+  it('cleans up animation frame on unmount', () => {
+    const cancelAnimationFrameSpy = vi.spyOn(window, 'cancelAnimationFrame');
     const { unmount } = renderHook(() => useAnimatedNumber(100, 1000));
 
     unmount();
@@ -168,7 +168,7 @@ describe("useAnimatedNumber", () => {
     cancelAnimationFrameSpy.mockRestore();
   });
 
-  it("applies easing function correctly", async () => {
+  it('applies easing function correctly', async () => {
     const { result } = renderHook(() => useAnimatedNumber(100, 1000));
 
     // Check intermediate values show easing (ease-out)

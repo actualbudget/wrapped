@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from 'react';
 
-import type { WrappedData } from "../types";
+import type { WrappedData } from '../types';
 
 import {
   initialize,
@@ -10,10 +10,10 @@ import {
   getAccounts,
   shutdown,
   clearBudget,
-} from "../services/fileApi";
-import { getErrorMessage, isFileApiError } from "../types/errors";
-import { DEFAULT_YEAR } from "../utils/constants";
-import { transformToWrappedData } from "../utils/dataTransform";
+} from '../services/fileApi';
+import { getErrorMessage, isFileApiError } from '../types/errors';
+import { DEFAULT_YEAR } from '../utils/constants';
+import { transformToWrappedData } from '../utils/dataTransform';
 
 export function useActualData() {
   const [data, setData] = useState<WrappedData | null>(null);
@@ -73,7 +73,7 @@ export function useActualData() {
 
   const refreshData = useCallback(async () => {
     if (!file) {
-      throw new Error("No file available");
+      throw new Error('No file available');
     }
     await fetchData(file);
   }, [file, fetchData]);

@@ -1,33 +1,33 @@
-import { motion } from "framer-motion";
+import { motion } from 'framer-motion';
 
-import type { WrappedData } from "../../types";
+import type { WrappedData } from '../../types';
 
-import { ClickableBarChart } from "../charts/ClickableBarChart";
-import { PageContainer } from "../PageContainer";
-import styles from "./Page.module.css";
+import { ClickableBarChart } from '../charts/ClickableBarChart';
+import { PageContainer } from '../PageContainer';
+import styles from './Page.module.css';
 
 interface TopCategoriesPageProps {
   data: WrappedData;
 }
 
 const CATEGORY_COLORS = [
-  "#667eea",
-  "#764ba2",
-  "#f093fb",
-  "#4facfe",
-  "#43e97b",
-  "#fa709a",
-  "#fee140",
-  "#30cfd0",
-  "#a8edea",
-  "#fed6e3",
+  '#667eea',
+  '#764ba2',
+  '#f093fb',
+  '#4facfe',
+  '#43e97b',
+  '#fa709a',
+  '#fee140',
+  '#30cfd0',
+  '#a8edea',
+  '#fed6e3',
 ];
 
 export function TopCategoriesPage({ data }: TopCategoriesPageProps) {
-  const chartData = data.topCategories.map((cat) => ({
+  const chartData = data.topCategories.map(cat => ({
     id: cat.categoryId,
     name:
-      cat.categoryName.length > 20 ? cat.categoryName.substring(0, 20) + "..." : cat.categoryName,
+      cat.categoryName.length > 20 ? cat.categoryName.substring(0, 20) + '...' : cat.categoryName,
     fullName: cat.categoryName,
     amount: cat.amount,
     percentage: cat.percentage.toFixed(1),
@@ -64,7 +64,7 @@ export function TopCategoriesPage({ data }: TopCategoriesPageProps) {
             colors={CATEGORY_COLORS}
             height={600}
             margin={{ top: 20, right: 30, left: 100, bottom: 5 }}
-            xAxisFormatter={(value) => `$${Math.round(value).toLocaleString("en-US")}`}
+            xAxisFormatter={value => `$${Math.round(value).toLocaleString('en-US')}`}
           />
         </div>
 
@@ -74,17 +74,17 @@ export function TopCategoriesPage({ data }: TopCategoriesPageProps) {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
         >
-          {data.topCategories.slice(0, 3).map((cat) => (
+          {data.topCategories.slice(0, 3).map(cat => (
             <div key={cat.categoryId} className={styles.statCard}>
               <div className={styles.statValue}>
-                ${cat.amount.toLocaleString("en-US", { maximumFractionDigits: 0 })}
+                ${cat.amount.toLocaleString('en-US', { maximumFractionDigits: 0 })}
               </div>
               <div className={styles.statLabel}>{cat.categoryName}</div>
               <div
                 style={{
-                  fontSize: "0.9rem",
-                  color: "rgba(255, 255, 255, 0.6)",
-                  marginTop: "0.5rem",
+                  fontSize: '0.9rem',
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  marginTop: '0.5rem',
                 }}
               >
                 {cat.percentage.toFixed(1)}% of expenses
