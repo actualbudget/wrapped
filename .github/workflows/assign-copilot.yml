@@ -1,0 +1,24 @@
+name: Auto-Assign Copilot to Issues
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+
+jobs:
+  assign-copilot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Assign Copilot to Issue
+        uses: otto-de/assign_issue_toCopilot_action@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+        # Note: If the default GITHUB_TOKEN doesn't have sufficient permissions
+        # due to Copilot licensing restrictions, you may need to use a Personal
+        # Access Token (PAT) with 'repo' scope instead:
+        # 1. Create a PAT at: https://github.com/settings/tokens
+        # 2. Add it as a repository secret named 'COPILOT_PAT'
+        # 3. Replace GITHUB_TOKEN with secrets.COPILOT_PAT above
+
