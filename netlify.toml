@@ -10,5 +10,14 @@ status = 200
 [build.environment]
 NODE_VERSION = "18"
 
+# Security headers
+[[headers]]
+for = "/*"
+[headers.values]
+X-Frame-Options = "DENY"
+X-Content-Type-Options = "nosniff"
+Referrer-Policy = "strict-origin-when-cross-origin"
+Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self';"
+
 # Domain configuration: wrapped.actualbudget.org
 # Set this in Netlify dashboard: Site settings > Domain management > Custom domains

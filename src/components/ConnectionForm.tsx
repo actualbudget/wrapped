@@ -7,9 +7,17 @@ interface ConnectionFormProps {
   onConnect: (file: File) => void;
   loading?: boolean;
   error?: string | null;
+  progress?: number;
+  onRetry?: () => void;
 }
 
-export function ConnectionForm({ onConnect, loading = false, error = null }: ConnectionFormProps) {
+export function ConnectionForm({
+  onConnect,
+  loading = false,
+  error = null,
+  progress = 0,
+  onRetry,
+}: ConnectionFormProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState<string>("");
 
@@ -58,22 +66,55 @@ export function ConnectionForm({ onConnect, loading = false, error = null }: Con
               required
               disabled={loading}
               className={styles.fileInput}
+              aria-describedby="file-help"
+              aria-invalid={error ? "true" : "false"}
             />
             {fileName && (
               <div className={styles.fileName}>
                 Selected: <strong>{fileName}</strong>
               </div>
             )}
-            <small className={styles.helpText}>
+            <small id="file-help" className={styles.helpText}>
               Export your budget from Actual Budget (Settings → Advanced → Export budget) and upload
               the .zip file here
             </small>
           </div>
 
           {error && (
-            <motion.div className={styles.error} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <motion.div
+              className={styles.error}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              role="alert"
+              aria-live="polite"
+            >
               {error}
+              {onRetry && (
+                <button
+                  type="button"
+                  onClick={onRetry}
+                  className={styles.retryButton}
+                  aria-label="Retry loading budget file"
+                >
+                  Retry
+                </button>
+              )}
             </motion.div>
+          )}
+
+          {loading && progress > 0 && (
+            <div
+              className={styles.progressContainer}
+              role="progressbar"
+              aria-valuenow={progress}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
+              <div className={styles.progressBar}>
+                <div className={styles.progressFill} style={{ width: `${progress}%` }} />
+              </div>
+              <span className={styles.progressText}>{progress}%</span>
+            </div>
           )}
 
           <motion.button
@@ -82,6 +123,8 @@ export function ConnectionForm({ onConnect, loading = false, error = null }: Con
             disabled={loading || !selectedFile}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
+            aria-busy={loading}
+            aria-label={loading ? "Loading budget data" : "Load budget file"}
           >
             {loading ? "Loading..." : "Load Budget"}
           </motion.button>

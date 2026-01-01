@@ -129,6 +129,61 @@
   border-radius: 12px;
   color: #c33;
   font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.retryButton {
+  padding: 0.5rem 1rem;
+  background: #c33;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.retryButton:hover {
+  background: #a22;
+}
+
+.retryButton:focus {
+  outline: 2px solid #c33;
+  outline-offset: 2px;
+}
+
+.progressContainer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.progressBar {
+  flex: 1;
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  transition: width 0.3s ease;
+}
+
+.progressText {
+  font-size: 0.85rem;
+  color: #666;
+  font-weight: 600;
+  min-width: 3rem;
+  text-align: right;
 }
 
 .privacyNote {

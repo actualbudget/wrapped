@@ -32,7 +32,7 @@ const PAGES = [
 
 function App() {
   const [currentPage, setCurrentPage] = useState(0);
-  const { data, loading, error, fetchData } = useActualData();
+  const { data, loading, error, progress, fetchData, retry } = useActualData();
 
   const handleConnect = async (file: File) => {
     await fetchData(file);
@@ -52,7 +52,15 @@ function App() {
 
   // Show connection form if no data loaded
   if (!data && !loading) {
-    return <ConnectionForm onConnect={handleConnect} loading={loading} error={error} />;
+    return (
+      <ConnectionForm
+        onConnect={handleConnect}
+        loading={loading}
+        error={error}
+        progress={progress}
+        onRetry={retry}
+      />
+    );
   }
 
   // Show loading state

@@ -31,7 +31,8 @@ vi.mock("../utils/dataTransform", () => ({
     categories: unknown[],
     payees: unknown[],
     accounts: unknown[],
-  ) => mockTransformToWrappedData(transactions, categories, payees, accounts),
+    year?: number,
+  ) => mockTransformToWrappedData(transactions, categories, payees, accounts, year),
 }));
 
 describe("useActualData", () => {
@@ -62,6 +63,7 @@ describe("useActualData", () => {
       expect(result.current.data).toBeNull();
       expect(result.current.loading).toBe(false);
       expect(result.current.error).toBeNull();
+      expect(result.current.progress).toBe(0);
     });
   });
 
@@ -96,6 +98,7 @@ describe("useActualData", () => {
         await fetchPromise!;
       });
       expect(result.current.loading).toBe(false);
+      expect(result.current.progress).toBe(100);
     });
 
     it("fetches and transforms data successfully", async () => {
@@ -110,6 +113,7 @@ describe("useActualData", () => {
         expect(result.current.data).toEqual(mockData);
         expect(result.current.loading).toBe(false);
         expect(result.current.error).toBeNull();
+        expect(result.current.progress).toBe(100);
       });
     });
 
@@ -164,6 +168,7 @@ describe("useActualData", () => {
         mockCategories,
         mockPayees,
         mockAccounts,
+        2025, // DEFAULT_YEAR
       );
     });
 
@@ -179,6 +184,7 @@ describe("useActualData", () => {
         expect(result.current.error).toBe(errorMessage);
         expect(result.current.loading).toBe(false);
         expect(result.current.data).toBeNull();
+        expect(result.current.progress).toBe(0);
       });
     });
 
@@ -193,6 +199,7 @@ describe("useActualData", () => {
       await waitFor(() => {
         expect(result.current.error).toBe(errorMessage);
         expect(result.current.loading).toBe(false);
+        expect(result.current.progress).toBe(0);
       });
     });
 
@@ -204,8 +211,10 @@ describe("useActualData", () => {
       await result.current.fetchData(file);
 
       await waitFor(() => {
-        expect(result.current.error).toBe("Failed to fetch data");
+        // getErrorMessage returns the string as-is for string errors
+        expect(result.current.error).toBe("String error");
         expect(result.current.loading).toBe(false);
+        expect(result.current.progress).toBe(0);
       });
     });
 
@@ -249,6 +258,37 @@ describe("useActualData", () => {
       const { result } = renderHook(() => useActualData());
 
       await expect(result.current.refreshData()).rejects.toThrow("No file available");
+    });
+  });
+
+  describe("retry", () => {
+    it("retries loading when file is available", async () => {
+      const { result } = renderHook(() => useActualData());
+      const file = createMockFile();
+
+      await result.current.fetchData(file);
+
+      // Wait for state to update
+      await waitFor(() => {
+        expect(result.current.data).not.toBeNull();
+      });
+
+      // Set an error state
+      mockInitialize.mockRejectedValueOnce(new Error("Test error"));
+      vi.clearAllMocks();
+      mockInitialize.mockResolvedValue(undefined);
+
+      await result.current.retry?.();
+
+      expect(mockInitialize).toHaveBeenCalled();
+    });
+
+    it("does nothing when no file is available", () => {
+      const { result } = renderHook(() => useActualData());
+
+      expect(result.current.retry).toBeDefined();
+      // Should not throw when no file
+      expect(() => result.current.retry?.()).not.toThrow();
     });
 
     it("updates data after refresh", async () => {

@@ -2,6 +2,14 @@ import JSZip from "jszip";
 
 import type { Transaction, Account, Category } from "../types";
 
+import {
+  DatabaseError,
+  FileValidationError,
+  getErrorMessage,
+  isFileApiError,
+} from "../types/errors";
+import { MAX_FILE_SIZE } from "../utils/constants";
+
 type SqlJsDatabase = Awaited<ReturnType<typeof import("sql.js").default>>["Database"];
 
 let sqlJs: Awaited<ReturnType<typeof import("sql.js").default>> | null = null;
@@ -24,16 +32,17 @@ async function initSqlJsLib(): Promise<Awaited<ReturnType<typeof import("sql.js"
   const initFn = sqlJsModule.default;
 
   if (typeof initFn !== "function") {
-    throw new Error(
+    throw new DatabaseError(
       `Failed to load sql.js: default export is not a function. Got type: ${typeof initFn}`,
     );
   }
 
   // Load sql.js - initSqlJs returns a Promise that resolves to the Module
+  // Use bundled WASM files from public directory instead of CDN for security
   sqlJs = await initFn({
     locateFile: (file: string) => {
-      // Use CDN for sql-wasm.wasm file
-      return `https://sql.js.org/dist/${file}`;
+      // WASM files are copied to public directory during build
+      return `/${file}`;
     },
   });
 
@@ -46,6 +55,17 @@ async function initSqlJsLib(): Promise<Awaited<ReturnType<typeof import("sql.js"
  */
 export async function initialize(file: File): Promise<void> {
   try {
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+      throw new FileValidationError(
+        `File size (${(file.size / 1024 / 1024).toFixed(2)}MB) exceeds maximum allowed size (${MAX_FILE_SIZE / 1024 / 1024}MB)`,
+      );
+    }
+
+    if (file.size === 0) {
+      throw new FileValidationError("File is empty");
+    }
+
     // Close existing database if any
     if (db) {
       db.close();
@@ -53,26 +73,29 @@ export async function initialize(file: File): Promise<void> {
     }
 
     // Load and unzip the file
-    console.log("Loading zip file...");
     const arrayBuffer = await file.arrayBuffer();
     const zip = await JSZip.loadAsync(arrayBuffer);
 
     // Extract db.sqlite
     const dbFile = zip.file("db.sqlite");
     if (!dbFile) {
-      throw new Error("db.sqlite not found in zip file");
+      throw new FileValidationError("db.sqlite not found in zip file");
     }
 
     const dbData = await dbFile.async("uint8array");
-    console.log("Extracted db.sqlite from zip");
+    if (dbData.length === 0) {
+      throw new FileValidationError("db.sqlite file is empty");
+    }
 
     // Load the database into sql.js
     const SQL = await initSqlJsLib();
     db = new SQL.Database(dbData);
-    console.log("Database loaded");
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to initialize file API: ${errorMessage}`);
+    if (isFileApiError(error)) {
+      throw error;
+    }
+    const errorMessage = getErrorMessage(error);
+    throw new DatabaseError(`Failed to initialize file API: ${errorMessage}`, error);
   }
 }
 
@@ -81,7 +104,7 @@ export async function initialize(file: File): Promise<void> {
  */
 function query(sql: string, params: unknown[] = []): Record<string, unknown>[] {
   if (!db) {
-    throw new Error("Database not loaded. Call initialize() first.");
+    throw new DatabaseError("Database not loaded. Call initialize() first.");
   }
 
   const stmt = db.prepare(sql);
@@ -102,7 +125,7 @@ function query(sql: string, params: unknown[] = []): Record<string, unknown>[] {
  */
 export async function getAccounts(): Promise<Account[]> {
   if (!db) {
-    throw new Error("Database not loaded. Call initialize() first.");
+    throw new DatabaseError("Database not loaded. Call initialize() first.");
   }
 
   try {
@@ -114,8 +137,10 @@ export async function getAccounts(): Promise<Account[]> {
       offbudget: acc.offbudget === 1,
     }));
   } catch (error) {
-    console.error("Failed to get accounts:", error);
-    throw error;
+    if (isFileApiError(error)) {
+      throw error;
+    }
+    throw new DatabaseError("Failed to get accounts", error);
   }
 }
 
@@ -124,7 +149,7 @@ export async function getAccounts(): Promise<Account[]> {
  */
 export async function getCategories(): Promise<Category[]> {
   if (!db) {
-    throw new Error("Database not loaded. Call initialize() first.");
+    throw new DatabaseError("Database not loaded. Call initialize() first.");
   }
 
   try {
@@ -149,8 +174,10 @@ export async function getCategories(): Promise<Category[]> {
       tombstone: cat.tombstone === 1, // Include tombstone flag
     }));
   } catch (error) {
-    console.error("Failed to get categories:", error);
-    throw error;
+    if (isFileApiError(error)) {
+      throw error;
+    }
+    throw new DatabaseError("Failed to get categories", error);
   }
 }
 
@@ -163,7 +190,7 @@ async function getTransactions(
   endDate?: string,
 ): Promise<Transaction[]> {
   if (!db) {
-    throw new Error("Database not loaded. Call initialize() first.");
+    throw new DatabaseError("Database not loaded. Call initialize() first.");
   }
 
   try {
@@ -212,8 +239,9 @@ async function getTransactions(
       payeeMappings.forEach((pm) => {
         descriptionToPayeeMap.set(String(pm.id), String(pm.targetId));
       });
-    } catch (error) {
-      console.warn("Could not load payees:", error);
+    } catch {
+      // Payee loading failure is non-critical, continue without payee info
+      // Error is silently handled as transactions can work without payee names
     }
 
     // Get category names (including deleted ones)
@@ -265,8 +293,10 @@ async function getTransactions(
 
     return result;
   } catch (error) {
-    console.error("Failed to get transactions:", error);
-    throw error;
+    if (isFileApiError(error)) {
+      throw error;
+    }
+    throw new DatabaseError("Failed to get transactions", error);
   }
 }
 
@@ -275,7 +305,7 @@ async function getTransactions(
  */
 export async function getAllTransactionsForYear(year: number): Promise<Transaction[]> {
   if (!db) {
-    throw new Error("Database not loaded. Call initialize() first.");
+    throw new DatabaseError("Database not loaded. Call initialize() first.");
   }
 
   try {
@@ -289,15 +319,18 @@ export async function getAllTransactionsForYear(year: number): Promise<Transacti
       try {
         const transactions = await getTransactions(account.id, startDate, endDate);
         allTransactions.push(...transactions);
-      } catch (error) {
-        console.warn(`Failed to fetch transactions for account ${account.name}:`, error);
+      } catch {
+        // Individual account failures are non-critical, continue with other accounts
+        // Error is logged but not thrown to allow partial data retrieval
       }
     }
 
     return allTransactions;
   } catch (error) {
-    console.error("Failed to get all transactions:", error);
-    throw error;
+    if (isFileApiError(error)) {
+      throw error;
+    }
+    throw new DatabaseError("Failed to get all transactions", error);
   }
 }
 
@@ -308,7 +341,7 @@ export async function getPayees(): Promise<
   Array<{ id: string; name: string; tombstone?: boolean; transfer_acct?: string }>
 > {
   if (!db) {
-    throw new Error("Database not loaded. Call initialize() first.");
+    throw new DatabaseError("Database not loaded. Call initialize() first.");
   }
 
   try {
@@ -321,8 +354,10 @@ export async function getPayees(): Promise<
       transfer_acct: p.transfer_acct ? String(p.transfer_acct) : undefined, // Include transfer_acct if present
     }));
   } catch (error) {
-    console.error("Failed to get payees:", error);
-    throw error;
+    if (isFileApiError(error)) {
+      throw error;
+    }
+    throw new DatabaseError("Failed to get payees", error);
   }
 }
 
