@@ -51,7 +51,7 @@
     "vitest": "^4.0.16"
   },
   "lint-staged": {
-    "*.{ts,tsx,js,jsx}": [
+    "*.{ts,tsx,js,jsx,md}": [
       "oxfmt",
       "oxlint --deny-warnings"
     ]
