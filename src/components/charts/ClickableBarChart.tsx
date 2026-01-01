@@ -16,7 +16,7 @@ interface ChartDataItem {
   name: string; // Display name (may be truncated)
   fullName: string; // Full name for tooltip
   amount: number; // Original amount
-  [key: string]: any; // Allow additional properties
+  [key: string]: unknown; // Allow additional properties
 }
 
 interface ClickableBarChartProps {
@@ -48,12 +48,17 @@ export function ClickableBarChart({
     });
   };
 
+  interface PayloadItem {
+    value?: number;
+    payload?: ChartDataItem & { originalAmount?: number };
+  }
+
   const CustomTooltip = ({
     active,
     payload,
     label,
   }: TooltipProps<number, string> & {
-    payload?: Array<{ value?: number; payload?: any }>;
+    payload?: PayloadItem[];
     label?: string;
   }) => {
     if (active && payload && payload.length) {
@@ -63,7 +68,7 @@ export function ClickableBarChart({
       const isHidden = item && hiddenItems.has(item.id);
 
       // Use original amount - either from payload's originalAmount or from data
-      const payloadData = entry.payload as any;
+      const payloadData = entry.payload;
       const displayValue = payloadData?.originalAmount ?? (isHidden && item ? item.amount : value);
 
       return (
@@ -80,7 +85,7 @@ export function ClickableBarChart({
             {item?.fullName || label}
           </p>
           {tooltipFormatter ? (
-            tooltipFormatter(item!, displayValue)
+            tooltipFormatter(item!, displayValue ?? 0)
           ) : (
             <p style={{ margin: 0, color: "#ffffff" }}>
               Amount: $

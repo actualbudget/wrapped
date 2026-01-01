@@ -13,7 +13,7 @@ const cafPolyfill = (id: number) => {
 };
 
 // Define on all possible global objects to ensure they're accessible
-const defineGlobal = (name: string, value: any) => {
+const defineGlobal = (name: string, value: unknown) => {
   Object.defineProperty(globalThis, name, {
     writable: true,
     configurable: true,

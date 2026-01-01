@@ -10,8 +10,11 @@ export function useAnimatedNumber(target: number, duration = 1000, decimals = 0)
     const raf =
       typeof requestAnimationFrame !== "undefined"
         ? requestAnimationFrame
-        : typeof globalThis !== "undefined" && (globalThis as any).requestAnimationFrame
-          ? (globalThis as any).requestAnimationFrame
+        : typeof globalThis !== "undefined" &&
+            (globalThis as unknown as { requestAnimationFrame?: typeof requestAnimationFrame })
+              .requestAnimationFrame
+          ? (globalThis as unknown as { requestAnimationFrame: typeof requestAnimationFrame })
+              .requestAnimationFrame
           : typeof window !== "undefined" && window.requestAnimationFrame
             ? window.requestAnimationFrame
             : null;
@@ -44,8 +47,14 @@ export function useAnimatedNumber(target: number, duration = 1000, decimals = 0)
       if (animationFrame) {
         if (typeof cancelAnimationFrame !== "undefined") {
           cancelAnimationFrame(animationFrame);
-        } else if (typeof globalThis !== "undefined" && (globalThis as any).cancelAnimationFrame) {
-          (globalThis as any).cancelAnimationFrame(animationFrame);
+        } else if (
+          typeof globalThis !== "undefined" &&
+          (globalThis as unknown as { cancelAnimationFrame?: typeof cancelAnimationFrame })
+            .cancelAnimationFrame
+        ) {
+          (
+            globalThis as unknown as { cancelAnimationFrame: typeof cancelAnimationFrame }
+          ).cancelAnimationFrame(animationFrame);
         } else if (typeof window !== "undefined" && window.cancelAnimationFrame) {
           window.cancelAnimationFrame(animationFrame);
         }

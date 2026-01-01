@@ -15,8 +15,12 @@ describe("useAnimatedNumber", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     // Override the polyfills with mocks for testing
-    (globalThis as any).requestAnimationFrame = mockRAF;
-    (globalThis as any).cancelAnimationFrame = mockCAF;
+    (
+      globalThis as unknown as { requestAnimationFrame: typeof requestAnimationFrame }
+    ).requestAnimationFrame = mockRAF;
+    (
+      globalThis as unknown as { cancelAnimationFrame: typeof cancelAnimationFrame }
+    ).cancelAnimationFrame = mockCAF;
     if (typeof window !== "undefined") {
       window.requestAnimationFrame = mockRAF;
       window.cancelAnimationFrame = mockCAF;

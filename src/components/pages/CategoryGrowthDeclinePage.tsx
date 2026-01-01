@@ -84,9 +84,13 @@ export function CategoryGrowthDeclinePage({ data }: CategoryGrowthDeclinePagePro
                   borderRadius: "8px",
                   color: "white",
                 }}
-                formatter={(value: number | undefined, _name: string | undefined, props: any) => [
+                formatter={(
+                  value: number | undefined,
+                  _name: string | undefined,
+                  props: { payload?: { totalChange?: number } },
+                ) => [
                   `${(value ?? 0).toFixed(1)}%`,
-                  `Change: $${props.payload.totalChange.toLocaleString("en-US", { maximumFractionDigits: 0 })}`,
+                  `Change: $${(props.payload?.totalChange ?? 0).toLocaleString("en-US", { maximumFractionDigits: 0 })}`,
                 ]}
               />
               <Bar dataKey="percentageChange" animationDuration={1000}>

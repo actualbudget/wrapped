@@ -39,7 +39,7 @@ export function CategoryTrendsPage({ data }: CategoryTrendsPageProps) {
   const months = data.categoryTrends[0]?.monthlyData.map((m) => m.month.substring(0, 3)) || [];
 
   const chartData = months.map((month, index) => {
-    const dataPoint: any = { month };
+    const dataPoint: Record<string, string | number> = { month };
 
     // First, collect all visible category values for this month to find the max
     const visibleValues: number[] = [];

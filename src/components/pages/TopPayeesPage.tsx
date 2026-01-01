@@ -137,7 +137,8 @@ export function TopPayeesPage({ data }: TopPayeesPageProps) {
             tooltipFormatter={(item, displayValue) => (
               <>
                 <p style={{ margin: "0 0 8px 0", color: "#ffffff" }}>
-                  {item.transactions} transaction{item.transactions !== 1 ? "s" : ""}
+                  {item.transactions as number} transaction
+                  {(item.transactions as number) !== 1 ? "s" : ""}
                 </p>
                 {viewMode === "amount" && (
                   <p style={{ margin: 0, color: "#ffffff" }}>

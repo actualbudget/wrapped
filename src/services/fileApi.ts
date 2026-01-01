@@ -1,13 +1,15 @@
 import JSZip from "jszip";
 import type { Transaction, Account, Category } from "../types";
 
-let sqlJs: any = null;
-let db: any = null; // sql.js Database instance
+type SqlJsDatabase = Awaited<ReturnType<typeof import("sql.js").default>>["Database"];
+
+let sqlJs: Awaited<ReturnType<typeof import("sql.js").default>> | null = null;
+let db: InstanceType<SqlJsDatabase> | null = null; // sql.js Database instance
 
 /**
  * Initialize sql.js
  */
-async function initSqlJsLib(): Promise<any> {
+async function initSqlJsLib(): Promise<Awaited<ReturnType<typeof import("sql.js").default>>> {
   if (sqlJs) {
     return sqlJs;
   }
@@ -76,7 +78,7 @@ export async function initialize(file: File): Promise<void> {
 /**
  * Execute a query on the database
  */
-function query(sql: string, params: any[] = []): any[] {
+function query(sql: string, params: unknown[] = []): Record<string, unknown>[] {
   if (!db) {
     throw new Error("Database not loaded. Call initialize() first.");
   }
@@ -84,7 +86,7 @@ function query(sql: string, params: any[] = []): any[] {
   const stmt = db.prepare(sql);
   stmt.bind(params);
 
-  const results: any[] = [];
+  const results: Record<string, unknown>[] = [];
   while (stmt.step()) {
     const row = stmt.getAsObject();
     results.push(row);
@@ -104,10 +106,10 @@ export async function getAccounts(): Promise<Account[]> {
 
   try {
     const accounts = query("SELECT id, name, type, offbudget FROM accounts WHERE tombstone = 0");
-    return accounts.map((acc: any) => ({
-      id: acc.id,
-      name: acc.name,
-      type: acc.type,
+    return accounts.map((acc) => ({
+      id: String(acc.id),
+      name: String(acc.name),
+      type: String(acc.type),
       offbudget: acc.offbudget === 1,
     }));
   } catch (error) {
@@ -133,15 +135,15 @@ export async function getCategories(): Promise<Category[]> {
     let groupMap = new Map<string, string>();
     try {
       const groups = query("SELECT id, name FROM category_groups WHERE tombstone = 0");
-      groupMap = new Map(groups.map((g: any) => [g.id, g.name]));
+      groupMap = new Map(groups.map((g) => [String(g.id), String(g.name)]));
     } catch {
       // No category_groups table, that's okay
     }
 
-    return categories.map((cat: any) => ({
-      id: cat.id,
-      name: cat.name,
-      group: cat.cat_group ? groupMap.get(cat.cat_group) : undefined,
+    return categories.map((cat) => ({
+      id: String(cat.id),
+      name: String(cat.name),
+      group: cat.cat_group ? groupMap.get(String(cat.cat_group)) : undefined,
       is_income: cat.is_income === 1,
       tombstone: cat.tombstone === 1, // Include tombstone flag
     }));
@@ -171,7 +173,7 @@ async function getTransactions(
 
     // Convert date strings to YYYYMMDD integer format for comparison
     let dateFilter = "";
-    const params: any[] = [accountId];
+    const params: unknown[] = [accountId];
 
     if (startDate) {
       // Convert YYYY-MM-DD to YYYYMMDD integer
@@ -200,14 +202,14 @@ async function getTransactions(
       // Get all payees (including deleted ones)
       const payees = query("SELECT id, name, tombstone FROM payees");
       payeeInfoMap = new Map(
-        payees.map((p: any) => [p.id, { name: p.name, tombstone: p.tombstone === 1 }]),
+        payees.map((p) => [String(p.id), { name: String(p.name), tombstone: p.tombstone === 1 }]),
       );
-      payeeMap = new Map(payees.map((p: any) => [p.id, p.name]));
+      payeeMap = new Map(payees.map((p) => [String(p.id), String(p.name)]));
 
       // Get payee mappings: description UUID -> payee ID
       const payeeMappings = query("SELECT id, targetId FROM payee_mapping");
-      payeeMappings.forEach((pm: any) => {
-        descriptionToPayeeMap.set(pm.id, pm.targetId);
+      payeeMappings.forEach((pm) => {
+        descriptionToPayeeMap.set(String(pm.id), String(pm.targetId));
       });
     } catch (error) {
       console.warn("Could not load payees:", error);
@@ -216,7 +218,7 @@ async function getTransactions(
     // Get category names (including deleted ones)
     const categories = query("SELECT id, name, tombstone FROM categories");
     const categoryMap = new Map(
-      categories.map((c: any) => [c.id, { name: c.name, tombstone: c.tombstone === 1 }]),
+      categories.map((c) => [String(c.id), { name: String(c.name), tombstone: c.tombstone === 1 }]),
     );
 
     const result: Transaction[] = [];
@@ -233,26 +235,26 @@ async function getTransactions(
       }
 
       // Find payee: description (UUID) -> payee_mapping -> payee
-      const payeeId = t.description ? descriptionToPayeeMap.get(t.description) : undefined;
+      const payeeId = t.description ? descriptionToPayeeMap.get(String(t.description)) : undefined;
       const payeeName = payeeId ? payeeMap.get(payeeId) : undefined;
       const payeeInfo = payeeId && payeeInfoMap ? payeeInfoMap.get(payeeId) : undefined;
       const payeeTombstone = payeeInfo ? payeeInfo.tombstone : false;
 
       // Get category info (name and tombstone status)
-      const categoryInfo = t.category ? categoryMap.get(t.category) : undefined;
+      const categoryInfo = t.category ? categoryMap.get(String(t.category)) : undefined;
       const categoryName = categoryInfo ? categoryInfo.name : undefined;
       const categoryTombstone = categoryInfo ? categoryInfo.tombstone : false;
 
       result.push({
-        id: t.id,
-        account: t.account || accountId,
+        id: String(t.id),
+        account: t.account ? String(t.account) : accountId,
         date: dateStr,
-        amount: t.amount,
+        amount: Number(t.amount),
         payee: payeeId || undefined,
         payee_name: payeeName,
         payee_tombstone: payeeTombstone,
-        notes: t.notes || undefined,
-        category: t.category || undefined,
+        notes: t.notes ? String(t.notes) : undefined,
+        category: t.category ? String(t.category) : undefined,
         category_name: categoryName,
         category_tombstone: categoryTombstone,
         cleared: t.cleared === 1 || false,
@@ -311,11 +313,11 @@ export async function getPayees(): Promise<
   try {
     // Fetch both active and deleted payees, including transfer_acct field
     const payees = query("SELECT id, name, tombstone, transfer_acct FROM payees");
-    return payees.map((p: any) => ({
-      id: p.id,
-      name: p.name,
+    return payees.map((p) => ({
+      id: String(p.id),
+      name: String(p.name),
       tombstone: p.tombstone === 1, // Include tombstone flag
-      transfer_acct: p.transfer_acct || undefined, // Include transfer_acct if present
+      transfer_acct: p.transfer_acct ? String(p.transfer_acct) : undefined, // Include transfer_acct if present
     }));
   } catch (error) {
     console.error("Failed to get payees:", error);

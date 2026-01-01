@@ -26,10 +26,10 @@ vi.mock("../services/fileApi", () => ({
 const mockTransformToWrappedData = vi.fn();
 vi.mock("../utils/dataTransform", () => ({
   transformToWrappedData: (
-    transactions: any[],
-    categories: any[],
-    payees: any[],
-    accounts: any[],
+    transactions: unknown[],
+    categories: unknown[],
+    payees: unknown[],
+    accounts: unknown[],
   ) => mockTransformToWrappedData(transactions, categories, payees, accounts),
 }));
 

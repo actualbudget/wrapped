@@ -173,7 +173,11 @@ export function FutureProjectionPage({ data }: FutureProjectionPageProps) {
                 dataKey="2025 Actual"
                 stroke="#43e97b"
                 strokeWidth={3}
-                dot={(props: any) => {
+                dot={(props: {
+                  cx?: number;
+                  cy?: number;
+                  payload?: { month?: string; "2025 Actual"?: number };
+                }) => {
                   // Add custom dots for milestone points
                   if (!props.cx || !props.cy) return null;
                   const isMilestone = milestonePoints.some(
@@ -207,7 +211,11 @@ export function FutureProjectionPage({ data }: FutureProjectionPageProps) {
                 stroke="#43e97b"
                 strokeWidth={3}
                 strokeDasharray="5 5"
-                dot={(props: any) => {
+                dot={(props: {
+                  cx?: number;
+                  cy?: number;
+                  payload?: { month?: string; "2026 Projected"?: number };
+                }) => {
                   // Add custom dots for milestone points on projected line
                   if (!props.cx || !props.cy) return null;
                   const isMilestone = milestonePoints.some(

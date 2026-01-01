@@ -51,7 +51,7 @@ const MONTHS = [
 export function transformToWrappedData(
   transactions: Transaction[],
   categories: Array<{ id: string; name: string; tombstone?: boolean }> = [],
-  payees: Array<{ id: string; name: string; tombstone?: boolean }> = [],
+  payees: Array<{ id: string; name: string; tombstone?: boolean; transfer_acct?: string }> = [],
   accounts: Account[] = [],
 ): WrappedData {
   const yearStart = startOfYear(new Date(YEAR, 0, 1));
@@ -70,8 +70,8 @@ export function transformToWrappedData(
   const payeeIdToTransferAcct = new Map<string, string>(); // payee_id -> transfer_account_id
   payees.forEach((p) => {
     // Store transfer_acct if present (indicates this payee is a transfer)
-    if ((p as any).transfer_acct) {
-      payeeIdToTransferAcct.set(p.id, (p as any).transfer_acct);
+    if (p.transfer_acct) {
+      payeeIdToTransferAcct.set(p.id, p.transfer_acct);
     }
   });
 
@@ -229,7 +229,7 @@ export function transformToWrappedData(
   const payeeIdToTombstone = new Map<string, boolean>();
   payees.forEach((p) => {
     payeeIdToName.set(p.id, p.name);
-    payeeIdToTombstone.set(p.id, (p as any).tombstone || false);
+    payeeIdToTombstone.set(p.id, p.tombstone || false);
   });
 
   const payeeMap = new Map<string, { amount: number; count: number; name: string }>();

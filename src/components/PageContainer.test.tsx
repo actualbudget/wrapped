@@ -5,13 +5,15 @@ import { PageContainer } from "./PageContainer";
 // Mock framer-motion
 vi.mock("framer-motion", () => ({
   motion: {
-    div: ({ children, id, className, ...props }: any) => (
+    div: ({ children, id, className, ...props }: React.ComponentProps<"div">) => (
       <div id={id} className={className} data-testid="motion-div" {...props}>
         {children}
       </div>
     ),
   },
-  AnimatePresence: ({ children }: any) => <div data-testid="animate-presence">{children}</div>,
+  AnimatePresence: ({ children }: React.PropsWithChildren) => (
+    <div data-testid="animate-presence">{children}</div>
+  ),
 }));
 
 describe("PageContainer", () => {

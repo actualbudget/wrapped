@@ -6,12 +6,14 @@ import { createMockWrappedData } from "../../test-utils/mockData";
 // Mock framer-motion
 vi.mock("framer-motion", () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-    h1: ({ children, ...props }: any) => <h1 {...props}>{children}</h1>,
-    p: ({ children, ...props }: any) => <p {...props}>{children}</p>,
-    strong: ({ children, ...props }: any) => <strong {...props}>{children}</strong>,
+    div: ({ children, ...props }: React.ComponentProps<"div">) => <div {...props}>{children}</div>,
+    h1: ({ children, ...props }: React.ComponentProps<"h1">) => <h1 {...props}>{children}</h1>,
+    p: ({ children, ...props }: React.ComponentProps<"p">) => <p {...props}>{children}</p>,
+    strong: ({ children, ...props }: React.ComponentProps<"strong">) => (
+      <strong {...props}>{children}</strong>
+    ),
   },
-  AnimatePresence: ({ children }: any) => children,
+  AnimatePresence: ({ children }: React.PropsWithChildren) => children,
 }));
 
 describe("IntroPage", () => {
