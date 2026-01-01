@@ -3,9 +3,6 @@
   "version": "1.0.0",
   "license": "MIT",
   "type": "module",
-  "engines": {
-    "node": ">=20.0.0"
-  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -44,6 +41,9 @@
     "typescript": "^5.9.3",
     "vite": "^7.3.0",
     "vitest": "^4.0.16"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   },
   "packageManager": "yarn@4.12.0"
 }
