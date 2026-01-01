@@ -52,6 +52,7 @@ test.describe('Happy Path - Full App Navigation', () => {
       'top-categories-page',
       'category-trends-page',
       'top-payees-page',
+      'budget-vs-actual-page',
       'calendar-heatmap-page',
       'spending-velocity-page',
       'future-projection-page',

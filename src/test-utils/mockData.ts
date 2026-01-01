@@ -15,6 +15,8 @@ import type {
   CategoryGrowth,
   SavingsMilestone,
   FutureProjection,
+  BudgetComparisonData,
+  CategoryBudget,
 } from '../types';
 
 const MONTHS = [
@@ -260,6 +262,72 @@ export function createMockFutureProjection(
   };
 }
 
+export function createMockBudgetComparison(
+  overrides?: Partial<BudgetComparisonData>,
+): BudgetComparisonData {
+  const monthlyBudgets = MONTHS.map((month, index) => ({
+    month,
+    budgetedAmount: 500,
+    actualAmount: 450 + index * 10,
+    carryForward: index === 0 ? 0 : 50,
+    effectiveBudget: index === 0 ? 500 : 550,
+    remaining: index === 0 ? 50 : 100 - index * 10,
+    variance: index === 0 ? -50 : -100 + index * 10,
+    variancePercentage: index === 0 ? -10 : -18.18 + index * 1.82,
+  }));
+
+  const categoryBudgets: CategoryBudget[] = [
+    {
+      categoryId: 'cat1',
+      categoryName: 'Groceries',
+      categoryGroup: 'Food',
+      monthlyBudgets,
+      totalBudgeted: 6000,
+      totalActual: 5400,
+      totalVariance: -600,
+      totalVariancePercentage: -10,
+    },
+    {
+      categoryId: 'cat2',
+      categoryName: 'Rent',
+      categoryGroup: 'Housing',
+      monthlyBudgets: MONTHS.map(month => ({
+        month,
+        budgetedAmount: 1200,
+        actualAmount: 1200,
+        carryForward: 0,
+        effectiveBudget: 1200,
+        remaining: 0,
+        variance: 0,
+        variancePercentage: 0,
+      })),
+      totalBudgeted: 14400,
+      totalActual: 14400,
+      totalVariance: 0,
+      totalVariancePercentage: 0,
+    },
+  ];
+
+  return {
+    categoryBudgets: overrides?.categoryBudgets || categoryBudgets,
+    monthlyTotals: MONTHS.map((month, index) => ({
+      month,
+      totalBudgeted: 1700,
+      totalActual: 1650 + index * 10,
+      variance: -50 - index * 10,
+    })),
+    overallBudgeted: 20400,
+    overallActual: 19800,
+    overallVariance: -600,
+    overallVariancePercentage: -2.94,
+    groupSortOrder: new Map([
+      ['Food', 1],
+      ['Housing', 2],
+    ]),
+    ...overrides,
+  };
+}
+
 export function createMockWrappedData(overrides?: Partial<WrappedData>): WrappedData {
   const monthlyData = createMockMonthlyData();
   const topMonths = createMockTopMonths(3);
@@ -310,6 +378,7 @@ export function createMockWrappedData(overrides?: Partial<WrappedData>): Wrapped
     categoryGrowth: createMockCategoryGrowth(),
     savingsMilestones: createMockSavingsMilestones(),
     futureProjection: createMockFutureProjection(),
+    budgetComparison: undefined,
     ...overrides,
   };
 }

@@ -30,6 +30,8 @@ import type {
   CategoryGrowth,
   SavingsMilestone,
   FutureProjection,
+  BudgetComparisonData,
+  CategoryBudget,
 } from '../types';
 
 import { integerToAmount } from '../services/fileApi';
@@ -52,12 +54,173 @@ const MONTHS = [
   'December',
 ];
 
+/**
+ * Calculate budget comparison data
+ */
+function calculateBudgetComparison(
+  expenseTransactions: Transaction[],
+  _categories: Array<{ id: string; name: string; tombstone?: boolean; group?: string }>,
+  budgetData: Array<{ categoryId: string; month: string; budgetedAmount: number }>,
+  accountOffbudgetMap: Map<string, boolean>,
+  categoryIdToName: Map<string, string>,
+  categoryIdToGroup: Map<string, string>,
+): BudgetComparisonData | undefined {
+  if (!budgetData || budgetData.length === 0) {
+    return undefined;
+  }
+
+  // Create a map of budget data: categoryId -> month -> budgetedAmount
+  const budgetMap = new Map<string, Map<string, number>>();
+  budgetData.forEach(budget => {
+    if (!budgetMap.has(budget.categoryId)) {
+      budgetMap.set(budget.categoryId, new Map());
+    }
+    const categoryBudgets = budgetMap.get(budget.categoryId)!;
+    categoryBudgets.set(budget.month, budget.budgetedAmount);
+  });
+
+  // Calculate actual spending per category per month
+  const actualSpendingMap = new Map<string, Map<string, number>>(); // categoryId -> month -> actualAmount
+
+  expenseTransactions.forEach(t => {
+    const date = parseISO(t.date);
+    const monthName = MONTHS[date.getMonth()];
+    const isOffBudget = accountOffbudgetMap.get(t.account) || false;
+
+    let categoryId: string;
+    if (!t.category || t.category === '') {
+      categoryId = isOffBudget ? 'off-budget' : 'uncategorized';
+    } else {
+      categoryId = t.category;
+    }
+
+    if (!actualSpendingMap.has(categoryId)) {
+      actualSpendingMap.set(categoryId, new Map());
+    }
+    const categorySpending = actualSpendingMap.get(categoryId)!;
+    const currentAmount = categorySpending.get(monthName) || 0;
+    categorySpending.set(monthName, currentAmount + integerToAmount(Math.abs(t.amount)));
+  });
+
+  // Get all unique category IDs from both budget and actual spending
+  const allCategoryIds = new Set<string>();
+  budgetMap.forEach((_, categoryId) => allCategoryIds.add(categoryId));
+  actualSpendingMap.forEach((_, categoryId) => allCategoryIds.add(categoryId));
+
+  // Build category budgets
+  const categoryBudgets: CategoryBudget[] = Array.from(allCategoryIds).map(categoryId => {
+    const categoryName =
+      categoryId === 'uncategorized'
+        ? 'Uncategorized'
+        : categoryId === 'off-budget'
+          ? 'Off Budget'
+          : categoryIdToName.get(categoryId) || categoryId;
+
+    const categoryGroup = categoryIdToGroup.get(categoryId);
+
+    const budgetMapForCategory = budgetMap.get(categoryId) || new Map();
+    const actualMapForCategory = actualSpendingMap.get(categoryId) || new Map();
+
+    // Calculate monthly budgets with carry forward logic
+    let carryForwardFromPrevious = 0; // Carry forward from previous month
+    const monthlyBudgets = MONTHS.map(monthName => {
+      const budgetedAmount = budgetMapForCategory.get(monthName) || 0;
+      const actualAmount = actualMapForCategory.get(monthName) || 0;
+      const carryForward = carryForwardFromPrevious;
+      const effectiveBudget = budgetedAmount + carryForward; // Available to spend this month
+      const remaining = effectiveBudget - actualAmount; // What's left after spending
+      const variance = actualAmount - effectiveBudget; // Variance against effective budget
+      const variancePercentage = effectiveBudget !== 0 ? (variance / effectiveBudget) * 100 : 0;
+
+      // Update carry forward for next month (only positive remaining amounts carry forward)
+      carryForwardFromPrevious = remaining > 0 ? remaining : 0;
+
+      return {
+        month: monthName,
+        budgetedAmount,
+        actualAmount,
+        carryForward,
+        effectiveBudget,
+        remaining,
+        variance,
+        variancePercentage,
+      };
+    });
+
+    const totalBudgeted = monthlyBudgets.reduce((sum, m) => sum + m.budgetedAmount, 0);
+    const totalActual = monthlyBudgets.reduce((sum, m) => sum + m.actualAmount, 0);
+    // Total variance should use effective budgets (which include carry forward)
+    const totalEffectiveBudget = monthlyBudgets.reduce((sum, m) => sum + m.effectiveBudget, 0);
+    const totalVariance = totalActual - totalEffectiveBudget;
+    const totalVariancePercentage =
+      totalEffectiveBudget !== 0 ? (totalVariance / totalEffectiveBudget) * 100 : 0;
+
+    return {
+      categoryId,
+      categoryName,
+      categoryGroup,
+      monthlyBudgets,
+      totalBudgeted,
+      totalActual,
+      totalVariance,
+      totalVariancePercentage,
+    };
+  });
+
+  // Calculate monthly totals (using effective budgets which include carry forward)
+  const monthlyTotals = MONTHS.map(monthName => {
+    let totalBudgeted = 0;
+    let totalEffectiveBudget = 0;
+    let totalActual = 0;
+
+    categoryBudgets.forEach(cat => {
+      const monthlyData = cat.monthlyBudgets.find(m => m.month === monthName);
+      if (monthlyData) {
+        totalBudgeted += monthlyData.budgetedAmount;
+        totalEffectiveBudget += monthlyData.effectiveBudget;
+        totalActual += monthlyData.actualAmount;
+      }
+    });
+
+    return {
+      month: monthName,
+      totalBudgeted,
+      totalActual,
+      variance: totalActual - totalEffectiveBudget, // Variance against effective budget
+    };
+  });
+
+  // Calculate overall totals (using effective budgets which include carry forward)
+  const overallBudgeted = categoryBudgets.reduce((sum, cat) => sum + cat.totalBudgeted, 0);
+  const overallActual = categoryBudgets.reduce((sum, cat) => sum + cat.totalActual, 0);
+  // Calculate total effective budget across all categories
+  const overallEffectiveBudget = categoryBudgets.reduce(
+    (sum, cat) => sum + cat.monthlyBudgets.reduce((monthSum, m) => monthSum + m.effectiveBudget, 0),
+    0,
+  );
+  const overallVariance = overallActual - overallEffectiveBudget;
+  const overallVariancePercentage =
+    overallEffectiveBudget !== 0 ? (overallVariance / overallEffectiveBudget) * 100 : 0;
+
+  return {
+    categoryBudgets,
+    monthlyTotals,
+    overallBudgeted,
+    overallActual,
+    overallVariance,
+    overallVariancePercentage,
+    groupSortOrder: undefined, // Will be set by transformToWrappedData
+  };
+}
+
 export function transformToWrappedData(
   transactions: Transaction[],
-  categories: Array<{ id: string; name: string; tombstone?: boolean }> = [],
+  categories: Array<{ id: string; name: string; tombstone?: boolean; group?: string }> = [],
   payees: Array<{ id: string; name: string; tombstone?: boolean; transfer_acct?: string }> = [],
   accounts: Account[] = [],
   year: number = DEFAULT_YEAR,
+  budgetData?: Array<{ categoryId: string; month: string; budgetedAmount: number }>,
+  groupSortOrders: Map<string, number> = new Map(),
 ): WrappedData {
   try {
     const yearStart = startOfYear(new Date(year, 0, 1));
@@ -749,6 +912,29 @@ export function transformToWrappedData(
       projectedYearEndSavings,
     };
 
+    // Create map of category ID to group name
+    const categoryIdToGroup = new Map<string, string>();
+    categories.forEach(cat => {
+      if (cat.group) {
+        categoryIdToGroup.set(cat.id, cat.group);
+      }
+    });
+
+    // Calculate budget comparison if budget data is available
+    const budgetComparison = calculateBudgetComparison(
+      expenseTransactions,
+      categories,
+      budgetData || [],
+      accountOffbudgetMap,
+      categoryIdToName,
+      categoryIdToGroup,
+    );
+
+    // Add group sort orders to budget comparison if available
+    if (budgetComparison && groupSortOrders.size > 0) {
+      budgetComparison.groupSortOrder = groupSortOrders;
+    }
+
     return {
       year,
       totalIncome,
@@ -775,6 +961,7 @@ export function transformToWrappedData(
       categoryGrowth,
       savingsMilestones,
       futureProjection,
+      budgetComparison,
     };
   } catch (error) {
     if (isDataTransformError(error)) {

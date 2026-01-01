@@ -4,6 +4,7 @@ import styles from './App.module.css';
 import { ConnectionForm } from './components/ConnectionForm';
 import { Navigation } from './components/Navigation';
 import { AccountBreakdownPage } from './components/pages/AccountBreakdownPage';
+import { BudgetVsActualPage } from './components/pages/BudgetVsActualPage';
 import { CalendarHeatmapPage } from './components/pages/CalendarHeatmapPage';
 import { CategoryTrendsPage } from './components/pages/CategoryTrendsPage';
 import { FutureProjectionPage } from './components/pages/FutureProjectionPage';
@@ -24,6 +25,7 @@ const PAGES = [
   { component: TopCategoriesPage, id: 'top-categories' },
   { component: CategoryTrendsPage, id: 'category-trends' },
   { component: TopPayeesPage, id: 'top-payees' },
+  { component: BudgetVsActualPage, id: 'budget-vs-actual' },
   { component: CalendarHeatmapPage, id: 'calendar-heatmap' },
   { component: SpendingVelocityPage, id: 'spending-velocity' },
   { component: FutureProjectionPage, id: 'future-projection' },

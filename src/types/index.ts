@@ -153,6 +153,41 @@ export interface FutureProjection {
   projectedYearEndSavings: number;
 }
 
+export interface CategoryBudget {
+  categoryId: string;
+  categoryName: string;
+  categoryGroup?: string;
+  monthlyBudgets: Array<{
+    month: string;
+    budgetedAmount: number;
+    actualAmount: number;
+    carryForward: number; // Amount carried forward from previous month
+    effectiveBudget: number; // budgetedAmount + carryForward (available to spend)
+    remaining: number; // effectiveBudget - actualAmount (carries forward to next month)
+    variance: number; // actualAmount - effectiveBudget
+    variancePercentage: number;
+  }>;
+  totalBudgeted: number;
+  totalActual: number;
+  totalVariance: number;
+  totalVariancePercentage: number;
+}
+
+export interface BudgetComparisonData {
+  categoryBudgets: CategoryBudget[];
+  monthlyTotals: Array<{
+    month: string;
+    totalBudgeted: number;
+    totalActual: number;
+    variance: number;
+  }>;
+  overallBudgeted: number;
+  overallActual: number;
+  overallVariance: number;
+  overallVariancePercentage: number;
+  groupSortOrder?: Map<string, number>; // Map of group name to sort_order
+}
+
 export interface WrappedData {
   year: number;
   totalIncome: number;
@@ -179,4 +214,5 @@ export interface WrappedData {
   categoryGrowth: CategoryGrowth[];
   savingsMilestones: SavingsMilestone[];
   futureProjection: FutureProjection;
+  budgetComparison?: BudgetComparisonData;
 }

@@ -82,22 +82,6 @@ yarn preview
 2. **Wait for Processing**: The app will extract and process your 2025 budget data (this happens entirely in your browser)
 3. **Navigate Through Pages**: Use the Next/Previous buttons or arrow keys (← →) to navigate through the wrapped pages
 
-## Pages
-
-The wrapped includes the following 11 pages:
-
-1. **Intro**: Welcome page with overview statistics and transaction count
-2. **Savings Rate**: Percentage and breakdown of savings with income vs expenses comparison
-3. **Account Breakdown**: Spending breakdown by account type
-4. **Monthly Breakdown**: Bar chart showing income and expenses by month with transaction statistics
-5. **Top Categories**: Horizontal bar chart of top spending categories
-6. **Category Trends**: Line chart showing spending trends for top categories over time
-7. **Top Payees**: Horizontal bar chart of top payees by amount spent
-8. **Calendar Heatmap**: GitHub-style calendar showing transaction frequency throughout the year
-9. **Spending Velocity**: Daily spending averages and fastest/slowest spending periods
-10. **Future Projection**: Projected savings and financial outlook for the next year
-11. **Outro**: Final summary and thank you message
-
 ## Technology Stack
 
 - **React 19** with TypeScript

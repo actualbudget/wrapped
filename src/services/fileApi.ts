@@ -145,6 +145,29 @@ export async function getAccounts(): Promise<Account[]> {
 }
 
 /**
+ * Get category group sort orders (group name -> sort_order)
+ */
+export async function getCategoryGroupSortOrders(): Promise<Map<string, number>> {
+  if (!db) {
+    throw new DatabaseError('Database not loaded. Call initialize() first.');
+  }
+
+  const groupSortOrderMap = new Map<string, number>();
+  try {
+    const groups = query('SELECT id, name, sort_order FROM category_groups WHERE tombstone = 0');
+    groups.forEach(g => {
+      const name = String(g.name);
+      if (g.sort_order !== null && g.sort_order !== undefined) {
+        groupSortOrderMap.set(name, Number(g.sort_order));
+      }
+    });
+  } catch {
+    // No category_groups table or sort_order column, that's okay
+  }
+  return groupSortOrderMap;
+}
+
+/**
  * Get categories from database
  */
 export async function getCategories(): Promise<Category[]> {
@@ -378,6 +401,84 @@ export async function clearBudget(): Promise<void> {
   if (db) {
     db.close();
     db = null;
+  }
+}
+
+/**
+ * Get budgeted amounts from database
+ * Queries the zero_budgets table directly (schema is known)
+ */
+export async function getBudgetedAmounts(
+  year: number,
+): Promise<Array<{ categoryId: string; month: string; budgetedAmount: number }>> {
+  if (!db) {
+    throw new DatabaseError('Database not loaded. Call initialize() first.');
+  }
+
+  try {
+    // Actual Budget uses zero_budgets table with:
+    // - month: INTEGER in YYYYMM format (e.g., 202501 for January 2025)
+    // - category: TEXT (UUID matching category IDs)
+    // - amount: INTEGER (budgeted amount in cents)
+    const yearStart = year * 100 + 1; // e.g., 202501
+    const yearEnd = year * 100 + 12; // e.g., 202512
+
+    // Query zero_budgets table directly with parameterized query
+    const sql = 'SELECT month, category, amount FROM zero_budgets WHERE month >= ? AND month <= ?';
+    const budgetRows = query(sql, [yearStart, yearEnd]);
+
+    // Month names for conversion
+    const monthNames = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+
+    // Convert to structured format
+    const result: Array<{ categoryId: string; month: string; budgetedAmount: number }> = [];
+
+    for (const row of budgetRows) {
+      const categoryId = String(row.category || '');
+      const monthInt = Number(row.month || 0);
+      const amount = Number(row.amount || 0);
+
+      // Skip if missing required data
+      if (!categoryId || !monthInt || amount === 0) {
+        continue;
+      }
+
+      // Convert month INTEGER (YYYYMM format) to month name
+      // Extract month number from YYYYMM (e.g., 202501 -> 01 -> January)
+      const monthNum = monthInt % 100; // Get last 2 digits
+      if (monthNum < 1 || monthNum > 12) {
+        continue; // Skip invalid month numbers
+      }
+
+      const monthStr = monthNames[monthNum - 1];
+      const budgetedAmount = integerToAmount(amount);
+
+      result.push({
+        categoryId,
+        month: monthStr,
+        budgetedAmount,
+      });
+    }
+
+    return result;
+  } catch (error) {
+    // If budget data fetch fails (e.g., table doesn't exist), return empty array
+    // This allows graceful degradation - the page will show "No budget data available"
+    console.warn('Failed to fetch budget data:', error);
+    return [];
   }
 }
 

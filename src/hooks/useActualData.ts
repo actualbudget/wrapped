@@ -8,6 +8,8 @@ import {
   getCategories,
   getPayees,
   getAccounts,
+  getBudgetedAmounts,
+  getCategoryGroupSortOrders,
   shutdown,
   clearBudget,
 } from '../services/fileApi';
@@ -40,19 +42,33 @@ export function useActualData() {
       // Fetch all data
       setProgress(50);
       const transactions = await getAllTransactionsForYear(DEFAULT_YEAR);
-      setProgress(70);
+      setProgress(60);
       const categories = await getCategories();
       const payees = await getPayees();
       const accounts = await getAccounts();
+      setProgress(70);
 
-      // Transform data
+      // Fetch budget data and group sort orders (non-blocking - returns empty array/map if unavailable)
+      let budgetData: Array<{ categoryId: string; month: string; budgetedAmount: number }> = [];
+      let groupSortOrders = new Map<string, number>();
+      try {
+        budgetData = await getBudgetedAmounts(DEFAULT_YEAR);
+        groupSortOrders = await getCategoryGroupSortOrders();
+      } catch (error) {
+        // Budget data or group sort order fetch failed, continue without it
+        console.warn('Failed to fetch budget data or group sort orders:', error);
+      }
+
       setProgress(85);
+      // Transform data
       const wrappedData = transformToWrappedData(
         transactions,
         categories,
         payees,
         accounts,
         DEFAULT_YEAR,
+        budgetData.length > 0 ? budgetData : undefined,
+        groupSortOrders,
       );
 
       setData(wrappedData);
