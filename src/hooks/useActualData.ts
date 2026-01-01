@@ -63,7 +63,11 @@ export function useActualData() {
   );
 
   const fetchData = useCallback(
-    async (uploadedFile: File, includeOffBudget: boolean = false) => {
+    async (
+      uploadedFile: File,
+      includeOffBudget: boolean = false,
+      overrideCurrencySymbol?: string,
+    ) => {
       setLoading(true);
       setError(null);
       setFile(uploadedFile);
@@ -120,12 +124,15 @@ export function useActualData() {
         setGroupSortOrders(fetchedGroupSortOrders);
         setCurrencySymbol(currencySymbol);
 
+        // Use override currency if provided, otherwise use the currency from the database
+        const effectiveCurrency = overrideCurrencySymbol || currencySymbol;
+
         // Transform data
         setProgress(85);
         transformData(
           raw,
           includeOffBudget,
-          currencySymbol,
+          effectiveCurrency,
           fetchedBudgetData.length > 0 ? fetchedBudgetData : undefined,
           fetchedGroupSortOrders,
         );
@@ -148,11 +155,11 @@ export function useActualData() {
   );
 
   const refreshData = useCallback(
-    async (includeOffBudget: boolean = false) => {
+    async (includeOffBudget: boolean = false, overrideCurrencySymbol?: string) => {
       if (!file) {
         throw new Error('No file available');
       }
-      await fetchData(file, includeOffBudget);
+      await fetchData(file, includeOffBudget, overrideCurrencySymbol);
     },
     [file, fetchData],
   );

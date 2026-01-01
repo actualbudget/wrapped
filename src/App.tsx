@@ -45,7 +45,7 @@ function App() {
   const { data, loading, error, progress, fetchData, retransformData, retry } = useActualData();
 
   const handleConnect = async (file: File) => {
-    await fetchData(file, includeOffBudget);
+    await fetchData(file, includeOffBudget, overrideCurrency || undefined);
   };
 
   const handleToggle = (value: boolean) => {
