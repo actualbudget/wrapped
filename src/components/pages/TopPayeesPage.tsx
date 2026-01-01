@@ -136,6 +136,11 @@ export function TopPayeesPage({ data }: TopPayeesPageProps) {
             colors={PAYEE_COLORS}
             height={600}
             margin={{ top: 20, right: 30, left: 100, bottom: 5 }}
+            xAxisFormatter={
+              viewMode === "amount"
+                ? (value) => `$${Math.round(value).toLocaleString("en-US")}`
+                : undefined
+            }
             tooltipFormatter={(item, displayValue) => (
               <>
                 <p style={{ margin: "0 0 8px 0", color: "#ffffff" }}>

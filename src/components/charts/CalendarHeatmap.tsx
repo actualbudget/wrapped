@@ -8,10 +8,10 @@ import styles from "./CalendarHeatmap.module.css";
 interface CalendarHeatmapProps {
   data: CalendarDay[];
   year?: number;
+  viewMode?: "count" | "amount";
 }
 
-export function CalendarHeatmap({ data, year = 2025 }: CalendarHeatmapProps) {
-  const [viewMode, setViewMode] = useState<"count" | "amount">("count");
+export function CalendarHeatmap({ data, year = 2025, viewMode = "count" }: CalendarHeatmapProps) {
   const [tooltip, setTooltip] = useState<{
     date: string;
     count: number;
@@ -96,20 +96,6 @@ export function CalendarHeatmap({ data, year = 2025 }: CalendarHeatmapProps) {
   return (
     <div className={styles.container}>
       <div className={styles.heatmap}>
-        <div className={styles.toggleContainer}>
-          <button
-            className={`${styles.toggleButton} ${viewMode === "count" ? styles.active : ""}`}
-            onClick={() => setViewMode("count")}
-          >
-            Count
-          </button>
-          <button
-            className={`${styles.toggleButton} ${viewMode === "amount" ? styles.active : ""}`}
-            onClick={() => setViewMode("amount")}
-          >
-            Amount
-          </button>
-        </div>
         <div className={styles.weeks}>
           {weeks.map((week, weekIndex) => {
             const firstDayDate = week.find((d) => d.day !== null)?.date || week[0]?.date;

@@ -25,6 +25,7 @@ interface ClickableBarChartProps {
   height?: number;
   margin?: { top?: number; right?: number; left?: number; bottom?: number };
   tooltipFormatter?: (item: ChartDataItem, displayValue: number) => React.ReactNode;
+  xAxisFormatter?: (value: number) => string;
 }
 
 export function ClickableBarChart({
@@ -33,6 +34,7 @@ export function ClickableBarChart({
   height = 600,
   margin = { top: 20, right: 30, left: 100, bottom: 5 },
   tooltipFormatter,
+  xAxisFormatter,
 }: ClickableBarChartProps) {
   const [hiddenItems, setHiddenItems] = useState<Set<string>>(new Set());
 
@@ -120,7 +122,7 @@ export function ClickableBarChart({
     <ResponsiveContainer width="100%" height={height}>
       <BarChart data={transformedData} layout="vertical" margin={margin}>
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
-        <XAxis type="number" stroke="rgba(255, 255, 255, 0.8)" />
+        <XAxis type="number" stroke="rgba(255, 255, 255, 0.8)" tickFormatter={xAxisFormatter} />
         <YAxis type="category" dataKey="name" stroke="rgba(255, 255, 255, 0.8)" width={90} />
         <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255, 255, 255, 0.1)" }} />
         <Bar dataKey="amount" animationDuration={1000}>

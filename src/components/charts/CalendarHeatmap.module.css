@@ -1,6 +1,7 @@
 .container {
   width: 100%;
   max-width: 950px;
+  min-width: max-content;
   margin: 0 auto;
   position: relative;
 }
@@ -46,9 +47,10 @@
   display: flex;
   gap: 4px;
   margin-bottom: 1rem;
-  flex-wrap: wrap;
-  justify-content: center;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
   align-items: flex-start;
+  min-width: max-content;
 }
 
 .week {
@@ -122,6 +124,7 @@
 
   .weeks {
     gap: 3px;
+    justify-content: flex-start;
   }
 
   .week {
@@ -130,5 +133,10 @@
 
   .heatmap {
     padding: 1rem;
+    min-width: max-content;
+  }
+
+  .container {
+    max-width: 100%;
   }
 }

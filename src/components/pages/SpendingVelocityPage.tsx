@@ -66,7 +66,10 @@ export function SpendingVelocityPage({ data }: SpendingVelocityPageProps) {
             <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
               <XAxis dataKey="week" stroke="rgba(255, 255, 255, 0.8)" />
-              <YAxis stroke="rgba(255, 255, 255, 0.8)" />
+              <YAxis
+                stroke="rgba(255, 255, 255, 0.8)"
+                tickFormatter={(value) => `$${Math.round(value).toLocaleString("en-US")}`}
+              />
               <Tooltip
                 contentStyle={{
                   backgroundColor: "rgba(0, 0, 0, 0.9)",

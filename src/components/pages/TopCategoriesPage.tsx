@@ -64,6 +64,7 @@ export function TopCategoriesPage({ data }: TopCategoriesPageProps) {
             colors={CATEGORY_COLORS}
             height={600}
             margin={{ top: 20, right: 30, left: 100, bottom: 5 }}
+            xAxisFormatter={(value) => `$${Math.round(value).toLocaleString("en-US")}`}
           />
         </div>
 

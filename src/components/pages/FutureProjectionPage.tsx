@@ -147,7 +147,10 @@ export function FutureProjectionPage({ data }: FutureProjectionPageProps) {
             <LineChart data={chartData} margin={{ top: 20, right: 80, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
               <XAxis dataKey="month" stroke="rgba(255, 255, 255, 0.8)" />
-              <YAxis stroke="rgba(255, 255, 255, 0.8)" />
+              <YAxis
+                stroke="rgba(255, 255, 255, 0.8)"
+                tickFormatter={(value) => `$${Math.round(value).toLocaleString("en-US")}`}
+              />
               <Tooltip
                 content={() => null}
                 cursor={{ stroke: "rgba(255, 255, 255, 0.3)", strokeWidth: 1 }}
