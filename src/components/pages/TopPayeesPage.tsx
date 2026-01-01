@@ -138,9 +138,10 @@ export function TopPayeesPage({ data }: TopPayeesPageProps) {
             margin={{ top: 20, right: 30, left: 100, bottom: 5 }}
             xAxisFormatter={
               viewMode === 'amount'
-                ? value => `$${Math.round(value).toLocaleString('en-US')}`
+                ? value => `${data.currencySymbol}${Math.round(value).toLocaleString('en-US')}`
                 : undefined
             }
+            currencySymbol={data.currencySymbol}
             tooltipFormatter={(item, displayValue) => (
               <>
                 <p style={{ margin: '0 0 8px 0', color: '#ffffff' }}>
@@ -149,7 +150,7 @@ export function TopPayeesPage({ data }: TopPayeesPageProps) {
                 </p>
                 {viewMode === 'amount' && (
                   <p style={{ margin: 0, color: '#ffffff' }}>
-                    Amount: $
+                    Amount: {data.currencySymbol}
                     {typeof displayValue === 'number'
                       ? Math.round(displayValue).toLocaleString('en-US')
                       : '0'}
@@ -172,7 +173,10 @@ export function TopPayeesPage({ data }: TopPayeesPageProps) {
               <div key={payeeName} className={styles.statCard}>
                 <div className={styles.statValue}>
                   {viewMode === 'amount' ? (
-                    <>${payee.amount.toLocaleString('en-US', { maximumFractionDigits: 0 })}</>
+                    <>
+                      {data.currencySymbol}
+                      {payee.amount.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                    </>
                   ) : (
                     <>{payee.transactionCount}</>
                   )}
@@ -190,7 +194,10 @@ export function TopPayeesPage({ data }: TopPayeesPageProps) {
                       {payee.transactionCount} transaction{payee.transactionCount !== 1 ? 's' : ''}
                     </>
                   ) : (
-                    <>${payee.amount.toLocaleString('en-US', { maximumFractionDigits: 0 })}</>
+                    <>
+                      {data.currencySymbol}
+                      {payee.amount.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                    </>
                   )}
                 </div>
               </div>

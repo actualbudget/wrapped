@@ -9,9 +9,15 @@ interface CalendarHeatmapProps {
   data: CalendarDay[];
   year?: number;
   viewMode?: 'count' | 'amount';
+  currencySymbol?: string;
 }
 
-export function CalendarHeatmap({ data, year = 2025, viewMode = 'count' }: CalendarHeatmapProps) {
+export function CalendarHeatmap({
+  data,
+  year = 2025,
+  viewMode = 'count',
+  currencySymbol = '$',
+}: CalendarHeatmapProps) {
   const [tooltip, setTooltip] = useState<{
     date: string;
     count: number;
@@ -121,7 +127,7 @@ export function CalendarHeatmap({ data, year = 2025, viewMode = 'count' }: Calen
                         isValidDay
                           ? viewMode === 'count'
                             ? `${format(date, 'MMM d')}: ${day!.count} transaction${day!.count !== 1 ? 's' : ''}`
-                            : `${format(date, 'MMM d')}: $${day!.amount.toLocaleString('en-US', { maximumFractionDigits: 2 })}`
+                            : `${format(date, 'MMM d')}: ${currencySymbol}${day!.amount.toLocaleString('en-US', { maximumFractionDigits: 2 })}`
                           : ''
                       }
                     />
@@ -160,7 +166,8 @@ export function CalendarHeatmap({ data, year = 2025, viewMode = 'count' }: Calen
           ) : (
             <>
               <strong>
-                ${tooltip.amount.toLocaleString('en-US', { maximumFractionDigits: 2 })}
+                {currencySymbol}
+                {tooltip.amount.toLocaleString('en-US', { maximumFractionDigits: 2 })}
               </strong>{' '}
               on {tooltip.date}
             </>

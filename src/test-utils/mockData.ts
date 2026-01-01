@@ -379,6 +379,7 @@ export function createMockWrappedData(overrides?: Partial<WrappedData>): Wrapped
     savingsMilestones: createMockSavingsMilestones(),
     futureProjection: createMockFutureProjection(),
     budgetComparison: undefined,
+    currencySymbol: '$',
     ...overrides,
   };
 }

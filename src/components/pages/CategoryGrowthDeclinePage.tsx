@@ -92,7 +92,7 @@ export function CategoryGrowthDeclinePage({ data }: CategoryGrowthDeclinePagePro
                   props: { payload?: { totalChange?: number } },
                 ) => [
                   `${(value ?? 0).toFixed(1)}%`,
-                  `Change: $${(props.payload?.totalChange ?? 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}`,
+                  `Change: ${data.currencySymbol}${(props.payload?.totalChange ?? 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}`,
                 ]}
               />
               <Bar dataKey="percentageChange" animationDuration={1000}>

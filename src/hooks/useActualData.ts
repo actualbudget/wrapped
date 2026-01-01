@@ -10,6 +10,7 @@ import {
   getAccounts,
   getBudgetedAmounts,
   getCategoryGroupSortOrders,
+  getCurrencySymbol,
   shutdown,
   clearBudget,
 } from '../services/fileApi';
@@ -31,6 +32,7 @@ export function useActualData() {
     Array<{ categoryId: string; month: string; budgetedAmount: number }> | undefined
   >(undefined);
   const [groupSortOrders, setGroupSortOrders] = useState<Map<string, number>>(new Map());
+  const [currencySymbol, setCurrencySymbol] = useState<string>('$');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -40,6 +42,7 @@ export function useActualData() {
     (
       raw: RawBudgetData,
       includeOffBudget: boolean,
+      currencySymbol: string,
       budgetData?: Array<{ categoryId: string; month: string; budgetedAmount: number }>,
       groupSortOrders: Map<string, number> = new Map(),
     ) => {
@@ -50,6 +53,7 @@ export function useActualData() {
         raw.accounts,
         DEFAULT_YEAR,
         includeOffBudget,
+        currencySymbol,
         budgetData,
         groupSortOrders,
       );
@@ -86,6 +90,16 @@ export function useActualData() {
         const raw = { transactions, categories, payees, accounts };
         setRawData(raw);
 
+        // Fetch currency symbol
+        setProgress(72);
+        let currencySymbol = '$';
+        try {
+          currencySymbol = await getCurrencySymbol();
+        } catch (error) {
+          // Currency symbol fetch failed, default to "$"
+          console.warn('Failed to fetch currency symbol, defaulting to $:', error);
+        }
+
         // Fetch budget data and group sort orders (non-blocking - returns empty array/map if unavailable)
         let fetchedBudgetData: Array<{
           categoryId: string;
@@ -101,15 +115,17 @@ export function useActualData() {
           console.warn('Failed to fetch budget data or group sort orders:', error);
         }
 
-        // Store budget data and group sort orders for retransformData
+        // Store budget data, group sort orders, and currency symbol for retransformData
         setBudgetData(fetchedBudgetData.length > 0 ? fetchedBudgetData : undefined);
         setGroupSortOrders(fetchedGroupSortOrders);
+        setCurrencySymbol(currencySymbol);
 
         // Transform data
         setProgress(85);
         transformData(
           raw,
           includeOffBudget,
+          currencySymbol,
           fetchedBudgetData.length > 0 ? fetchedBudgetData : undefined,
           fetchedGroupSortOrders,
         );
@@ -142,12 +158,13 @@ export function useActualData() {
   );
 
   const retransformData = useCallback(
-    (includeOffBudget: boolean) => {
+    (includeOffBudget: boolean, overrideCurrencySymbol?: string) => {
       if (rawData) {
-        transformData(rawData, includeOffBudget, budgetData, groupSortOrders);
+        const effectiveCurrency = overrideCurrencySymbol || currencySymbol;
+        transformData(rawData, includeOffBudget, effectiveCurrency, budgetData, groupSortOrders);
       }
     },
-    [rawData, transformData, budgetData, groupSortOrders],
+    [rawData, transformData, currencySymbol, budgetData, groupSortOrders],
   );
 
   // Cleanup on unmount

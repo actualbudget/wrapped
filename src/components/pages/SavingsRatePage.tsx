@@ -95,19 +95,22 @@ export function SavingsRatePage({ data }: SavingsRatePageProps) {
         >
           <div className={styles.statCard}>
             <div className={styles.statValue}>
-              ${savingsAmount.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+              {data.currencySymbol}
+              {savingsAmount.toLocaleString('en-US', { maximumFractionDigits: 0 })}
             </div>
             <div className={styles.statLabel}>Total Saved</div>
           </div>
           <div className={styles.statCard}>
             <div className={styles.statValue}>
-              ${expensesAmount.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+              {data.currencySymbol}
+              {expensesAmount.toLocaleString('en-US', { maximumFractionDigits: 0 })}
             </div>
             <div className={styles.statLabel}>Total Spent</div>
           </div>
           <div className={styles.statCard}>
             <div className={styles.statValue}>
-              ${data.totalIncome.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+              {data.currencySymbol}
+              {data.totalIncome.toLocaleString('en-US', { maximumFractionDigits: 0 })}
             </div>
             <div className={styles.statLabel}>Total Income</div>
           </div>

@@ -25,6 +25,7 @@ const ACCOUNT_COLORS = [
 const CustomTooltip = ({
   active,
   payload,
+  currencySymbol,
 }: TooltipProps<number, string> & {
   payload?: Array<{
     name?: string;
@@ -32,6 +33,7 @@ const CustomTooltip = ({
     color?: string;
     payload?: { transactionCount?: number; percentage?: number };
   }>;
+  currencySymbol?: string;
 }) => {
   if (!active || !payload || !payload.length) {
     return null;
@@ -55,7 +57,8 @@ const CustomTooltip = ({
         {data.name || 'Account'}
       </p>
       <p style={{ margin: '4px 0', color: data.color || '#ffffff' }}>
-        <span style={{ marginRight: '8px' }}>Spending:</span>$
+        <span style={{ marginRight: '8px' }}>Spending:</span>
+        {currencySymbol || '$'}
         {Math.round(data.value ?? 0).toLocaleString('en-US')}
       </p>
       {transactionCount !== undefined && (
@@ -155,7 +158,7 @@ export function AccountBreakdownPage({ data }: AccountBreakdownPageProps) {
                   );
                 })}
               </Pie>
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<CustomTooltip currencySymbol={data.currencySymbol} />} />
               <Legend
                 wrapperStyle={{ paddingTop: '10px' }}
                 content={() => (
@@ -226,7 +229,8 @@ export function AccountBreakdownPage({ data }: AccountBreakdownPageProps) {
           {data.accountBreakdown.slice(0, 3).map(account => (
             <div key={account.accountId} className={styles.statCard}>
               <div className={styles.statValue}>
-                ${account.totalSpending.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                {data.currencySymbol}
+                {account.totalSpending.toLocaleString('en-US', { maximumFractionDigits: 0 })}
               </div>
               <div className={styles.statLabel}>{account.accountName}</div>
               <div

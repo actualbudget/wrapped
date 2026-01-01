@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import styles from './App.module.css';
 import { ConnectionForm } from './components/ConnectionForm';
+import { CurrencySelector } from './components/CurrencySelector';
 import { Navigation } from './components/Navigation';
 import { OffBudgetToggle } from './components/OffBudgetToggle';
 import { AccountBreakdownPage } from './components/pages/AccountBreakdownPage';
@@ -37,6 +38,10 @@ const PAGES = [
 function App() {
   const [currentPage, setCurrentPage] = useState(0);
   const [includeOffBudget, setIncludeOffBudget] = useLocalStorage('includeOffBudget', false);
+  const [overrideCurrency, setOverrideCurrency] = useLocalStorage<string | null>(
+    'overrideCurrency',
+    null,
+  );
   const { data, loading, error, progress, fetchData, retransformData, retry } = useActualData();
 
   const handleConnect = async (file: File) => {
@@ -45,7 +50,19 @@ function App() {
 
   const handleToggle = (value: boolean) => {
     setIncludeOffBudget(value);
-    retransformData(value);
+    retransformData(value, overrideCurrency || undefined);
+  };
+
+  const handleCurrencyChange = (currencySymbol: string) => {
+    // If the selected currency matches the default from database, clear the override
+    const defaultCurrency = data?.currencySymbol || '$';
+    if (currencySymbol === defaultCurrency) {
+      setOverrideCurrency(null);
+      retransformData(includeOffBudget, undefined);
+    } else {
+      setOverrideCurrency(currencySymbol);
+      retransformData(includeOffBudget, currencySymbol);
+    }
   };
 
   const handleNext = () => {
@@ -95,13 +112,33 @@ function App() {
     const CurrentPageComponent = PAGES[currentPage].component;
     const isIntroPage = currentPage === 0;
 
+    const effectiveCurrency = overrideCurrency || data.currencySymbol || '$';
+
     return (
       <div className={styles.app}>
         <OffBudgetToggle includeOffBudget={includeOffBudget} onToggle={handleToggle} />
+        <CurrencySelector
+          selectedCurrency={effectiveCurrency}
+          defaultCurrency={data.currencySymbol || '$'}
+          onCurrencyChange={handleCurrencyChange}
+        />
         {isIntroPage ? (
-          <IntroPage data={data} onNext={handleNext} />
+          <IntroPage
+            data={
+              effectiveCurrency !== data.currencySymbol
+                ? { ...data, currencySymbol: effectiveCurrency }
+                : data
+            }
+            onNext={handleNext}
+          />
         ) : (
-          <CurrentPageComponent data={data} />
+          <CurrentPageComponent
+            data={
+              effectiveCurrency !== data.currencySymbol
+                ? { ...data, currencySymbol: effectiveCurrency }
+                : data
+            }
+          />
         )}
         <Navigation
           currentPage={currentPage}

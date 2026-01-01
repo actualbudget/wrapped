@@ -220,6 +220,7 @@ export function transformToWrappedData(
   accounts: Account[] = [],
   year: number = DEFAULT_YEAR,
   includeOffBudget: boolean = false,
+  currencySymbol: string = '$',
   budgetData?: Array<{ categoryId: string; month: string; budgetedAmount: number }>,
   groupSortOrders: Map<string, number> = new Map(),
 ): WrappedData {
@@ -684,11 +685,11 @@ export function transformToWrappedData(
       .sort((a, b) => a - b);
 
     const buckets = [
-      { range: '$0-$10', min: 0, max: 10 },
-      { range: '$10-$50', min: 10, max: 50 },
-      { range: '$50-$100', min: 50, max: 100 },
-      { range: '$100-$500', min: 100, max: 500 },
-      { range: '$500+', min: 500, max: Infinity },
+      { range: `${currencySymbol}0-${currencySymbol}10`, min: 0, max: 10 },
+      { range: `${currencySymbol}10-${currencySymbol}50`, min: 10, max: 50 },
+      { range: `${currencySymbol}50-${currencySymbol}100`, min: 50, max: 100 },
+      { range: `${currencySymbol}100-${currencySymbol}500`, min: 100, max: 500 },
+      { range: `${currencySymbol}500+`, min: 500, max: Infinity },
     ].map(bucket => {
       const count = transactionAmounts.filter(
         amt => amt >= bucket.min && (bucket.max === Infinity || amt < bucket.max),
@@ -842,7 +843,7 @@ export function transformToWrappedData(
           const monthIndex = MONTHS.indexOf(monthData.month);
           const milestoneDate = format(endOfMonth(new Date(year, monthIndex, 1)), 'yyyy-MM-dd');
           savingsMilestones.push({
-            milestone: `$${(threshold / 1000).toFixed(0)}k`,
+            milestone: `${currencySymbol}${(threshold / 1000).toFixed(0)}k`,
             amount: threshold,
             date: milestoneDate,
             cumulativeSavings: cumulativeSavingsForMilestones,
@@ -980,6 +981,7 @@ export function transformToWrappedData(
       savingsMilestones,
       futureProjection,
       budgetComparison,
+      currencySymbol,
     };
   } catch (error) {
     if (isDataTransformError(error)) {

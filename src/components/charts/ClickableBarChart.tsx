@@ -26,6 +26,7 @@ interface ClickableBarChartProps {
   margin?: { top?: number; right?: number; left?: number; bottom?: number };
   tooltipFormatter?: (item: ChartDataItem, displayValue: number) => React.ReactNode;
   xAxisFormatter?: (value: number) => string;
+  currencySymbol?: string;
 }
 
 export function ClickableBarChart({
@@ -35,6 +36,7 @@ export function ClickableBarChart({
   margin = { top: 20, right: 30, left: 100, bottom: 5 },
   tooltipFormatter,
   xAxisFormatter,
+  currencySymbol = '$',
 }: ClickableBarChartProps) {
   const [hiddenItems, setHiddenItems] = useState<Set<string>>(new Set());
 
@@ -90,7 +92,7 @@ export function ClickableBarChart({
             tooltipFormatter(item!, displayValue ?? 0)
           ) : (
             <p style={{ margin: 0, color: '#ffffff' }}>
-              Amount: $
+              Amount: {currencySymbol}
               {typeof displayValue === 'number'
                 ? Math.round(displayValue).toLocaleString('en-US')
                 : '0'}

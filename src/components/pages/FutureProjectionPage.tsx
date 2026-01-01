@@ -149,7 +149,9 @@ export function FutureProjectionPage({ data }: FutureProjectionPageProps) {
               <XAxis dataKey="month" stroke="rgba(255, 255, 255, 0.8)" />
               <YAxis
                 stroke="rgba(255, 255, 255, 0.8)"
-                tickFormatter={value => `$${Math.round(value).toLocaleString('en-US')}`}
+                tickFormatter={value =>
+                  `${data.currencySymbol}${Math.round(value).toLocaleString('en-US')}`
+                }
               />
               <Tooltip
                 content={() => null}
@@ -262,7 +264,7 @@ export function FutureProjectionPage({ data }: FutureProjectionPageProps) {
             <div
               className={`${styles.statValue} ${animatedProjectedSavings >= 0 ? styles.positive : styles.negative}`}
             >
-              $
+              {data.currencySymbol}
               {Math.abs(animatedProjectedSavings).toLocaleString('en-US', {
                 maximumFractionDigits: 0,
               })}
@@ -271,7 +273,8 @@ export function FutureProjectionPage({ data }: FutureProjectionPageProps) {
           </div>
           <div className={styles.statCard}>
             <div className={styles.statValue}>
-              ${data.futureProjection.dailyNetSavings.toFixed(2)}
+              {data.currencySymbol}
+              {data.futureProjection.dailyNetSavings.toFixed(2)}
             </div>
             <div className={styles.statLabel}>Daily Net Savings</div>
             <div
@@ -281,7 +284,8 @@ export function FutureProjectionPage({ data }: FutureProjectionPageProps) {
                 marginTop: '0.5rem',
               }}
             >
-              ${data.futureProjection.dailyAverageIncome.toFixed(2)} income - $
+              {data.currencySymbol}
+              {data.futureProjection.dailyAverageIncome.toFixed(2)} income - {data.currencySymbol}
               {data.futureProjection.dailyAverageExpenses.toFixed(2)} expenses
             </div>
           </div>

@@ -9,6 +9,7 @@ import {
   isFileApiError,
 } from '../types/errors';
 import { MAX_FILE_SIZE } from '../utils/constants';
+import { getCurrencySymbolFromCode } from '../utils/currency';
 
 type SqlJsDatabase = Awaited<ReturnType<typeof import('sql.js').default>>['Database'];
 
@@ -479,6 +480,37 @@ export async function getBudgetedAmounts(
     // This allows graceful degradation - the page will show "No budget data available"
     console.warn('Failed to fetch budget data:', error);
     return [];
+  }
+}
+
+/**
+ * Get currency symbol from preferences table
+ * Queries the preferences table for defaultCurrencyCode and maps it to a symbol
+ */
+export async function getCurrencySymbol(): Promise<string> {
+  if (!db) {
+    throw new DatabaseError('Database not loaded. Call initialize() first.');
+  }
+
+  try {
+    // Query preferences table for defaultCurrencyCode
+    const results = query("SELECT value FROM preferences WHERE id = 'defaultCurrencyCode'");
+
+    let currencyCode: string | null = null;
+    if (results.length > 0 && results[0].value) {
+      currencyCode = String(results[0].value).trim();
+      // If empty string, treat as null
+      if (currencyCode === '') {
+        currencyCode = null;
+      }
+    }
+
+    // Map currency code to symbol using the utility function
+    return getCurrencySymbolFromCode(currencyCode);
+  } catch (error) {
+    // If preferences table doesn't exist or query fails, default to "$"
+    console.warn('Failed to fetch currency symbol from preferences, defaulting to $:', error);
+    return '$';
   }
 }
 

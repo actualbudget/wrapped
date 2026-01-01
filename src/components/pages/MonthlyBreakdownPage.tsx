@@ -126,7 +126,9 @@ export function MonthlyBreakdownPage({ data }: MonthlyBreakdownPageProps) {
               <YAxis
                 stroke="rgba(255, 255, 255, 0.8)"
                 domain={yAxisDomain}
-                tickFormatter={value => `$${Math.round(value).toLocaleString('en-US')}`}
+                tickFormatter={value =>
+                  `${data.currencySymbol}${Math.round(value).toLocaleString('en-US')}`
+                }
               />
               <Tooltip
                 contentStyle={{
@@ -136,7 +138,7 @@ export function MonthlyBreakdownPage({ data }: MonthlyBreakdownPageProps) {
                   color: 'white',
                 }}
                 formatter={(value: number | undefined, name: string | undefined) => [
-                  `$${Math.round(value ?? 0).toLocaleString('en-US')}`,
+                  `${data.currencySymbol}${Math.round(value ?? 0).toLocaleString('en-US')}`,
                   name ?? '',
                 ]}
               />
@@ -250,7 +252,8 @@ export function MonthlyBreakdownPage({ data }: MonthlyBreakdownPageProps) {
             transition={{ delay: 0.7 }}
           >
             <div className={styles.largeNumber} style={{ fontSize: 'clamp(1.8rem, 5vw, 3.5rem)' }}>
-              ${formatAmount(animatedAverage)}
+              {data.currencySymbol}
+              {formatAmount(animatedAverage)}
             </div>
             <div className={styles.statLabel}>Average Transaction</div>
           </motion.div>
@@ -262,7 +265,8 @@ export function MonthlyBreakdownPage({ data }: MonthlyBreakdownPageProps) {
             transition={{ delay: 0.8 }}
           >
             <div className={styles.largeNumber} style={{ fontSize: 'clamp(1.8rem, 5vw, 3.5rem)' }}>
-              ${formatAmount(animatedLargest)}
+              {data.currencySymbol}
+              {formatAmount(animatedLargest)}
             </div>
             <div className={styles.statLabel}>Largest Transaction</div>
             {data.transactionStats.largestTransaction && (

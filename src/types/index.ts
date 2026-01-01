@@ -215,4 +215,5 @@ export interface WrappedData {
   savingsMilestones: SavingsMilestone[];
   futureProjection: FutureProjection;
   budgetComparison?: BudgetComparisonData;
+  currencySymbol: string; // Currency symbol from preferences table (defaults to "$")
 }

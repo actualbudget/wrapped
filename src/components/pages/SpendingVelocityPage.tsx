@@ -58,7 +58,8 @@ export function SpendingVelocityPage({ data }: SpendingVelocityPageProps) {
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.4, type: 'spring', stiffness: 200 }}
         >
-          ${animatedDailyAverage.toFixed(2)}/day
+          {data.currencySymbol}
+          {animatedDailyAverage.toFixed(2)}/day
         </motion.div>
 
         <div className={styles.chartContainer}>
@@ -68,7 +69,9 @@ export function SpendingVelocityPage({ data }: SpendingVelocityPageProps) {
               <XAxis dataKey="week" stroke="rgba(255, 255, 255, 0.8)" />
               <YAxis
                 stroke="rgba(255, 255, 255, 0.8)"
-                tickFormatter={value => `$${Math.round(value).toLocaleString('en-US')}`}
+                tickFormatter={value =>
+                  `${data.currencySymbol}${Math.round(value).toLocaleString('en-US')}`
+                }
               />
               <Tooltip
                 contentStyle={{
@@ -78,7 +81,7 @@ export function SpendingVelocityPage({ data }: SpendingVelocityPageProps) {
                   color: 'white',
                 }}
                 formatter={(value: number | undefined) => [
-                  `$${Math.round((value ?? 0) * 100) / 100}`,
+                  `${data.currencySymbol}${Math.round((value ?? 0) * 100) / 100}`,
                   'Avg/Day',
                 ]}
               />
@@ -110,7 +113,8 @@ export function SpendingVelocityPage({ data }: SpendingVelocityPageProps) {
                 marginTop: '0.5rem',
               }}
             >
-              ${data.spendingVelocity.fastestPeriod.averagePerDay.toFixed(2)}/day
+              {data.currencySymbol}
+              {data.spendingVelocity.fastestPeriod.averagePerDay.toFixed(2)}/day
             </div>
           </div>
           <div className={styles.statCard}>
@@ -123,7 +127,8 @@ export function SpendingVelocityPage({ data }: SpendingVelocityPageProps) {
                 marginTop: '0.5rem',
               }}
             >
-              ${data.spendingVelocity.slowestPeriod.averagePerDay.toFixed(2)}/day
+              {data.currencySymbol}
+              {data.spendingVelocity.slowestPeriod.averagePerDay.toFixed(2)}/day
             </div>
           </div>
         </motion.div>

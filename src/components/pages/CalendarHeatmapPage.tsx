@@ -77,7 +77,12 @@ export function CalendarHeatmapPage({ data }: CalendarHeatmapPageProps) {
             WebkitOverflowScrolling: 'touch',
           }}
         >
-          <CalendarHeatmap data={data.calendarData} year={data.year} viewMode={viewMode} />
+          <CalendarHeatmap
+            data={data.calendarData}
+            year={data.year}
+            viewMode={viewMode}
+            currencySymbol={data.currencySymbol}
+          />
         </motion.div>
 
         <motion.div

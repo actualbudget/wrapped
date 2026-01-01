@@ -43,13 +43,15 @@ export function OutroPage({ data }: OutroPageProps) {
         >
           <div className={styles.statCard}>
             <div className={styles.statValue}>
-              ${data.totalIncome.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+              {data.currencySymbol}
+              {data.totalIncome.toLocaleString('en-US', { maximumFractionDigits: 0 })}
             </div>
             <div className={styles.statLabel}>Income</div>
           </div>
           <div className={styles.statCard}>
             <div className={styles.statValue}>
-              ${data.totalExpenses.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+              {data.currencySymbol}
+              {data.totalExpenses.toLocaleString('en-US', { maximumFractionDigits: 0 })}
             </div>
             <div className={styles.statLabel}>Expenses</div>
           </div>
@@ -57,7 +59,8 @@ export function OutroPage({ data }: OutroPageProps) {
             <div
               className={`${styles.statValue} ${data.netSavings >= 0 ? styles.positive : styles.negative}`}
             >
-              ${Math.abs(data.netSavings).toLocaleString('en-US', { maximumFractionDigits: 0 })}
+              {data.currencySymbol}
+              {Math.abs(data.netSavings).toLocaleString('en-US', { maximumFractionDigits: 0 })}
             </div>
             <div className={styles.statLabel}>{data.netSavings >= 0 ? 'Saved' : 'Overspent'}</div>
           </div>

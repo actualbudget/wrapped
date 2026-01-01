@@ -88,9 +88,11 @@ export function CategoryTrendsPage({ data }: CategoryTrendsPageProps) {
     active,
     payload,
     label,
+    currencySymbol,
   }: TooltipProps<number, string> & {
     payload?: Array<{ value?: number; dataKey?: string; name?: string; color?: string }>;
     label?: string;
+    currencySymbol?: string;
   }) => {
     if (!active || !payload || !payload.length) return null;
 
@@ -132,7 +134,8 @@ export function CategoryTrendsPage({ data }: CategoryTrendsPageProps) {
                 key={entry.dataKey || entry.name || index}
                 style={{ margin: '4px 0', color: entry.color || '#ffffff' }}
               >
-                <span style={{ marginRight: '8px' }}>{entry.name}:</span>$
+                <span style={{ marginRight: '8px' }}>{entry.name}:</span>
+                {currencySymbol || '$'}
                 {Math.round(displayValue).toLocaleString('en-US', { maximumFractionDigits: 0 })}
               </p>
             );
@@ -174,9 +177,11 @@ export function CategoryTrendsPage({ data }: CategoryTrendsPageProps) {
               <XAxis dataKey="month" stroke="rgba(255, 255, 255, 0.8)" />
               <YAxis
                 stroke="rgba(255, 255, 255, 0.8)"
-                tickFormatter={value => `$${Math.round(value).toLocaleString('en-US')}`}
+                tickFormatter={value =>
+                  `${data.currencySymbol}${Math.round(value).toLocaleString('en-US')}`
+                }
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<CustomTooltip currencySymbol={data.currencySymbol} />} />
               <Legend
                 wrapperStyle={{ paddingTop: '20px' }}
                 content={({ payload }) => (

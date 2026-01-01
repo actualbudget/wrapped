@@ -219,7 +219,8 @@ export function BudgetVsActualPage({ data }: BudgetVsActualPageProps) {
                   : entry.color || '#ffffff',
               }}
             >
-              <span style={{ marginRight: '8px' }}>{entry.name}:</span>$
+              <span style={{ marginRight: '8px' }}>{entry.name}:</span>
+              {data.currencySymbol}
               {Math.round(Math.abs(varianceValue)).toLocaleString('en-US', {
                 maximumFractionDigits: 0,
               })}
@@ -250,7 +251,7 @@ export function BudgetVsActualPage({ data }: BudgetVsActualPageProps) {
                     paddingTop: '8px',
                   }}
                 >
-                  Carry Forward: $
+                  Carry Forward: {data.currencySymbol}
                   {carryForward.toLocaleString('en-US', { maximumFractionDigits: 2 })}
                 </p>
               );
@@ -300,7 +301,8 @@ export function BudgetVsActualPage({ data }: BudgetVsActualPageProps) {
             transition={{ delay: 0.5 }}
           >
             <div className={styles.statValue}>
-              ${animatedBudgeted.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+              {data.currencySymbol}
+              {animatedBudgeted.toLocaleString('en-US', { maximumFractionDigits: 0 })}
             </div>
             <div className={styles.statLabel}>Total Budgeted</div>
           </motion.div>
@@ -312,7 +314,8 @@ export function BudgetVsActualPage({ data }: BudgetVsActualPageProps) {
             transition={{ delay: 0.6 }}
           >
             <div className={styles.statValue}>
-              ${animatedActual.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+              {data.currencySymbol}
+              {animatedActual.toLocaleString('en-US', { maximumFractionDigits: 0 })}
             </div>
             <div className={styles.statLabel}>Total Actual</div>
           </motion.div>
@@ -393,7 +396,9 @@ export function BudgetVsActualPage({ data }: BudgetVsActualPageProps) {
                 <XAxis dataKey="month" stroke="rgba(255, 255, 255, 0.8)" />
                 <YAxis
                   stroke="rgba(255, 255, 255, 0.8)"
-                  tickFormatter={value => `$${Math.round(value).toLocaleString('en-US')}`}
+                  tickFormatter={value =>
+                    `${data.currencySymbol}${Math.round(value).toLocaleString('en-US')}`
+                  }
                 />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend
@@ -471,13 +476,13 @@ export function BudgetVsActualPage({ data }: BudgetVsActualPageProps) {
               }}
             >
               <div>
-                Total Budgeted: $
+                Total Budgeted: {data.currencySymbol}
                 {selectedCategory.totalBudgeted.toLocaleString('en-US', {
                   maximumFractionDigits: 0,
                 })}
               </div>
               <div>
-                Total Actual: $
+                Total Actual: {data.currencySymbol}
                 {selectedCategory.totalActual.toLocaleString('en-US', {
                   maximumFractionDigits: 0,
                 })}
@@ -487,7 +492,7 @@ export function BudgetVsActualPage({ data }: BudgetVsActualPageProps) {
                   color: selectedCategory.totalVariance >= 0 ? '#fa709a' : '#43e97b',
                 }}
               >
-                Variance: $
+                Variance: {data.currencySymbol}
                 {Math.abs(selectedCategory.totalVariance).toLocaleString('en-US', {
                   maximumFractionDigits: 0,
                 })}{' '}

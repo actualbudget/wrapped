@@ -64,7 +64,10 @@ export function TopCategoriesPage({ data }: TopCategoriesPageProps) {
             colors={CATEGORY_COLORS}
             height={600}
             margin={{ top: 20, right: 30, left: 100, bottom: 5 }}
-            xAxisFormatter={value => `$${Math.round(value).toLocaleString('en-US')}`}
+            xAxisFormatter={value =>
+              `${data.currencySymbol}${Math.round(value).toLocaleString('en-US')}`
+            }
+            currencySymbol={data.currencySymbol}
           />
         </div>
 
@@ -77,7 +80,8 @@ export function TopCategoriesPage({ data }: TopCategoriesPageProps) {
           {data.topCategories.slice(0, 3).map(cat => (
             <div key={cat.categoryId} className={styles.statCard}>
               <div className={styles.statValue}>
-                ${cat.amount.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                {data.currencySymbol}
+                {cat.amount.toLocaleString('en-US', { maximumFractionDigits: 0 })}
               </div>
               <div className={styles.statLabel}>{cat.categoryName}</div>
               <div
