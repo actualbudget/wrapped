@@ -12,8 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Assign Copilot to Issue
-        uses: otto-de/assign_issue_toCopilot_action@v1
+        uses: otto-de/assign_issue_toCopilot_action@v1.0.1
         with:
+          issue_number: ${{ github.event.issue.number }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
         # Note: If the default GITHUB_TOKEN doesn't have sufficient permissions
         # due to Copilot licensing restrictions, you may need to use a Personal
