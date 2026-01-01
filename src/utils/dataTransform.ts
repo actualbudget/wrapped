@@ -58,6 +58,7 @@ export function transformToWrappedData(
   payees: Array<{ id: string; name: string; tombstone?: boolean; transfer_acct?: string }> = [],
   accounts: Account[] = [],
   year: number = DEFAULT_YEAR,
+  includeOffBudget: boolean = false,
 ): WrappedData {
   try {
     const yearStart = startOfYear(new Date(year, 0, 1));
@@ -84,7 +85,7 @@ export function transformToWrappedData(
       payeeIdToName.set(p.id, p.name);
     });
 
-    // Filter transactions for 2025 and exclude transfers, off-budget, and starting balance
+    // Filter transactions for 2025 and exclude transfers, off-budget (conditionally), and starting balance
     const yearTransactions = transactions.filter(t => {
       const date = parseISO(t.date);
       if (date < yearStart || date > yearEnd) {
@@ -95,10 +96,12 @@ export function transformToWrappedData(
       if (isTransfer) {
         return false;
       }
-      // Exclude off-budget transactions
-      const isOffBudget = accountOffbudgetMap.get(t.account) || false;
-      if (isOffBudget) {
-        return false;
+      // Exclude off-budget transactions (unless includeOffBudget is true)
+      if (!includeOffBudget) {
+        const isOffBudget = accountOffbudgetMap.get(t.account) || false;
+        if (isOffBudget) {
+          return false;
+        }
       }
       // Exclude starting balance transactions
       const payeeName = t.payee ? payeeIdToName.get(t.payee) || t.payee_name : t.payee_name;

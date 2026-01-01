@@ -624,6 +624,66 @@ describe('transformToWrappedData', () => {
     });
   });
 
+  describe('Include Off-Budget Toggle', () => {
+    it('excludes off-budget transactions by default', () => {
+      const transactions: Transaction[] = [
+        createMockTransaction({ id: 't1', account: 'acc1', amount: -10000 }),
+        createMockTransaction({ id: 't2', account: 'acc2', amount: -20000 }),
+      ];
+
+      const accounts: Account[] = [
+        createMockAccount({ id: 'acc1', name: 'Checking', offbudget: false }),
+        createMockAccount({ id: 'acc2', name: 'Home Value', offbudget: true }),
+      ];
+
+      const result = transformToWrappedData(transactions, [], [], accounts);
+
+      expect(result.transactionStats.totalCount).toBe(1);
+      expect(result.totalExpenses).toBe(100);
+    });
+
+    it('includes off-budget transactions when includeOffBudget is true', () => {
+      const transactions: Transaction[] = [
+        createMockTransaction({ id: 't1', account: 'acc1', amount: -10000 }),
+        createMockTransaction({ id: 't2', account: 'acc2', amount: -20000 }),
+      ];
+
+      const accounts: Account[] = [
+        createMockAccount({ id: 'acc1', name: 'Checking', offbudget: false }),
+        createMockAccount({ id: 'acc2', name: 'Home Value', offbudget: true }),
+      ];
+
+      const result = transformToWrappedData(transactions, [], [], accounts, 2025, true);
+
+      expect(result.transactionStats.totalCount).toBe(2);
+      expect(result.totalExpenses).toBe(300);
+    });
+
+    it('still excludes starting balance transactions when includeOffBudget is true', () => {
+      const transactions: Transaction[] = [
+        createMockTransaction({ id: 't1', account: 'acc1', payee: 'payee1', amount: -10000 }),
+        createMockTransaction({ id: 't2', account: 'acc2', payee: 'payee2', amount: -20000 }),
+        createMockTransaction({ id: 't3', account: 'acc2', payee: 'payee3', amount: -30000 }),
+      ];
+
+      const accounts: Account[] = [
+        createMockAccount({ id: 'acc1', name: 'Checking', offbudget: false }),
+        createMockAccount({ id: 'acc2', name: 'Home Value', offbudget: true }),
+      ];
+
+      const payees = [
+        { id: 'payee1', name: 'Regular Payee' },
+        { id: 'payee2', name: 'Store' },
+        { id: 'payee3', name: 'Starting Balance' },
+      ];
+
+      const result = transformToWrappedData(transactions, [], payees, accounts, 2025, true);
+
+      expect(result.transactionStats.totalCount).toBe(2);
+      expect(result.totalExpenses).toBe(300);
+    });
+  });
+
   describe('Edge Cases', () => {
     it('handles very large transaction amounts', () => {
       const transactions: Transaction[] = [
