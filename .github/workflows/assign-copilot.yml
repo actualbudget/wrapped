@@ -22,4 +22,3 @@ jobs:
         # 1. Create a PAT at: https://github.com/settings/tokens
         # 2. Add it as a repository secret named 'COPILOT_PAT'
         # 3. Replace GITHUB_TOKEN with secrets.COPILOT_PAT above
-

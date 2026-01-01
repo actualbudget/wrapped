@@ -224,6 +224,33 @@ describe('transformToWrappedData', () => {
       expect(result.topCategories[0].amount).toBe(100);
     });
 
+    it('excludes off-budget transactions from income and account breakdown', () => {
+      const transactions: Transaction[] = [
+        createMockTransaction({ id: 't1', account: 'acc1', category: 'cat1', amount: -10000 }),
+        createMockTransaction({ id: 't2', account: 'acc1', category: 'cat1', amount: 20000 }),
+        createMockTransaction({ id: 't3', account: 'acc2', category: 'cat1', amount: -5000 }),
+        createMockTransaction({ id: 't4', account: 'acc2', category: 'cat1', amount: 15000 }),
+      ];
+
+      const accounts: Account[] = [
+        createMockAccount({ id: 'acc1', name: 'Checking', offbudget: false }),
+        createMockAccount({ id: 'acc2', name: 'Savings', offbudget: true }),
+      ];
+
+      const categories: Category[] = [createMockCategory({ id: 'cat1', name: 'Groceries' })];
+
+      const result = transformToWrappedData(transactions, categories, [], accounts);
+
+      // Only transactions from acc1 should be included
+      expect(result.totalExpenses).toBe(100); // $100 from t1 only
+      expect(result.totalIncome).toBe(200); // $200 from t2 only
+      expect(result.transactionStats.totalCount).toBe(2); // t1 and t2 only
+
+      // Account breakdown should only have acc1
+      expect(result.accountBreakdown).toHaveLength(1);
+      expect(result.accountBreakdown[0].accountName).toBe('Checking');
+    });
+
     it('handles deleted categories', () => {
       const transactions: Transaction[] = [
         createMockTransaction({ id: 't1', category: 'cat1', amount: -10000 }),
