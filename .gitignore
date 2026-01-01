@@ -30,3 +30,8 @@ dist-ssr
 
 # Actual Budget data directory
 actual-data
+
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
