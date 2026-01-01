@@ -25,7 +25,7 @@ export function OffBudgetToggle({ includeOffBudget, onToggle }: OffBudgetToggleP
           aria-label="Include off-budget transactions"
           tabIndex={0}
           onKeyDown={e => {
-            if (e.key === 'Enter' || e.key === ' ') {
+            if (e.key === 'Enter' || e.code === 'Space') {
               e.preventDefault();
               onToggle(!includeOffBudget);
             }
