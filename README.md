@@ -8,18 +8,18 @@ A beautiful year-in-review application for your Actual Budget data, styled like 
 
 ## Features
 
-- 📊 **Comprehensive Statistics**: Income vs expenses, top categories, top payees, transaction stats
+- 📊 **Comprehensive Statistics**: Income vs expenses, top categories, top payees, transaction statistics
 - 📅 **Calendar Heatmap**: GitHub-style contribution graph showing transaction frequency
 - 📈 **Beautiful Charts**: Interactive charts powered by Recharts
 - 🎨 **Spotify Wrapped Style**: Vibrant gradients, bold typography, smooth animations
 - 🔒 **Privacy First**: All processing happens in your browser - your data never leaves your device
-- 📥 **Export to Image**: Export any page as a PNG image
-- ⌨️ **Keyboard Navigation**: Navigate with arrow keys
+- ⌨️ **Keyboard Navigation**: Navigate with arrow keys (← →)
 - 📱 **Responsive Design**: Works on desktop and mobile devices
+- 🧪 **Well Tested**: Unit tests with Vitest and E2E tests with Playwright
 
 ## Prerequisites
 
-- Node.js 20+ and Yarn
+- Node.js 20+ and Yarn 4.12.0+
 - An exported Actual Budget file (zip format)
 
 ## Architecture
@@ -68,45 +68,89 @@ yarn build
 
 The built files will be in the `dist` directory and can be deployed to any static hosting service.
 
+### Preview Production Build
+
+Preview the production build locally:
+
+```bash
+yarn preview
+```
+
 ## Usage
 
 1. **Upload Your Budget**: Click "Choose File" and select your exported Actual Budget `.zip` file
 2. **Wait for Processing**: The app will extract and process your 2025 budget data (this happens entirely in your browser)
-3. **Navigate Through Pages**: Use the Next/Previous buttons or arrow keys to navigate through the wrapped pages
-4. **Export Pages**: Click the export button on any page to download it as a PNG image
+3. **Navigate Through Pages**: Use the Next/Previous buttons or arrow keys (← →) to navigate through the wrapped pages
 
 ## Pages
 
-The wrapped includes the following 18 pages:
+The wrapped includes the following 11 pages:
 
-1. **Intro**: Welcome page with overview statistics
-2. **Income vs Expenses**: Comparison with donut chart
-3. **Monthly Breakdown**: Bar chart showing income and expenses by month
-4. **Top Categories**: Horizontal bar chart of top spending categories
-5. **Category Trends**: Line chart showing spending trends for top categories
-6. **Top Payees**: Horizontal bar chart of top payees by amount
-7. **Transaction Stats**: Total count, average, and largest transaction
-8. **Top Months**: Bar chart of spending by month with highlights
-9. **Savings Rate**: Percentage and breakdown of savings
-10. **Calendar Heatmap**: GitHub-style calendar showing transaction frequency
-11. **Spending Velocity**: Daily spending averages and fastest/slowest periods
-12. **Day of Week Analysis**: Spending patterns by day of the week
-13. **Account Breakdown**: Spending breakdown by account
-14. **Spending Streaks**: Longest spending and no-spending streaks
-15. **Transaction Size Distribution**: Distribution of transaction amounts by size
-16. **Quarterly Comparison**: Income and expense comparison by quarter
-17. **Future Projection**: Projected savings and financial outlook
-18. **Outro**: Final summary and thank you message
+1. **Intro**: Welcome page with overview statistics and transaction count
+2. **Savings Rate**: Percentage and breakdown of savings with income vs expenses comparison
+3. **Account Breakdown**: Spending breakdown by account type
+4. **Monthly Breakdown**: Bar chart showing income and expenses by month with transaction statistics
+5. **Top Categories**: Horizontal bar chart of top spending categories
+6. **Category Trends**: Line chart showing spending trends for top categories over time
+7. **Top Payees**: Horizontal bar chart of top payees by amount spent
+8. **Calendar Heatmap**: GitHub-style calendar showing transaction frequency throughout the year
+9. **Spending Velocity**: Daily spending averages and fastest/slowest spending periods
+10. **Future Projection**: Projected savings and financial outlook for the next year
+11. **Outro**: Final summary and thank you message
 
 ## Technology Stack
 
 - **React 19** with TypeScript
-- **Vite** for build tooling
+- **Vite 7** for build tooling
 - **Framer Motion** for animations
 - **Recharts** for data visualization
 - **sql.js** for in-browser SQLite database processing
 - **JSZip** for zip file extraction
 - **date-fns** for date utilities
+
+## Development
+
+### Testing
+
+Run unit tests:
+
+```bash
+yarn test
+```
+
+Run tests in watch mode:
+
+```bash
+yarn test:watch
+```
+
+Run E2E tests:
+
+```bash
+yarn test:e2e
+```
+
+### Linting
+
+Format and lint code:
+
+```bash
+yarn lint
+```
+
+Check linting without fixing:
+
+```bash
+yarn lint:check
+```
+
+### Type Checking
+
+The build script automatically runs TypeScript type checking. To check types manually:
+
+```bash
+npx tsc --noEmit
+```
 
 ## Privacy & Security
 

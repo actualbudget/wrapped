@@ -113,7 +113,7 @@ const transactions2025 = await getAllTransactionsForYear(2025);
 const expenses = transactions2025.filter(t => t.amount < 0);
 ```
 
-**Note:** This function automatically filters out transfer transactions (transactions where the payee has a `transfer_acct` field).
+**Note:** This function returns all transactions including transfers. Transfer filtering is handled by `transformToWrappedData()`.
 
 ### `integerToAmount(amount: number): number`
 
@@ -172,8 +172,10 @@ A React hook that manages loading and processing Actual Budget data from a zip f
 - `data`: `WrappedData | null` - The processed wrapped data
 - `loading`: `boolean` - Loading state
 - `error`: `string | null` - Error message if loading failed
+- `progress`: `number` - Loading progress (0-100)
 - `fetchData`: `(file: File) => Promise<void>` - Function to load data from a file
 - `refreshData`: `() => Promise<void>` - Function to reload data from the last loaded file
+- `retry`: `() => Promise<void> | undefined` - Function to retry loading the last file
 
 **Example:**
 
@@ -269,7 +271,7 @@ function Settings() {
 
 ## Data Transformation Utilities
 
-### `transformToWrappedData(transactions, categories, payees, accounts): WrappedData`
+### `transformToWrappedData(transactions, categories, payees, accounts, year?): WrappedData`
 
 Transforms raw transaction data into a structured `WrappedData` object with all calculated metrics and aggregations.
 
@@ -279,6 +281,7 @@ Transforms raw transaction data into a structured `WrappedData` object with all 
 - `categories`: Array of Category objects
 - `payees`: Array of Payee objects
 - `accounts`: Array of Account objects
+- `year`: Optional year number (defaults to 2025)
 
 **Returns:** `WrappedData` object containing:
 
@@ -309,7 +312,7 @@ const categories = await getCategories();
 const payees = await getPayees();
 const accounts = await getAccounts();
 
-const wrappedData = transformToWrappedData(transactions, categories, payees, accounts);
+const wrappedData = transformToWrappedData(transactions, categories, payees, accounts, 2025);
 
 console.log(wrappedData.totalIncome);
 console.log(wrappedData.topCategories);
@@ -318,8 +321,8 @@ console.log(wrappedData.monthlyData);
 
 **Important Notes:**
 
-- Automatically filters transactions to 2025 only
-- Excludes transfer transactions
+- Automatically filters transactions to the specified year (defaults to 2025)
+- Excludes transfer transactions (transactions where the payee has a `transfer_acct` field)
 - Handles deleted categories/payees (marks with "deleted: " prefix)
 - Converts amounts from cents to dollars
 - Handles off-budget accounts appropriately
@@ -393,7 +396,7 @@ All TypeScript types are defined in `src/types/index.ts`. Key types include:
 import { useActualData } from '../hooks/useActualData';
 
 function BudgetViewer() {
-  const { data, loading, error, fetchData } = useActualData();
+  const { data, loading, error, progress, fetchData, retry } = useActualData();
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -501,6 +504,6 @@ The `useActualData` hook automatically handles errors and exposes them via the `
 ## Browser Compatibility
 
 - Requires browsers with WebAssembly support (all modern browsers)
-- Uses `sql.js` which loads WASM files from CDN
+- Uses `sql.js` which loads WASM files from the public directory (bundled with the app)
 - Uses localStorage API for `useLocalStorage` hook
 - Uses `requestAnimationFrame` for `useAnimatedNumber` hook
