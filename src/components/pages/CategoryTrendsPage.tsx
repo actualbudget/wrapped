@@ -194,8 +194,9 @@ export function CategoryTrendsPage({ data }: CategoryTrendsPageProps) {
                       );
                       const isHidden = trend && hiddenCategories.has(trend.categoryId);
                       return (
-                        <div
+                        <button
                           key={`legend-${index}`}
+                          type="button"
                           onClick={() => trend && handleCategoryClick(trend.categoryId)}
                           style={{
                             display: "flex",
@@ -205,6 +206,10 @@ export function CategoryTrendsPage({ data }: CategoryTrendsPageProps) {
                             padding: "4px 8px",
                             borderRadius: "4px",
                             transition: "opacity 0.2s",
+                            border: "none",
+                            background: "transparent",
+                            font: "inherit",
+                            color: "inherit",
                           }}
                           onMouseEnter={(e) => {
                             e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
@@ -225,7 +230,7 @@ export function CategoryTrendsPage({ data }: CategoryTrendsPageProps) {
                           <span style={{ color: "rgba(255, 255, 255, 0.8)", fontSize: "0.9rem" }}>
                             {entry.value}
                           </span>
-                        </div>
+                        </button>
                       );
                     })}
                   </div>

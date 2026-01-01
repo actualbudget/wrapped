@@ -155,8 +155,9 @@ export function MonthlyBreakdownPage({ data }: MonthlyBreakdownPageProps) {
                       const dataKey = typeof entry.dataKey === "string" ? entry.dataKey : undefined;
                       const isHidden = dataKey && hiddenSeries.has(dataKey);
                       return (
-                        <div
+                        <button
                           key={`legend-${index}`}
+                          type="button"
                           onClick={() => dataKey && handleSeriesClick(dataKey)}
                           style={{
                             display: "flex",
@@ -166,6 +167,10 @@ export function MonthlyBreakdownPage({ data }: MonthlyBreakdownPageProps) {
                             padding: "4px 8px",
                             borderRadius: "4px",
                             transition: "opacity 0.2s",
+                            border: "none",
+                            background: "transparent",
+                            font: "inherit",
+                            color: "inherit",
                           }}
                           onMouseEnter={(e) => {
                             e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
@@ -186,7 +191,7 @@ export function MonthlyBreakdownPage({ data }: MonthlyBreakdownPageProps) {
                           <span style={{ color: "rgba(255, 255, 255, 0.8)", fontSize: "0.9rem" }}>
                             {entry.value}
                           </span>
-                        </div>
+                        </button>
                       );
                     })}
                   </div>

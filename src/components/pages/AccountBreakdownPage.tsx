@@ -171,8 +171,9 @@ export function AccountBreakdownPage({ data }: AccountBreakdownPageProps) {
                       const isHidden = hiddenAccounts.has(account.accountId);
                       const color = ACCOUNT_COLORS[index % ACCOUNT_COLORS.length];
                       return (
-                        <div
+                        <button
                           key={`legend-${account.accountId}`}
+                          type="button"
                           onClick={() => handleAccountClick(account.accountId)}
                           style={{
                             display: "flex",
@@ -182,6 +183,10 @@ export function AccountBreakdownPage({ data }: AccountBreakdownPageProps) {
                             padding: "2px 4px",
                             borderRadius: "4px",
                             transition: "opacity 0.2s",
+                            border: "none",
+                            background: "transparent",
+                            font: "inherit",
+                            color: "inherit",
                           }}
                           onMouseEnter={(e) => {
                             e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
@@ -202,7 +207,7 @@ export function AccountBreakdownPage({ data }: AccountBreakdownPageProps) {
                           <span style={{ color: "rgba(255, 255, 255, 0.8)", fontSize: "0.9rem" }}>
                             {account.name}
                           </span>
-                        </div>
+                        </button>
                       );
                     })}
                   </div>
