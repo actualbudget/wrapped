@@ -2,6 +2,8 @@
 
 A beautiful year-in-review application for your Actual Budget data, styled like Spotify Wrapped. View your income, expenses, top categories, transaction patterns, and more with stunning visualizations and animations.
 
+> ⚠️ **Note**: This project was vibe coded - it was built for fun and to scratch a personal itch. Don't expect production-grade code quality, extensive error handling, or perfect architecture. It works, but it's not perfect. Use at your own discretion! 😅
+
 ## Features
 
 - 📊 **Comprehensive Statistics**: Income vs expenses, top categories, top payees, transaction stats
