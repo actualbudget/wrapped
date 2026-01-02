@@ -59,6 +59,7 @@ const MONTHS = [
  */
 function calculateBudgetComparison(
   expenseTransactions: Transaction[],
+  transferTransactions: Transaction[],
   _categories: Array<{ id: string; name: string; tombstone?: boolean; group?: string }>,
   budgetData: Array<{ categoryId: string; month: string; budgetedAmount: number }>,
   accountOffbudgetMap: Map<string, boolean>,
@@ -82,7 +83,32 @@ function calculateBudgetComparison(
   // Calculate actual spending per category per month
   const actualSpendingMap = new Map<string, Map<string, number>>(); // categoryId -> month -> actualAmount
 
+  // Include regular expense transactions
   expenseTransactions.forEach(t => {
+    const date = parseISO(t.date);
+    const monthName = MONTHS[date.getMonth()];
+    const isOffBudget = accountOffbudgetMap.get(t.account) || false;
+
+    let categoryId: string;
+    if (!t.category || t.category === '') {
+      categoryId = isOffBudget ? 'off-budget' : 'uncategorized';
+    } else {
+      categoryId = t.category;
+    }
+
+    if (!actualSpendingMap.has(categoryId)) {
+      actualSpendingMap.set(categoryId, new Map());
+    }
+    const categorySpending = actualSpendingMap.get(categoryId)!;
+    const currentAmount = categorySpending.get(monthName) || 0;
+    categorySpending.set(monthName, currentAmount + integerToAmount(Math.abs(t.amount)));
+  });
+
+  // Include transfer transactions (only expense transfers, i.e., negative amounts)
+  transferTransactions.forEach(t => {
+    // Only include transfers that are expenses (negative amounts)
+    if (t.amount >= 0) return;
+
     const date = parseISO(t.date);
     const monthName = MONTHS[date.getMonth()];
     const isOffBudget = accountOffbudgetMap.get(t.account) || false;
@@ -249,15 +275,29 @@ export function transformToWrappedData(
       payeeIdToName.set(p.id, p.name);
     });
 
+    // Collect transfer transactions separately for budget comparison
+    const transferTransactions: Transaction[] = [];
+
     // Filter transactions for 2025 and exclude transfers, off-budget (conditionally), and starting balance
     const yearTransactions = transactions.filter(t => {
       const date = parseISO(t.date);
       if (date < yearStart || date > yearEnd) {
         return false;
       }
-      // Exclude transfer transactions (payees with transfer_acct field)
+      // Collect transfer transactions (payees with transfer_acct field) but exclude from regular transactions
       const isTransfer = t.payee && payeeIdToTransferAcct.has(t.payee);
       if (isTransfer) {
+        // Check off-budget status
+        const isOffBudget = accountOffbudgetMap.get(t.account) || false;
+        // Include transfer if: (includeOffBudget is true) OR (account is not off-budget)
+        if (includeOffBudget || !isOffBudget) {
+          // Exclude starting balance transfers
+          const payeeName = t.payee ? payeeIdToName.get(t.payee) || t.payee_name : t.payee_name;
+          const isStartingBalance = payeeName && payeeName.toLowerCase() === 'starting balance';
+          if (!isStartingBalance) {
+            transferTransactions.push(t);
+          }
+        }
         return false;
       }
       // Exclude off-budget transactions (unless includeOffBudget is true)
@@ -942,6 +982,7 @@ export function transformToWrappedData(
     // Calculate budget comparison if budget data is available
     const budgetComparison = calculateBudgetComparison(
       expenseTransactions,
+      transferTransactions,
       categories,
       budgetData || [],
       accountOffbudgetMap,
