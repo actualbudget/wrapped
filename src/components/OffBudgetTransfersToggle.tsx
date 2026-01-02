@@ -2,15 +2,12 @@ import { motion } from 'framer-motion';
 
 import styles from './OffBudgetTransfersToggle.module.css';
 
-interface OffBudgetTransfersToggleProps {
-  includeOffBudgetTransfers: boolean;
+interface AllTransfersToggleProps {
+  includeAllTransfers: boolean;
   onToggle: (value: boolean) => void;
 }
 
-export function OffBudgetTransfersToggle({
-  includeOffBudgetTransfers,
-  onToggle,
-}: OffBudgetTransfersToggleProps) {
+export function AllTransfersToggle({ includeAllTransfers, onToggle }: AllTransfersToggleProps) {
   return (
     <motion.div
       className={styles.toggle}
@@ -19,18 +16,18 @@ export function OffBudgetTransfersToggle({
       transition={{ duration: 0.3, delay: 0.35 }}
     >
       <div className={styles.toggleLabel}>
-        <span className={styles.toggleText}>Include Off-Budget Transfers</span>
+        <span className={styles.toggleText}>Include All Transfers</span>
         <div
-          className={`${styles.toggleSwitch} ${includeOffBudgetTransfers ? styles.active : ''}`}
-          onClick={() => onToggle(!includeOffBudgetTransfers)}
+          className={`${styles.toggleSwitch} ${includeAllTransfers ? styles.active : ''}`}
+          onClick={() => onToggle(!includeAllTransfers)}
           role="switch"
-          aria-checked={includeOffBudgetTransfers}
-          aria-label="Include off-budget transfers"
+          aria-checked={includeAllTransfers}
+          aria-label="Include all transfers"
           tabIndex={0}
           onKeyDown={e => {
             if (e.key === 'Enter' || e.code === 'Space') {
               e.preventDefault();
-              onToggle(!includeOffBudgetTransfers);
+              onToggle(!includeAllTransfers);
             }
           }}
         >

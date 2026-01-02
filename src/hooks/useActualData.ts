@@ -43,7 +43,7 @@ export function useActualData() {
       raw: RawBudgetData,
       includeOffBudget: boolean,
       includeOnBudgetTransfers: boolean,
-      includeOffBudgetTransfers: boolean,
+      includeAllTransfers: boolean,
       currencySymbol: string,
       budgetData?: Array<{ categoryId: string; month: string; budgetedAmount: number }>,
       groupSortOrders: Map<string, number> = new Map(),
@@ -56,7 +56,7 @@ export function useActualData() {
         DEFAULT_YEAR,
         includeOffBudget,
         includeOnBudgetTransfers,
-        includeOffBudgetTransfers,
+        includeAllTransfers,
         currencySymbol,
         budgetData,
         groupSortOrders,
@@ -71,7 +71,7 @@ export function useActualData() {
       uploadedFile: File,
       includeOffBudget: boolean = false,
       includeOnBudgetTransfers: boolean = false,
-      includeOffBudgetTransfers: boolean = false,
+      includeAllTransfers: boolean = false,
       overrideCurrencySymbol?: string,
     ) => {
       setLoading(true);
@@ -139,7 +139,7 @@ export function useActualData() {
           raw,
           includeOffBudget,
           includeOnBudgetTransfers,
-          includeOffBudgetTransfers,
+          includeAllTransfers,
           effectiveCurrency,
           fetchedBudgetData.length > 0 ? fetchedBudgetData : undefined,
           fetchedGroupSortOrders,
@@ -166,7 +166,7 @@ export function useActualData() {
     async (
       includeOffBudget: boolean = false,
       includeOnBudgetTransfers: boolean = false,
-      includeOffBudgetTransfers: boolean = false,
+      includeAllTransfers: boolean = false,
       overrideCurrencySymbol?: string,
     ) => {
       if (!file) {
@@ -176,7 +176,7 @@ export function useActualData() {
         file,
         includeOffBudget,
         includeOnBudgetTransfers,
-        includeOffBudgetTransfers,
+        includeAllTransfers,
         overrideCurrencySymbol,
       );
     },
@@ -187,7 +187,7 @@ export function useActualData() {
     (
       includeOffBudget: boolean,
       includeOnBudgetTransfers: boolean,
-      includeOffBudgetTransfers: boolean,
+      includeAllTransfers: boolean,
       overrideCurrencySymbol?: string,
     ) => {
       if (rawData) {
@@ -196,7 +196,7 @@ export function useActualData() {
           rawData,
           includeOffBudget,
           includeOnBudgetTransfers,
-          includeOffBudgetTransfers,
+          includeAllTransfers,
           effectiveCurrency,
           budgetData,
           groupSortOrders,

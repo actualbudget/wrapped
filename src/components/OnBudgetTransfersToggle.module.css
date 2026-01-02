@@ -57,6 +57,11 @@
   transform: translateX(20px);
 }
 
+.toggleSwitch.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .toggleText {
   font-size: 0.85rem;
   opacity: 0.9;

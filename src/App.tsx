@@ -5,7 +5,7 @@ import { ConnectionForm } from './components/ConnectionForm';
 import { CurrencySelector } from './components/CurrencySelector';
 import { Navigation } from './components/Navigation';
 import { OffBudgetToggle } from './components/OffBudgetToggle';
-import { OffBudgetTransfersToggle } from './components/OffBudgetTransfersToggle';
+import { AllTransfersToggle } from './components/OffBudgetTransfersToggle';
 import { OnBudgetTransfersToggle } from './components/OnBudgetTransfersToggle';
 import { AccountBreakdownPage } from './components/pages/AccountBreakdownPage';
 import { BudgetVsActualPage } from './components/pages/BudgetVsActualPage';
@@ -45,8 +45,8 @@ function App() {
     'includeOnBudgetTransfers',
     false,
   );
-  const [includeOffBudgetTransfers, setIncludeOffBudgetTransfers] = useLocalStorage(
-    'includeOffBudgetTransfers',
+  const [includeAllTransfers, setIncludeAllTransfers] = useLocalStorage(
+    'includeAllTransfers',
     false,
   );
   const [overrideCurrency, setOverrideCurrency] = useLocalStorage<string | null>(
@@ -60,7 +60,7 @@ function App() {
       file,
       includeOffBudget,
       includeOnBudgetTransfers,
-      includeOffBudgetTransfers,
+      includeAllTransfers,
       overrideCurrency || undefined,
     );
   };
@@ -70,26 +70,26 @@ function App() {
     retransformData(
       value,
       includeOnBudgetTransfers,
-      includeOffBudgetTransfers,
+      includeAllTransfers,
       overrideCurrency || undefined,
     );
   };
 
   const handleOnBudgetTransfersToggle = (value: boolean) => {
     setIncludeOnBudgetTransfers(value);
-    retransformData(
-      includeOffBudget,
-      value,
-      includeOffBudgetTransfers,
-      overrideCurrency || undefined,
-    );
+    retransformData(includeOffBudget, value, includeAllTransfers, overrideCurrency || undefined);
   };
 
-  const handleOffBudgetTransfersToggle = (value: boolean) => {
-    setIncludeOffBudgetTransfers(value);
+  const handleAllTransfersToggle = (value: boolean) => {
+    setIncludeAllTransfers(value);
+    // When "Include All Transfers" is enabled, automatically enable "Include On-Budget Transfers"
+    const effectiveIncludeOnBudgetTransfers = value ? true : includeOnBudgetTransfers;
+    if (value && !includeOnBudgetTransfers) {
+      setIncludeOnBudgetTransfers(true);
+    }
     retransformData(
       includeOffBudget,
-      includeOnBudgetTransfers,
+      effectiveIncludeOnBudgetTransfers, // If includeAllTransfers is true, also enable on-budget transfers
       value,
       overrideCurrency || undefined,
     );
@@ -100,18 +100,13 @@ function App() {
     const defaultCurrency = data?.currencySymbol || '$';
     if (currencySymbol === defaultCurrency) {
       setOverrideCurrency(null);
-      retransformData(
-        includeOffBudget,
-        includeOnBudgetTransfers,
-        includeOffBudgetTransfers,
-        undefined,
-      );
+      retransformData(includeOffBudget, includeOnBudgetTransfers, includeAllTransfers, undefined);
     } else {
       setOverrideCurrency(currencySymbol);
       retransformData(
         includeOffBudget,
         includeOnBudgetTransfers,
-        includeOffBudgetTransfers,
+        includeAllTransfers,
         currencySymbol,
       );
     }
@@ -171,12 +166,13 @@ function App() {
         <SettingsMenu>
           <OffBudgetToggle includeOffBudget={includeOffBudget} onToggle={handleOffBudgetToggle} />
           <OnBudgetTransfersToggle
-            includeOnBudgetTransfers={includeOnBudgetTransfers}
+            includeOnBudgetTransfers={includeAllTransfers || includeOnBudgetTransfers}
             onToggle={handleOnBudgetTransfersToggle}
+            disabled={includeAllTransfers} // Disable when "Include All Transfers" is enabled
           />
-          <OffBudgetTransfersToggle
-            includeOffBudgetTransfers={includeOffBudgetTransfers}
-            onToggle={handleOffBudgetTransfersToggle}
+          <AllTransfersToggle
+            includeAllTransfers={includeAllTransfers}
+            onToggle={handleAllTransfersToggle}
           />
           <CurrencySelector
             selectedCurrency={effectiveCurrency}

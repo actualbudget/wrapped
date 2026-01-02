@@ -247,7 +247,7 @@ export function transformToWrappedData(
   year: number = DEFAULT_YEAR,
   includeOffBudget: boolean = false,
   includeOnBudgetTransfers: boolean = false,
-  includeOffBudgetTransfers: boolean = false,
+  includeAllTransfers: boolean = false,
   currencySymbol: string = '$',
   budgetData?: Array<{ categoryId: string; month: string; budgetedAmount: number }>,
   groupSortOrders: Map<string, number> = new Map(),
@@ -301,19 +301,22 @@ export function transformToWrappedData(
         const isOnBudgetToOnBudget =
           !sourceIsOffBudget && destinationAccountId && !destinationIsOffBudget;
 
-        // Determine if this is a transfer between two off-budget accounts
-        const isOffBudgetToOffBudget =
-          sourceIsOffBudget && destinationAccountId && destinationIsOffBudget;
+        // Determine if this is a transfer between on-budget and off-budget accounts (on->off or off->on)
+        const isOnBudgetToOffBudget =
+          (!sourceIsOffBudget && destinationAccountId && destinationIsOffBudget) ||
+          (sourceIsOffBudget && destinationAccountId && !destinationIsOffBudget);
 
         // Apply includeOnBudgetTransfers filter
         // If includeOnBudgetTransfers is false and both accounts are on-budget, exclude the transfer
-        if (!includeOnBudgetTransfers && isOnBudgetToOnBudget) {
+        // Note: includeAllTransfers automatically enables includeOnBudgetTransfers, so check that too
+        const effectiveIncludeOnBudgetTransfers = includeAllTransfers || includeOnBudgetTransfers;
+        if (!effectiveIncludeOnBudgetTransfers && isOnBudgetToOnBudget) {
           return false;
         }
 
-        // Apply includeOffBudgetTransfers filter
-        // If includeOffBudgetTransfers is false and both accounts are off-budget, exclude the transfer
-        if (!includeOffBudgetTransfers && isOffBudgetToOffBudget) {
+        // Apply includeAllTransfers filter
+        // If includeAllTransfers is false and transfer is between on-budget and off-budget, exclude the transfer
+        if (!includeAllTransfers && isOnBudgetToOffBudget) {
           return false;
         }
 

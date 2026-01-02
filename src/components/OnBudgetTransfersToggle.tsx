@@ -5,11 +5,13 @@ import styles from './OnBudgetTransfersToggle.module.css';
 interface OnBudgetTransfersToggleProps {
   includeOnBudgetTransfers: boolean;
   onToggle: (value: boolean) => void;
+  disabled?: boolean;
 }
 
 export function OnBudgetTransfersToggle({
   includeOnBudgetTransfers,
   onToggle,
+  disabled = false,
 }: OnBudgetTransfersToggleProps) {
   return (
     <motion.div
@@ -21,14 +23,15 @@ export function OnBudgetTransfersToggle({
       <div className={styles.toggleLabel}>
         <span className={styles.toggleText}>Include On-Budget Transfers</span>
         <div
-          className={`${styles.toggleSwitch} ${includeOnBudgetTransfers ? styles.active : ''}`}
-          onClick={() => onToggle(!includeOnBudgetTransfers)}
+          className={`${styles.toggleSwitch} ${includeOnBudgetTransfers ? styles.active : ''} ${disabled ? styles.disabled : ''}`}
+          onClick={() => !disabled && onToggle(!includeOnBudgetTransfers)}
           role="switch"
           aria-checked={includeOnBudgetTransfers}
           aria-label="Include on-budget transfers"
-          tabIndex={0}
+          aria-disabled={disabled}
+          tabIndex={disabled ? -1 : 0}
           onKeyDown={e => {
-            if (e.key === 'Enter' || e.code === 'Space') {
+            if (!disabled && (e.key === 'Enter' || e.code === 'Space')) {
               e.preventDefault();
               onToggle(!includeOnBudgetTransfers);
             }
