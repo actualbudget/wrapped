@@ -120,10 +120,17 @@ function calculateBudgetComparison(
     categorySpending.set(monthName, currentAmount + integerToAmount(Math.abs(t.amount)));
   });
 
+  // Create a Set of transaction IDs from expenseTransactions to avoid double-counting
+  const expenseTransactionIds = new Set(expenseTransactions.map(t => t.id));
+
   // Include transfer transactions (only expense transfers, i.e., negative amounts)
+  // BUT exclude transfers that are already in expenseTransactions to avoid double-counting
   transferTransactions.forEach(t => {
     // Only include transfers that are expenses (negative amounts)
     if (t.amount >= 0) return;
+
+    // Skip if this transfer is already in expenseTransactions (to avoid double-counting)
+    if (expenseTransactionIds.has(t.id)) return;
 
     const date = parseISO(t.date);
     const monthName = MONTHS[date.getMonth()];
