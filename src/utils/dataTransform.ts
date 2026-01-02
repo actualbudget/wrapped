@@ -246,7 +246,8 @@ export function transformToWrappedData(
   accounts: Account[] = [],
   year: number = DEFAULT_YEAR,
   includeOffBudget: boolean = false,
-  excludeOnBudgetTransfers: boolean = true,
+  includeOnBudgetTransfers: boolean = false,
+  includeOffBudgetTransfers: boolean = false,
   currencySymbol: string = '$',
   budgetData?: Array<{ categoryId: string; month: string; budgetedAmount: number }>,
   groupSortOrders: Map<string, number> = new Map(),
@@ -300,9 +301,19 @@ export function transformToWrappedData(
         const isOnBudgetToOnBudget =
           !sourceIsOffBudget && destinationAccountId && !destinationIsOffBudget;
 
-        // Apply excludeOnBudgetTransfers filter
-        // If excludeOnBudgetTransfers is true and both accounts are on-budget, exclude the transfer
-        if (excludeOnBudgetTransfers && isOnBudgetToOnBudget) {
+        // Determine if this is a transfer between two off-budget accounts
+        const isOffBudgetToOffBudget =
+          sourceIsOffBudget && destinationAccountId && destinationIsOffBudget;
+
+        // Apply includeOnBudgetTransfers filter
+        // If includeOnBudgetTransfers is false and both accounts are on-budget, exclude the transfer
+        if (!includeOnBudgetTransfers && isOnBudgetToOnBudget) {
+          return false;
+        }
+
+        // Apply includeOffBudgetTransfers filter
+        // If includeOffBudgetTransfers is false and both accounts are off-budget, exclude the transfer
+        if (!includeOffBudgetTransfers && isOffBudgetToOffBudget) {
           return false;
         }
 

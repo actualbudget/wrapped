@@ -42,7 +42,8 @@ export function useActualData() {
     (
       raw: RawBudgetData,
       includeOffBudget: boolean,
-      excludeOnBudgetTransfers: boolean,
+      includeOnBudgetTransfers: boolean,
+      includeOffBudgetTransfers: boolean,
       currencySymbol: string,
       budgetData?: Array<{ categoryId: string; month: string; budgetedAmount: number }>,
       groupSortOrders: Map<string, number> = new Map(),
@@ -54,7 +55,8 @@ export function useActualData() {
         raw.accounts,
         DEFAULT_YEAR,
         includeOffBudget,
-        excludeOnBudgetTransfers,
+        includeOnBudgetTransfers,
+        includeOffBudgetTransfers,
         currencySymbol,
         budgetData,
         groupSortOrders,
@@ -68,7 +70,8 @@ export function useActualData() {
     async (
       uploadedFile: File,
       includeOffBudget: boolean = false,
-      excludeOnBudgetTransfers: boolean = true,
+      includeOnBudgetTransfers: boolean = false,
+      includeOffBudgetTransfers: boolean = false,
       overrideCurrencySymbol?: string,
     ) => {
       setLoading(true);
@@ -135,7 +138,8 @@ export function useActualData() {
         transformData(
           raw,
           includeOffBudget,
-          excludeOnBudgetTransfers,
+          includeOnBudgetTransfers,
+          includeOffBudgetTransfers,
           effectiveCurrency,
           fetchedBudgetData.length > 0 ? fetchedBudgetData : undefined,
           fetchedGroupSortOrders,
@@ -161,13 +165,20 @@ export function useActualData() {
   const refreshData = useCallback(
     async (
       includeOffBudget: boolean = false,
-      excludeOnBudgetTransfers: boolean = true,
+      includeOnBudgetTransfers: boolean = false,
+      includeOffBudgetTransfers: boolean = false,
       overrideCurrencySymbol?: string,
     ) => {
       if (!file) {
         throw new Error('No file available');
       }
-      await fetchData(file, includeOffBudget, excludeOnBudgetTransfers, overrideCurrencySymbol);
+      await fetchData(
+        file,
+        includeOffBudget,
+        includeOnBudgetTransfers,
+        includeOffBudgetTransfers,
+        overrideCurrencySymbol,
+      );
     },
     [file, fetchData],
   );
@@ -175,7 +186,8 @@ export function useActualData() {
   const retransformData = useCallback(
     (
       includeOffBudget: boolean,
-      excludeOnBudgetTransfers: boolean,
+      includeOnBudgetTransfers: boolean,
+      includeOffBudgetTransfers: boolean,
       overrideCurrencySymbol?: string,
     ) => {
       if (rawData) {
@@ -183,7 +195,8 @@ export function useActualData() {
         transformData(
           rawData,
           includeOffBudget,
-          excludeOnBudgetTransfers,
+          includeOnBudgetTransfers,
+          includeOffBudgetTransfers,
           effectiveCurrency,
           budgetData,
           groupSortOrders,

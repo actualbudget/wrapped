@@ -1,6 +1,8 @@
 .selector {
   position: fixed;
-  top: calc(2rem + 7rem); /* Position below OffBudgetToggle and OnBudgetTransfersToggle (2rem + ~3.5rem + ~3.5rem) */
+  top: calc(
+    2rem + 7rem
+  ); /* Position below OffBudgetToggle and OnBudgetTransfersToggle (2rem + ~3.5rem + ~3.5rem) */
   right: 2rem;
   z-index: 1001;
   background: rgba(0, 0, 0, 0.8);

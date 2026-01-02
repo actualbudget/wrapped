@@ -5,6 +5,7 @@ import { ConnectionForm } from './components/ConnectionForm';
 import { CurrencySelector } from './components/CurrencySelector';
 import { Navigation } from './components/Navigation';
 import { OffBudgetToggle } from './components/OffBudgetToggle';
+import { OffBudgetTransfersToggle } from './components/OffBudgetTransfersToggle';
 import { OnBudgetTransfersToggle } from './components/OnBudgetTransfersToggle';
 import { AccountBreakdownPage } from './components/pages/AccountBreakdownPage';
 import { BudgetVsActualPage } from './components/pages/BudgetVsActualPage';
@@ -40,9 +41,13 @@ const PAGES = [
 function App() {
   const [currentPage, setCurrentPage] = useState(0);
   const [includeOffBudget, setIncludeOffBudget] = useLocalStorage('includeOffBudget', false);
-  const [excludeOnBudgetTransfers, setExcludeOnBudgetTransfers] = useLocalStorage(
-    'excludeOnBudgetTransfers',
-    true,
+  const [includeOnBudgetTransfers, setIncludeOnBudgetTransfers] = useLocalStorage(
+    'includeOnBudgetTransfers',
+    false,
+  );
+  const [includeOffBudgetTransfers, setIncludeOffBudgetTransfers] = useLocalStorage(
+    'includeOffBudgetTransfers',
+    false,
   );
   const [overrideCurrency, setOverrideCurrency] = useLocalStorage<string | null>(
     'overrideCurrency',
@@ -54,19 +59,40 @@ function App() {
     await fetchData(
       file,
       includeOffBudget,
-      excludeOnBudgetTransfers,
+      includeOnBudgetTransfers,
+      includeOffBudgetTransfers,
       overrideCurrency || undefined,
     );
   };
 
   const handleOffBudgetToggle = (value: boolean) => {
     setIncludeOffBudget(value);
-    retransformData(value, excludeOnBudgetTransfers, overrideCurrency || undefined);
+    retransformData(
+      value,
+      includeOnBudgetTransfers,
+      includeOffBudgetTransfers,
+      overrideCurrency || undefined,
+    );
   };
 
   const handleOnBudgetTransfersToggle = (value: boolean) => {
-    setExcludeOnBudgetTransfers(value);
-    retransformData(includeOffBudget, value, overrideCurrency || undefined);
+    setIncludeOnBudgetTransfers(value);
+    retransformData(
+      includeOffBudget,
+      value,
+      includeOffBudgetTransfers,
+      overrideCurrency || undefined,
+    );
+  };
+
+  const handleOffBudgetTransfersToggle = (value: boolean) => {
+    setIncludeOffBudgetTransfers(value);
+    retransformData(
+      includeOffBudget,
+      includeOnBudgetTransfers,
+      value,
+      overrideCurrency || undefined,
+    );
   };
 
   const handleCurrencyChange = (currencySymbol: string) => {
@@ -74,10 +100,20 @@ function App() {
     const defaultCurrency = data?.currencySymbol || '$';
     if (currencySymbol === defaultCurrency) {
       setOverrideCurrency(null);
-      retransformData(includeOffBudget, excludeOnBudgetTransfers, undefined);
+      retransformData(
+        includeOffBudget,
+        includeOnBudgetTransfers,
+        includeOffBudgetTransfers,
+        undefined,
+      );
     } else {
       setOverrideCurrency(currencySymbol);
-      retransformData(includeOffBudget, excludeOnBudgetTransfers, currencySymbol);
+      retransformData(
+        includeOffBudget,
+        includeOnBudgetTransfers,
+        includeOffBudgetTransfers,
+        currencySymbol,
+      );
     }
   };
 
@@ -135,8 +171,12 @@ function App() {
         <SettingsMenu>
           <OffBudgetToggle includeOffBudget={includeOffBudget} onToggle={handleOffBudgetToggle} />
           <OnBudgetTransfersToggle
-            excludeOnBudgetTransfers={excludeOnBudgetTransfers}
+            includeOnBudgetTransfers={includeOnBudgetTransfers}
             onToggle={handleOnBudgetTransfersToggle}
+          />
+          <OffBudgetTransfersToggle
+            includeOffBudgetTransfers={includeOffBudgetTransfers}
+            onToggle={handleOffBudgetTransfersToggle}
           />
           <CurrencySelector
             selectedCurrency={effectiveCurrency}
