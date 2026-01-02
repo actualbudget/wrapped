@@ -34,7 +34,7 @@ describe('SettingsMenu', () => {
     expect(screen.getByLabelText('Toggle settings menu')).toBeInTheDocument();
   });
 
-  it('renders burger button', () => {
+  it('renders settings button', () => {
     render(
       <SettingsMenu>
         <div>Test Content</div>
@@ -44,9 +44,10 @@ describe('SettingsMenu', () => {
     const button = screen.getByLabelText('Toggle settings menu');
     expect(button).toBeInTheDocument();
     expect(button).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.getByText('settings')).toBeInTheDocument();
   });
 
-  it('shows menu when burger button is clicked', () => {
+  it('shows menu when settings button is clicked', () => {
     render(
       <SettingsMenu>
         <div>Test Content</div>
@@ -60,7 +61,7 @@ describe('SettingsMenu', () => {
     expect(button).toHaveAttribute('aria-expanded', 'true');
   });
 
-  it('hides menu when burger button is clicked again', () => {
+  it('hides menu when settings button is clicked again', () => {
     render(
       <SettingsMenu>
         <div>Test Content</div>

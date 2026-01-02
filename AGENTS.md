@@ -173,9 +173,9 @@ A React hook that manages loading and processing Actual Budget data from a zip f
 - `loading`: `boolean` - Loading state
 - `error`: `string | null` - Error message if loading failed
 - `progress`: `number` - Loading progress (0-100)
-- `fetchData`: `(file: File, includeOffBudget?: boolean, includeOnBudgetTransfers?: boolean, includeAllTransfers?: boolean, overrideCurrencySymbol?: string) => Promise<void>` - Function to load data from a file
-- `refreshData`: `(includeOffBudget?: boolean, includeOnBudgetTransfers?: boolean, includeAllTransfers?: boolean, overrideCurrencySymbol?: string) => Promise<void>` - Function to reload data from the last loaded file
-- `retransformData`: `(includeOffBudget: boolean, includeOnBudgetTransfers: boolean, includeAllTransfers: boolean, overrideCurrencySymbol?: string) => void` - Function to re-transform data with new filter settings
+- `fetchData`: `(file: File, includeOffBudget?: boolean, includeBudgetedTransfers?: boolean, includeAllTransfers?: boolean, overrideCurrencySymbol?: string) => Promise<void>` - Function to load data from a file
+- `refreshData`: `(includeOffBudget?: boolean, includeBudgetedTransfers?: boolean, includeAllTransfers?: boolean, overrideCurrencySymbol?: string) => Promise<void>` - Function to reload data from the last loaded file
+- `retransformData`: `(includeOffBudget: boolean, includeBudgetedTransfers: boolean, includeAllTransfers: boolean, overrideCurrencySymbol?: string) => void` - Function to re-transform data with new filter settings
 - `retry`: `() => Promise<void> | undefined` - Function to retry loading the last file
 
 **Example:**
@@ -200,7 +200,7 @@ function MyComponent() {
 
 **Usage Pattern:**
 
-1. Call `fetchData(file, includeOffBudget, includeOnBudgetTransfers, includeAllTransfers, overrideCurrencySymbol)` when a user uploads a budget zip file
+1. Call `fetchData(file, includeOffBudget, includeBudgetedTransfers, includeAllTransfers, overrideCurrencySymbol)` when a user uploads a budget zip file
 2. The hook automatically initializes the database, fetches all data, and transforms it
 3. Access the processed `data` once loading completes
 4. Use `retransformData()` to re-process data when filter toggles change (without reloading from file)
@@ -209,8 +209,8 @@ function MyComponent() {
 **Filter Parameters:**
 
 - `includeOffBudget`: Include transactions from off-budget accounts (default: `false`)
-- `includeOnBudgetTransfers`: Include transfers between two on-budget accounts (default: `false`)
-- `includeAllTransfers`: Include transfers between on-budget and off-budget accounts (default: `false`). When enabled, automatically enables `includeOnBudgetTransfers`
+- `includeBudgetedTransfers`: Include transfers between on-budget and off-budget accounts (on→off or off→on) (default: `true`). When `true` but `includeAllTransfers` is `false`, excludes transfers between two on-budget accounts (on→on) and transfers between two off-budget accounts (off→off)
+- `includeAllTransfers`: Include all transfers including between two on-budget accounts and between two off-budget accounts (default: `false`). When enabled, automatically enables `includeBudgetedTransfers` and includes ALL transfer types
 - `overrideCurrencySymbol`: Override the currency symbol from the database (optional)
 
 ### `useAnimatedNumber(target: number, duration?: number, decimals?: number): number`
@@ -280,7 +280,7 @@ function Settings() {
 
 ## Data Transformation Utilities
 
-### `transformToWrappedData(transactions, categories, payees, accounts, year?, includeOffBudget?, includeOnBudgetTransfers?, includeAllTransfers?, currencySymbol?, budgetData?, groupSortOrders?): WrappedData`
+### `transformToWrappedData(transactions, categories, payees, accounts, year?, includeOffBudget?, includeBudgetedTransfers?, includeAllTransfers?, currencySymbol?, budgetData?, groupSortOrders?): WrappedData`
 
 Transforms raw transaction data into a structured `WrappedData` object with all calculated metrics and aggregations.
 
@@ -292,8 +292,8 @@ Transforms raw transaction data into a structured `WrappedData` object with all 
 - `accounts`: Array of Account objects
 - `year`: Optional year number (defaults to 2025)
 - `includeOffBudget`: Optional boolean to include off-budget transactions (defaults to `false`)
-- `includeOnBudgetTransfers`: Optional boolean to include transfers between two on-budget accounts (defaults to `false`)
-- `includeAllTransfers`: Optional boolean to include transfers between on-budget and off-budget accounts (defaults to `false`). When `true`, automatically enables `includeOnBudgetTransfers`
+- `includeBudgetedTransfers`: Optional boolean to include transfers between on-budget and off-budget accounts (on→off or off→on) (defaults to `true`). When `true` but `includeAllTransfers` is `false`, excludes transfers between two on-budget accounts (on→on) and transfers between two off-budget accounts (off→off). When `false`, excludes ALL transfers
+- `includeAllTransfers`: Optional boolean to include all transfers including between two on-budget accounts and between two off-budget accounts (defaults to `false`). When `true`, automatically enables `includeBudgetedTransfers` and includes ALL transfer types
 - `currencySymbol`: Optional currency symbol string (defaults to `'$'`)
 - `budgetData`: Optional array of budget data for budget comparison
 - `groupSortOrders`: Optional map of category group sort orders
@@ -334,7 +334,7 @@ const wrappedData = transformToWrappedData(
   accounts,
   2025,
   false, // includeOffBudget
-  false, // includeOnBudgetTransfers
+  true,  // includeBudgetedTransfers (default: true)
   false, // includeAllTransfers
   '$'    // currencySymbol
 );
@@ -347,9 +347,10 @@ console.log(wrappedData.monthlyData);
 **Important Notes:**
 
 - Automatically filters transactions to the specified year (defaults to 2025)
-- **Transfer Filtering**: By default, excludes all transfer transactions. Use `includeOnBudgetTransfers` and `includeAllTransfers` to include specific types:
-  - `includeOnBudgetTransfers = true`: Includes transfers between two on-budget accounts
-  - `includeAllTransfers = true`: Includes transfers between on-budget and off-budget accounts (on→off or off→on). Automatically enables `includeOnBudgetTransfers`
+- **Transfer Filtering**:
+  - By default (`includeBudgetedTransfers = true`, `includeAllTransfers = false`): Includes transfers between on-budget and off-budget accounts (on→off or off→on). Excludes transfers between two on-budget accounts (on→on) and transfers between two off-budget accounts (off→off)
+  - When `includeBudgetedTransfers = false`: Excludes ALL transfers regardless of account types
+  - When `includeAllTransfers = true`: Includes ALL transfers (on→on, on→off, off→on, off→off). Automatically enables `includeBudgetedTransfers`
 - **Transfer Labeling**: When transfers are included:
   - **Categories**: Transfers without categories are automatically labeled with the destination account name (e.g., "Transfer: Savings Account") instead of showing as "Uncategorized"
   - **Payees**: Transfer payees are automatically labeled with the destination account name (e.g., "Transfer: Savings Account") instead of showing as "Unknown"
