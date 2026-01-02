@@ -1,6 +1,6 @@
 .toggle {
   position: fixed;
-  top: 2rem;
+  top: calc(2rem + 3.5rem); /* Position below OffBudgetToggle (2rem top + ~3.5rem height) */
   right: 2rem;
   z-index: 1001;
   background: rgba(0, 0, 0, 0.8);
@@ -14,7 +14,6 @@
   color: white;
   font-size: 0.9rem;
   font-weight: 500;
-  margin-top: 3.5rem;
 }
 
 .toggleLabel {
@@ -22,6 +21,8 @@
   cursor: pointer;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  width: 100%;
   gap: 0.75rem;
 }
 
@@ -33,6 +34,8 @@
   border-radius: 12px;
   cursor: pointer;
   transition: background-color 0.3s;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .toggleSwitch.active {
@@ -57,5 +60,7 @@
 .toggleText {
   font-size: 0.85rem;
   opacity: 0.9;
+  text-align: left;
+  flex: 1;
 }
 

@@ -18,6 +18,7 @@ import { SavingsRatePage } from './components/pages/SavingsRatePage';
 import { SpendingVelocityPage } from './components/pages/SpendingVelocityPage';
 import { TopCategoriesPage } from './components/pages/TopCategoriesPage';
 import { TopPayeesPage } from './components/pages/TopPayeesPage';
+import { SettingsMenu } from './components/SettingsMenu';
 import { useActualData } from './hooks/useActualData';
 import { useLocalStorage } from './hooks/useLocalStorage';
 
@@ -131,16 +132,18 @@ function App() {
 
     return (
       <div className={styles.app}>
-        <OffBudgetToggle includeOffBudget={includeOffBudget} onToggle={handleOffBudgetToggle} />
-        <OnBudgetTransfersToggle
-          excludeOnBudgetTransfers={excludeOnBudgetTransfers}
-          onToggle={handleOnBudgetTransfersToggle}
-        />
-        <CurrencySelector
-          selectedCurrency={effectiveCurrency}
-          defaultCurrency={data.currencySymbol || '$'}
-          onCurrencyChange={handleCurrencyChange}
-        />
+        <SettingsMenu>
+          <OffBudgetToggle includeOffBudget={includeOffBudget} onToggle={handleOffBudgetToggle} />
+          <OnBudgetTransfersToggle
+            excludeOnBudgetTransfers={excludeOnBudgetTransfers}
+            onToggle={handleOnBudgetTransfersToggle}
+          />
+          <CurrencySelector
+            selectedCurrency={effectiveCurrency}
+            defaultCurrency={data.currencySymbol || '$'}
+            onCurrencyChange={handleCurrencyChange}
+          />
+        </SettingsMenu>
         {isIntroPage ? (
           <IntroPage
             data={
