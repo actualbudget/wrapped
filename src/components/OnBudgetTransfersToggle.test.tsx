@@ -15,7 +15,7 @@ describe('OnBudgetTransfersToggle', () => {
     const mockToggle = vi.fn();
     render(<OnBudgetTransfersToggle includeOnBudgetTransfers={false} onToggle={mockToggle} />);
 
-    expect(screen.getByText('Include On-Budget Transfers')).toBeInTheDocument();
+    expect(screen.getByText('Include Budgeted Transfers')).toBeInTheDocument();
   });
 
   it('displays toggle switch', () => {
@@ -86,7 +86,7 @@ describe('OnBudgetTransfersToggle', () => {
     render(<OnBudgetTransfersToggle includeOnBudgetTransfers={false} onToggle={mockToggle} />);
 
     const toggle = screen.getByRole('switch');
-    expect(toggle).toHaveAttribute('aria-label', 'Include on-budget transfers');
+    expect(toggle).toHaveAttribute('aria-label', 'Include budgeted transfers');
   });
 
   describe('disabled state', () => {

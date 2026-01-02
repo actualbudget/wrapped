@@ -223,13 +223,13 @@ describe('transformToWrappedData', () => {
 
       const accounts: Account[] = [
         createMockAccount({ id: 'acc1', name: 'Checking', offbudget: false }),
-        createMockAccount({ id: 'acc2', name: 'Savings Account', offbudget: false }),
-        createMockAccount({ id: 'acc3', name: 'Investment', offbudget: false }),
+        createMockAccount({ id: 'acc2', name: 'Savings Account', offbudget: true }), // off-budget
+        createMockAccount({ id: 'acc3', name: 'Investment', offbudget: true }), // off-budget
       ];
 
       const payees = [
-        { id: 'payee1', name: 'Transfer', transfer_acct: 'acc2' }, // transfer to Savings Account
-        { id: 'payee2', name: 'Transfer', transfer_acct: 'acc3' }, // transfer to Investment
+        { id: 'payee1', name: 'Transfer', transfer_acct: 'acc2' }, // transfer on->off to Savings Account
+        { id: 'payee2', name: 'Transfer', transfer_acct: 'acc3' }, // transfer on->off to Investment
       ];
 
       const result = transformToWrappedData(
@@ -288,11 +288,11 @@ describe('transformToWrappedData', () => {
 
       const accounts: Account[] = [
         createMockAccount({ id: 'acc1', name: 'Checking', offbudget: false }),
-        createMockAccount({ id: 'acc2', name: 'Savings', offbudget: false }),
+        createMockAccount({ id: 'acc2', name: 'Investment', offbudget: true }), // off-budget destination
       ];
 
       const payees = [
-        { id: 'payee1', name: 'Transfer', transfer_acct: 'acc2' }, // all transfers to Savings
+        { id: 'payee1', name: 'Transfer', transfer_acct: 'acc2' }, // all transfers from Checking to Investment (on->off)
       ];
 
       const result = transformToWrappedData(
@@ -307,7 +307,7 @@ describe('transformToWrappedData', () => {
       );
 
       const transferCategory = result.topCategories.find(
-        c => c.categoryName === 'Transfer: Savings',
+        c => c.categoryName === 'Transfer: Investment',
       );
       expect(transferCategory).toBeDefined();
       expect(transferCategory?.amount).toBe(600); // $100 + $200 + $300
@@ -505,13 +505,13 @@ describe('transformToWrappedData', () => {
 
       const accounts: Account[] = [
         createMockAccount({ id: 'acc1', name: 'Checking', offbudget: false }),
-        createMockAccount({ id: 'acc2', name: 'Savings Account', offbudget: false }),
-        createMockAccount({ id: 'acc3', name: 'Investment', offbudget: false }),
+        createMockAccount({ id: 'acc2', name: 'Savings Account', offbudget: true }), // off-budget
+        createMockAccount({ id: 'acc3', name: 'Investment', offbudget: true }), // off-budget
       ];
 
       const payees = [
-        { id: 'payee1', name: 'Transfer', transfer_acct: 'acc2' }, // transfer to Savings Account
-        { id: 'payee2', name: 'Transfer', transfer_acct: 'acc3' }, // transfer to Investment
+        { id: 'payee1', name: 'Transfer', transfer_acct: 'acc2' }, // transfer on->off to Savings Account
+        { id: 'payee2', name: 'Transfer', transfer_acct: 'acc3' }, // transfer on->off to Investment
       ];
 
       const result = transformToWrappedData(
@@ -554,11 +554,11 @@ describe('transformToWrappedData', () => {
 
       const accounts: Account[] = [
         createMockAccount({ id: 'acc1', name: 'Checking', offbudget: false }),
-        createMockAccount({ id: 'acc2', name: 'Savings', offbudget: false }),
+        createMockAccount({ id: 'acc2', name: 'Investment', offbudget: true }), // off-budget destination
       ];
 
       const payees = [
-        { id: 'payee1', name: 'Transfer', transfer_acct: 'acc2' }, // all transfers to Savings
+        { id: 'payee1', name: 'Transfer', transfer_acct: 'acc2' }, // all transfers from Checking to Investment (on->off)
       ];
 
       const result = transformToWrappedData(
@@ -572,7 +572,7 @@ describe('transformToWrappedData', () => {
         false,
       );
 
-      const transferPayee = result.topPayees.find(p => p.payee === 'Transfer: Savings');
+      const transferPayee = result.topPayees.find(p => p.payee === 'Transfer: Investment');
       expect(transferPayee).toBeDefined();
       expect(transferPayee?.amount).toBe(600); // $100 + $200 + $300
       expect(transferPayee?.transactionCount).toBe(3);
@@ -580,21 +580,21 @@ describe('transformToWrappedData', () => {
 
     it('uses receiving account name for transfer payees, not the source account', () => {
       const transactions: Transaction[] = [
-        // Transfer FROM Checking TO Savings - should show "Transfer: Savings" not "Transfer: Checking"
+        // Transfer FROM Checking (on-budget) TO Investment (off-budget) - should show "Transfer: Investment"
         createMockTransaction({ id: 't1', account: 'acc1', payee: 'payee1', amount: -10000 }),
-        // Transfer FROM Savings TO Investment - should show "Transfer: Investment" not "Transfer: Savings"
-        createMockTransaction({ id: 't2', account: 'acc2', payee: 'payee2', amount: -20000 }),
+        // Transfer FROM Investment (off-budget) TO Savings (on-budget) - should show "Transfer: Savings"
+        createMockTransaction({ id: 't2', account: 'acc3', payee: 'payee2', amount: -20000 }),
       ];
 
       const accounts: Account[] = [
         createMockAccount({ id: 'acc1', name: 'Checking', offbudget: false }), // Source for t1
-        createMockAccount({ id: 'acc2', name: 'Savings', offbudget: false }), // Destination for t1, Source for t2
-        createMockAccount({ id: 'acc3', name: 'Investment', offbudget: false }), // Destination for t2
+        createMockAccount({ id: 'acc2', name: 'Savings', offbudget: false }), // Destination for t2
+        createMockAccount({ id: 'acc3', name: 'Investment', offbudget: true }), // Source for t2
       ];
 
       const payees = [
-        { id: 'payee1', name: 'Transfer', transfer_acct: 'acc2' }, // Checking -> Savings
-        { id: 'payee2', name: 'Transfer', transfer_acct: 'acc3' }, // Savings -> Investment
+        { id: 'payee1', name: 'Transfer', transfer_acct: 'acc3' }, // Checking (on) -> Investment (off)
+        { id: 'payee2', name: 'Transfer', transfer_acct: 'acc2' }, // Investment (off) -> Savings (on)
       ];
 
       const result = transformToWrappedData(
@@ -603,19 +603,19 @@ describe('transformToWrappedData', () => {
         payees,
         accounts,
         2025,
-        false,
+        true, // includeOffBudget = true (needed for off->on transfer)
         true, // includeOnBudgetTransfers = true
-        false,
+        false, // includeAllTransfers = false
       );
 
       // Should show receiving account names, not source account names
-      const transferToSavings = result.topPayees.find(p => p.payee === 'Transfer: Savings');
       const transferToInvestment = result.topPayees.find(p => p.payee === 'Transfer: Investment');
+      const transferToSavings = result.topPayees.find(p => p.payee === 'Transfer: Savings');
 
-      expect(transferToSavings).toBeDefined();
-      expect(transferToSavings?.amount).toBe(100);
       expect(transferToInvestment).toBeDefined();
-      expect(transferToInvestment?.amount).toBe(200);
+      expect(transferToInvestment?.amount).toBe(100);
+      expect(transferToSavings).toBeDefined();
+      expect(transferToSavings?.amount).toBe(200);
 
       // Should NOT show source account names
       const transferFromChecking = result.topPayees.find(p => p.payee === 'Transfer: Checking');
@@ -729,14 +729,24 @@ describe('transformToWrappedData', () => {
         { id: 'payee2', name: 'Transfer', transfer_acct: 'acc2' },
       ];
 
-      const result = transformToWrappedData(transactions, [], payees, []);
+      // Explicitly disable includeOnBudgetTransfers to test exclusion
+      const result = transformToWrappedData(
+        transactions,
+        [],
+        payees,
+        [],
+        2025,
+        false,
+        false, // includeOnBudgetTransfers = false
+        false,
+      );
 
       expect(result.transactionStats.totalCount).toBe(1);
       expect(result.totalExpenses).toBe(100);
     });
 
     describe('On-Budget Transfers Toggle', () => {
-      it('excludes transfers between on-budget accounts by default', () => {
+      it('excludes transfers between on-budget accounts when includeOnBudgetTransfers is true but includeAllTransfers is false', () => {
         const transactions: Transaction[] = [
           createMockTransaction({ id: 't1', account: 'acc1', payee: 'payee1', amount: -10000 }),
           createMockTransaction({ id: 't2', account: 'acc1', payee: 'payee2', amount: -20000 }), // transfer on->on
@@ -752,13 +762,57 @@ describe('transformToWrappedData', () => {
           { id: 'payee2', name: 'Transfer', transfer_acct: 'acc2' }, // on-budget to on-budget
         ];
 
-        const result = transformToWrappedData(transactions, [], payees, accounts);
+        // With includeOnBudgetTransfers = true but includeAllTransfers = false
+        const result = transformToWrappedData(
+          transactions,
+          [],
+          payees,
+          accounts,
+          2025,
+          false,
+          true, // includeOnBudgetTransfers = true
+          false, // includeAllTransfers = false
+        );
 
+        // On-budget to on-budget transfers should be excluded (only on->off and off->on are included)
         expect(result.transactionStats.totalCount).toBe(1);
         expect(result.totalExpenses).toBe(100);
       });
 
-      it('includes transfers between on-budget accounts when toggle is on', () => {
+      it('excludes transfers between on-budget accounts when includeOnBudgetTransfers is false', () => {
+        const transactions: Transaction[] = [
+          createMockTransaction({ id: 't1', account: 'acc1', payee: 'payee1', amount: -10000 }),
+          createMockTransaction({ id: 't2', account: 'acc1', payee: 'payee2', amount: -20000 }), // transfer on->on
+        ];
+
+        const accounts: Account[] = [
+          createMockAccount({ id: 'acc1', name: 'Checking', offbudget: false }),
+          createMockAccount({ id: 'acc2', name: 'Savings', offbudget: false }),
+        ];
+
+        const payees = [
+          { id: 'payee1', name: 'Regular Payee' },
+          { id: 'payee2', name: 'Transfer', transfer_acct: 'acc2' }, // on-budget to on-budget
+        ];
+
+        // With includeOnBudgetTransfers = false
+        const result = transformToWrappedData(
+          transactions,
+          [],
+          payees,
+          accounts,
+          2025,
+          false,
+          false, // includeOnBudgetTransfers = false
+          false,
+        );
+
+        // All transfers should be excluded when toggle is off
+        expect(result.transactionStats.totalCount).toBe(1);
+        expect(result.totalExpenses).toBe(100);
+      });
+
+      it('excludes transfers between on-budget accounts when includeOnBudgetTransfers is true but includeAllTransfers is false', () => {
         const transactions: Transaction[] = [
           createMockTransaction({ id: 't1', account: 'acc1', payee: 'payee1', amount: -10000 }),
           createMockTransaction({ id: 't2', account: 'acc1', payee: 'payee2', amount: -20000 }), // transfer on->on
@@ -785,12 +839,13 @@ describe('transformToWrappedData', () => {
           false, // includeAllTransfers = false
         );
 
-        // Transfers should now be included in regular transactions
-        expect(result.transactionStats.totalCount).toBe(2);
-        expect(result.totalExpenses).toBe(300);
+        // On->on transfers should be excluded when only includeOnBudgetTransfers is true
+        // Only on->off and off->on transfers are included
+        expect(result.transactionStats.totalCount).toBe(1);
+        expect(result.totalExpenses).toBe(100);
       });
 
-      it('excludes transfers from on-budget to off-budget accounts by default', () => {
+      it('includes transfers from on-budget to off-budget accounts by default (includeOnBudgetTransfers defaults to true)', () => {
         const transactions: Transaction[] = [
           createMockTransaction({ id: 't1', account: 'acc1', payee: 'payee1', amount: -10000 }),
           createMockTransaction({ id: 't2', account: 'acc1', payee: 'payee2', amount: -20000 }), // transfer on->off
@@ -806,11 +861,12 @@ describe('transformToWrappedData', () => {
           { id: 'payee2', name: 'Transfer', transfer_acct: 'acc2' }, // on-budget to off-budget
         ];
 
-        // Test with includeAllTransfers = false (default)
+        // Test with default (includeOnBudgetTransfers = true)
         const result1 = transformToWrappedData(transactions, [], payees, accounts);
 
-        expect(result1.transactionStats.totalCount).toBe(1);
-        expect(result1.totalExpenses).toBe(100);
+        // Transfers between on-budget and off-budget are included by default
+        expect(result1.transactionStats.totalCount).toBe(2);
+        expect(result1.totalExpenses).toBe(300);
       });
 
       it('includes transfers from on-budget to off-budget accounts when includeAllTransfers is on', () => {
@@ -867,10 +923,12 @@ describe('transformToWrappedData', () => {
         expect(result1.totalExpenses).toBe(0);
 
         // With includeOffBudget = true, off-budget transactions are included
+        // The transfer (off->on) is also included by default (includeOnBudgetTransfers = true)
         const result2 = transformToWrappedData(transactions, [], payees, accounts, 2025, true);
 
-        expect(result2.transactionStats.totalCount).toBe(1);
-        expect(result2.totalExpenses).toBe(100);
+        // Both the regular transaction and the transfer are included
+        expect(result2.transactionStats.totalCount).toBe(2);
+        expect(result2.totalExpenses).toBe(300); // $100 + $200
       });
 
       it('includes transfers from off-budget to on-budget when includeAllTransfers is on', () => {
@@ -907,7 +965,7 @@ describe('transformToWrappedData', () => {
     });
 
     describe('Include All Transfers Toggle', () => {
-      it('excludes transfers between on-budget and off-budget accounts by default', () => {
+      it('includes transfers between on-budget and off-budget accounts by default (includeOnBudgetTransfers defaults to true)', () => {
         const transactions: Transaction[] = [
           createMockTransaction({ id: 't1', account: 'acc1', payee: 'payee1', amount: -10000 }),
           createMockTransaction({ id: 't2', account: 'acc1', payee: 'payee2', amount: -20000 }), // transfer on->off
@@ -925,8 +983,9 @@ describe('transformToWrappedData', () => {
 
         const result = transformToWrappedData(transactions, [], payees, accounts);
 
-        expect(result.transactionStats.totalCount).toBe(1);
-        expect(result.totalExpenses).toBe(100);
+        // Transfers between on-budget and off-budget are included by default
+        expect(result.transactionStats.totalCount).toBe(2);
+        expect(result.totalExpenses).toBe(300);
       });
 
       it('includes transfers between on-budget and off-budget accounts when toggle is on', () => {
@@ -1049,7 +1108,7 @@ describe('transformToWrappedData', () => {
           { id: 'payee2', name: 'Transfer Off->Off', transfer_acct: 'acc3' }, // off-budget to off-budget
         ];
 
-        // With includeOffBudget = true, transfers between off-budget accounts are included
+        // With includeOffBudget = true but includeOnBudgetTransfers = false, transfers are still excluded
         const result = transformToWrappedData(
           transactions,
           [],
@@ -1057,13 +1116,13 @@ describe('transformToWrappedData', () => {
           accounts,
           2025,
           true, // includeOffBudget = true
-          false, // includeOnBudgetTransfers = false
+          false, // includeOnBudgetTransfers = false (excludes ALL transfers)
           false, // includeAllTransfers = false
         );
 
-        // Transfer between two off-budget accounts should be included when includeOffBudget is true
-        expect(result.transactionStats.totalCount).toBe(2);
-        expect(result.totalExpenses).toBe(300);
+        // When includeOnBudgetTransfers is false, ALL transfers are excluded, even off->off
+        expect(result.transactionStats.totalCount).toBe(1);
+        expect(result.totalExpenses).toBe(100);
       });
 
       it('includes transfers between two off-budget accounts when includeAllTransfers is true (even without includeOffBudget)', () => {
@@ -1244,24 +1303,36 @@ describe('transformToWrappedData', () => {
       const transactions: Transaction[] = [
         createMockTransaction({ id: 't1', account: 'acc1', payee: 'payee1', amount: -10000 }),
         createMockTransaction({ id: 't2', account: 'acc2', payee: 'payee2', amount: -20000 }), // off-budget
-        createMockTransaction({ id: 't3', account: 'acc1', payee: 'payee3', amount: -30000 }), // transfer
+        createMockTransaction({ id: 't3', account: 'acc1', payee: 'payee3', amount: -30000 }), // transfer on->off
         createMockTransaction({ id: 't4', account: 'acc1', payee: 'payee4', amount: -40000 }), // starting balance
       ];
 
       const accounts: Account[] = [
         createMockAccount({ id: 'acc1', name: 'Checking', offbudget: false }),
         createMockAccount({ id: 'acc2', name: 'Car Value', offbudget: true }),
+        createMockAccount({ id: 'acc3', name: 'Investment', offbudget: true }),
       ];
 
       const payees = [
         { id: 'payee1', name: 'Regular Payee' },
         { id: 'payee2', name: 'Regular Payee 2' },
-        { id: 'payee3', name: 'Transfer', transfer_acct: 'acc3' },
+        { id: 'payee3', name: 'Transfer', transfer_acct: 'acc3' }, // on->off transfer
         { id: 'payee4', name: 'Starting Balance' },
       ];
 
-      const result = transformToWrappedData(transactions, [], payees, accounts);
+      // Explicitly disable includeOnBudgetTransfers to test exclusion
+      const result = transformToWrappedData(
+        transactions,
+        [],
+        payees,
+        accounts,
+        2025,
+        false, // includeOffBudget = false
+        false, // includeOnBudgetTransfers = false (explicitly disabled)
+        false, // includeAllTransfers = false
+      );
 
+      // Only regular transaction should be included (transfer, off-budget, and starting balance excluded)
       expect(result.transactionStats.totalCount).toBe(1);
       expect(result.totalExpenses).toBe(100);
     });

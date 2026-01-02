@@ -274,7 +274,7 @@ export function transformToWrappedData(
   accounts: Account[] = [],
   year: number = DEFAULT_YEAR,
   includeOffBudget: boolean = false,
-  includeOnBudgetTransfers: boolean = false,
+  includeOnBudgetTransfers: boolean = true, // Default to true (on by default)
   includeAllTransfers: boolean = false,
   currencySymbol: string = '$',
   budgetData?: Array<{ categoryId: string; month: string; budgetedAmount: number }>,
@@ -317,7 +317,7 @@ export function transformToWrappedData(
       // Collect transfer transactions (payees with transfer_acct field)
       const isTransfer = t.payee && payeeIdToTransferAcct.has(t.payee);
       if (isTransfer) {
-        // Check off-budget status of source account
+        // Check off-budget status of source account (needed for transferTransactions collection)
         const sourceIsOffBudget = accountOffbudgetMap.get(t.account) || false;
         // Get destination account ID from transfer payee
         const destinationAccountId = t.payee ? payeeIdToTransferAcct.get(t.payee) : undefined;
@@ -325,29 +325,39 @@ export function transformToWrappedData(
           ? accountOffbudgetMap.get(destinationAccountId) || false
           : false;
 
-        // Determine if this is a transfer between two on-budget accounts
-        const isOnBudgetToOnBudget =
-          !sourceIsOffBudget && destinationAccountId && !destinationIsOffBudget;
-
-        // Determine if this is a transfer between on-budget and off-budget accounts (on->off or off->on)
+        // Determine transfer types (only need on->off and off->on for filtering)
         const isOnBudgetToOffBudget =
-          (!sourceIsOffBudget && destinationAccountId && destinationIsOffBudget) ||
-          (sourceIsOffBudget && destinationAccountId && !destinationIsOffBudget);
+          !sourceIsOffBudget && destinationAccountId && destinationIsOffBudget;
+        const isOffBudgetToOnBudget =
+          sourceIsOffBudget && destinationAccountId && !destinationIsOffBudget;
 
-        // Apply includeOnBudgetTransfers filter
-        // If includeOnBudgetTransfers is false and both accounts are on-budget, exclude the transfer
-        // Note: includeAllTransfers automatically enables includeOnBudgetTransfers, so check that too
-        const effectiveIncludeOnBudgetTransfers = includeAllTransfers || includeOnBudgetTransfers;
-        if (!effectiveIncludeOnBudgetTransfers && isOnBudgetToOnBudget) {
-          return false;
+        // Apply includeAllTransfers filter first (highest priority)
+        // When includeAllTransfers is true, include ALL transfers (on->on, on->off, off->on, off->off)
+        if (includeAllTransfers) {
+          // Include all transfers - continue processing (don't return false)
+        } else {
+          // includeAllTransfers is false - apply includeOnBudgetTransfers filter
+          // If includeOnBudgetTransfers is false, exclude ALL transfers
+          if (!includeOnBudgetTransfers) {
+            return false;
+          }
+
+          // When includeOnBudgetTransfers is true but includeAllTransfers is false:
+          // Only include transfers between on-budget and off-budget accounts (on->off and off->on)
+          // Exclude: on->on transfers and off->off transfers
+          if (includeOnBudgetTransfers && !includeAllTransfers) {
+            // Only include on->off and off->on transfers
+            if (!(isOnBudgetToOffBudget || isOffBudgetToOnBudget)) {
+              // Exclude on->on and off->off transfers
+              return false;
+            }
+          }
         }
 
         // Apply includeAllTransfers filter
         // When includeAllTransfers is true, include ALL transfers (on->on, on->off, off->on, off->off)
-        // When includeAllTransfers is false, only exclude transfers between on-budget and off-budget
-        if (!includeAllTransfers && isOnBudgetToOffBudget) {
-          return false;
-        }
+        // When includeAllTransfers is false, it doesn't override includeOnBudgetTransfers for on->off/off->on
+        // but it still controls off->off transfers when includeOffBudget is also true
 
         // Exclude starting balance transfers
         const payeeName = t.payee ? payeeIdToName.get(t.payee) || t.payee_name : t.payee_name;

@@ -21,13 +21,13 @@ export function OnBudgetTransfersToggle({
       transition={{ duration: 0.3, delay: 0.3 }}
     >
       <div className={styles.toggleLabel}>
-        <span className={styles.toggleText}>Include On-Budget Transfers</span>
+        <span className={styles.toggleText}>Include Budgeted Transfers</span>
         <div
           className={`${styles.toggleSwitch} ${includeOnBudgetTransfers ? styles.active : ''} ${disabled ? styles.disabled : ''}`}
           onClick={() => !disabled && onToggle(!includeOnBudgetTransfers)}
           role="switch"
           aria-checked={includeOnBudgetTransfers}
-          aria-label="Include on-budget transfers"
+          aria-label="Include budgeted transfers"
           aria-disabled={disabled}
           tabIndex={disabled ? -1 : 0}
           onKeyDown={e => {

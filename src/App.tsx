@@ -43,7 +43,7 @@ function App() {
   const [includeOffBudget, setIncludeOffBudget] = useLocalStorage('includeOffBudget', false);
   const [includeOnBudgetTransfers, setIncludeOnBudgetTransfers] = useLocalStorage(
     'includeOnBudgetTransfers',
-    false,
+    true, // Default to true (on by default)
   );
   const [includeAllTransfers, setIncludeAllTransfers] = useLocalStorage(
     'includeAllTransfers',
@@ -82,7 +82,7 @@ function App() {
 
   const handleAllTransfersToggle = (value: boolean) => {
     setIncludeAllTransfers(value);
-    // When "Include All Transfers" is enabled, automatically enable "Include On-Budget Transfers"
+    // When "Include All Transfers" is enabled, automatically enable "Include Budgeted Transfers"
     const effectiveIncludeOnBudgetTransfers = value ? true : includeOnBudgetTransfers;
     if (value && !includeOnBudgetTransfers) {
       setIncludeOnBudgetTransfers(true);

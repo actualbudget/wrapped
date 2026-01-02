@@ -85,8 +85,8 @@ yarn preview
 2. **Wait for Processing**: The app will extract and process your 2025 budget data (this happens entirely in your browser)
 3. **Adjust Settings** (optional): Click the settings menu (☰) in the top-right corner to:
    - Include/exclude off-budget transactions
-   - Include/exclude transfers between on-budget accounts
-   - Include/exclude transfers between on-budget and off-budget accounts
+   - Include/exclude budgeted transfers (transfers between on-budget and off-budget accounts)
+   - Include all transfers (includes all transfer types, including between two on-budget accounts)
    - Override currency display
 4. **Navigate Through Pages**: Use the Next/Previous buttons or arrow keys (← →) to navigate through the wrapped pages
 

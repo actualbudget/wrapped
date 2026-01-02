@@ -70,7 +70,7 @@ export function useActualData() {
     async (
       uploadedFile: File,
       includeOffBudget: boolean = false,
-      includeOnBudgetTransfers: boolean = false,
+      includeOnBudgetTransfers: boolean = true, // Default to true (on by default)
       includeAllTransfers: boolean = false,
       overrideCurrencySymbol?: string,
     ) => {
@@ -165,7 +165,7 @@ export function useActualData() {
   const refreshData = useCallback(
     async (
       includeOffBudget: boolean = false,
-      includeOnBudgetTransfers: boolean = false,
+      includeOnBudgetTransfers: boolean = true, // Default to true (on by default)
       includeAllTransfers: boolean = false,
       overrideCurrencySymbol?: string,
     ) => {
