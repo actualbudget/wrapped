@@ -286,7 +286,7 @@ export function transformToWrappedData(
       if (date < yearStart || date > yearEnd) {
         return false;
       }
-      // Collect transfer transactions (payees with transfer_acct field) but exclude from regular transactions
+      // Collect transfer transactions (payees with transfer_acct field)
       const isTransfer = t.payee && payeeIdToTransferAcct.has(t.payee);
       if (isTransfer) {
         // Check off-budget status of source account
@@ -317,18 +317,26 @@ export function transformToWrappedData(
           return false;
         }
 
+        // Exclude starting balance transfers
+        const payeeName = t.payee ? payeeIdToName.get(t.payee) || t.payee_name : t.payee_name;
+        const isStartingBalance = payeeName && payeeName.toLowerCase() === 'starting balance';
+        if (isStartingBalance) {
+          return false;
+        }
+
+        // Include transfer in transferTransactions for budget comparison if applicable
         // Include transfer if: (includeOffBudget is true) OR (source account is not off-budget)
         if (includeOffBudget || !sourceIsOffBudget) {
-          // Exclude starting balance transfers
-          const payeeName = t.payee ? payeeIdToName.get(t.payee) || t.payee_name : t.payee_name;
-          const isStartingBalance = payeeName && payeeName.toLowerCase() === 'starting balance';
-          if (!isStartingBalance) {
-            transferTransactions.push(t);
-          }
+          transferTransactions.push(t);
         }
-        return false;
+
+        // Include transfer in regular transactions if the toggles allow it
+        // Continue processing (don't return false) so it's included in yearTransactions
+        // The transfer will be processed as a regular transaction below
+        // Note: We've already checked the toggles above, so if we reach here, the transfer should be included
       }
       // Exclude off-budget transactions (unless includeOffBudget is true)
+      // Note: This also applies to transfers that passed the toggle checks above
       if (!includeOffBudget) {
         const isOffBudget = accountOffbudgetMap.get(t.account) || false;
         if (isOffBudget) {
