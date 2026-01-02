@@ -246,6 +246,7 @@ export function transformToWrappedData(
   accounts: Account[] = [],
   year: number = DEFAULT_YEAR,
   includeOffBudget: boolean = false,
+  excludeOnBudgetTransfers: boolean = true,
   currencySymbol: string = '$',
   budgetData?: Array<{ categoryId: string; month: string; budgetedAmount: number }>,
   groupSortOrders: Map<string, number> = new Map(),
@@ -287,10 +288,26 @@ export function transformToWrappedData(
       // Collect transfer transactions (payees with transfer_acct field) but exclude from regular transactions
       const isTransfer = t.payee && payeeIdToTransferAcct.has(t.payee);
       if (isTransfer) {
-        // Check off-budget status
-        const isOffBudget = accountOffbudgetMap.get(t.account) || false;
-        // Include transfer if: (includeOffBudget is true) OR (account is not off-budget)
-        if (includeOffBudget || !isOffBudget) {
+        // Check off-budget status of source account
+        const sourceIsOffBudget = accountOffbudgetMap.get(t.account) || false;
+        // Get destination account ID from transfer payee
+        const destinationAccountId = t.payee ? payeeIdToTransferAcct.get(t.payee) : undefined;
+        const destinationIsOffBudget = destinationAccountId
+          ? accountOffbudgetMap.get(destinationAccountId) || false
+          : false;
+
+        // Determine if this is a transfer between two on-budget accounts
+        const isOnBudgetToOnBudget =
+          !sourceIsOffBudget && destinationAccountId && !destinationIsOffBudget;
+
+        // Apply excludeOnBudgetTransfers filter
+        // If excludeOnBudgetTransfers is true and both accounts are on-budget, exclude the transfer
+        if (excludeOnBudgetTransfers && isOnBudgetToOnBudget) {
+          return false;
+        }
+
+        // Include transfer if: (includeOffBudget is true) OR (source account is not off-budget)
+        if (includeOffBudget || !sourceIsOffBudget) {
           // Exclude starting balance transfers
           const payeeName = t.payee ? payeeIdToName.get(t.payee) || t.payee_name : t.payee_name;
           const isStartingBalance = payeeName && payeeName.toLowerCase() === 'starting balance';

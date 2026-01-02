@@ -5,6 +5,7 @@ import { ConnectionForm } from './components/ConnectionForm';
 import { CurrencySelector } from './components/CurrencySelector';
 import { Navigation } from './components/Navigation';
 import { OffBudgetToggle } from './components/OffBudgetToggle';
+import { OnBudgetTransfersToggle } from './components/OnBudgetTransfersToggle';
 import { AccountBreakdownPage } from './components/pages/AccountBreakdownPage';
 import { BudgetVsActualPage } from './components/pages/BudgetVsActualPage';
 import { CalendarHeatmapPage } from './components/pages/CalendarHeatmapPage';
@@ -38,6 +39,10 @@ const PAGES = [
 function App() {
   const [currentPage, setCurrentPage] = useState(0);
   const [includeOffBudget, setIncludeOffBudget] = useLocalStorage('includeOffBudget', false);
+  const [excludeOnBudgetTransfers, setExcludeOnBudgetTransfers] = useLocalStorage(
+    'excludeOnBudgetTransfers',
+    true,
+  );
   const [overrideCurrency, setOverrideCurrency] = useLocalStorage<string | null>(
     'overrideCurrency',
     null,
@@ -45,12 +50,22 @@ function App() {
   const { data, loading, error, progress, fetchData, retransformData, retry } = useActualData();
 
   const handleConnect = async (file: File) => {
-    await fetchData(file, includeOffBudget, overrideCurrency || undefined);
+    await fetchData(
+      file,
+      includeOffBudget,
+      excludeOnBudgetTransfers,
+      overrideCurrency || undefined,
+    );
   };
 
-  const handleToggle = (value: boolean) => {
+  const handleOffBudgetToggle = (value: boolean) => {
     setIncludeOffBudget(value);
-    retransformData(value, overrideCurrency || undefined);
+    retransformData(value, excludeOnBudgetTransfers, overrideCurrency || undefined);
+  };
+
+  const handleOnBudgetTransfersToggle = (value: boolean) => {
+    setExcludeOnBudgetTransfers(value);
+    retransformData(includeOffBudget, value, overrideCurrency || undefined);
   };
 
   const handleCurrencyChange = (currencySymbol: string) => {
@@ -58,10 +73,10 @@ function App() {
     const defaultCurrency = data?.currencySymbol || '$';
     if (currencySymbol === defaultCurrency) {
       setOverrideCurrency(null);
-      retransformData(includeOffBudget, undefined);
+      retransformData(includeOffBudget, excludeOnBudgetTransfers, undefined);
     } else {
       setOverrideCurrency(currencySymbol);
-      retransformData(includeOffBudget, currencySymbol);
+      retransformData(includeOffBudget, excludeOnBudgetTransfers, currencySymbol);
     }
   };
 
@@ -116,7 +131,11 @@ function App() {
 
     return (
       <div className={styles.app}>
-        <OffBudgetToggle includeOffBudget={includeOffBudget} onToggle={handleToggle} />
+        <OffBudgetToggle includeOffBudget={includeOffBudget} onToggle={handleOffBudgetToggle} />
+        <OnBudgetTransfersToggle
+          excludeOnBudgetTransfers={excludeOnBudgetTransfers}
+          onToggle={handleOnBudgetTransfersToggle}
+        />
         <CurrencySelector
           selectedCurrency={effectiveCurrency}
           defaultCurrency={data.currencySymbol || '$'}

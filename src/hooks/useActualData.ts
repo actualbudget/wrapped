@@ -42,6 +42,7 @@ export function useActualData() {
     (
       raw: RawBudgetData,
       includeOffBudget: boolean,
+      excludeOnBudgetTransfers: boolean,
       currencySymbol: string,
       budgetData?: Array<{ categoryId: string; month: string; budgetedAmount: number }>,
       groupSortOrders: Map<string, number> = new Map(),
@@ -53,6 +54,7 @@ export function useActualData() {
         raw.accounts,
         DEFAULT_YEAR,
         includeOffBudget,
+        excludeOnBudgetTransfers,
         currencySymbol,
         budgetData,
         groupSortOrders,
@@ -66,6 +68,7 @@ export function useActualData() {
     async (
       uploadedFile: File,
       includeOffBudget: boolean = false,
+      excludeOnBudgetTransfers: boolean = true,
       overrideCurrencySymbol?: string,
     ) => {
       setLoading(true);
@@ -132,6 +135,7 @@ export function useActualData() {
         transformData(
           raw,
           includeOffBudget,
+          excludeOnBudgetTransfers,
           effectiveCurrency,
           fetchedBudgetData.length > 0 ? fetchedBudgetData : undefined,
           fetchedGroupSortOrders,
@@ -155,20 +159,35 @@ export function useActualData() {
   );
 
   const refreshData = useCallback(
-    async (includeOffBudget: boolean = false, overrideCurrencySymbol?: string) => {
+    async (
+      includeOffBudget: boolean = false,
+      excludeOnBudgetTransfers: boolean = true,
+      overrideCurrencySymbol?: string,
+    ) => {
       if (!file) {
         throw new Error('No file available');
       }
-      await fetchData(file, includeOffBudget, overrideCurrencySymbol);
+      await fetchData(file, includeOffBudget, excludeOnBudgetTransfers, overrideCurrencySymbol);
     },
     [file, fetchData],
   );
 
   const retransformData = useCallback(
-    (includeOffBudget: boolean, overrideCurrencySymbol?: string) => {
+    (
+      includeOffBudget: boolean,
+      excludeOnBudgetTransfers: boolean,
+      overrideCurrencySymbol?: string,
+    ) => {
       if (rawData) {
         const effectiveCurrency = overrideCurrencySymbol || currencySymbol;
-        transformData(rawData, includeOffBudget, effectiveCurrency, budgetData, groupSortOrders);
+        transformData(
+          rawData,
+          includeOffBudget,
+          excludeOnBudgetTransfers,
+          effectiveCurrency,
+          budgetData,
+          groupSortOrders,
+        );
       }
     },
     [rawData, transformData, currencySymbol, budgetData, groupSortOrders],
