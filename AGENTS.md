@@ -350,6 +350,10 @@ console.log(wrappedData.monthlyData);
 - **Transfer Filtering**: By default, excludes all transfer transactions. Use `includeOnBudgetTransfers` and `includeAllTransfers` to include specific types:
   - `includeOnBudgetTransfers = true`: Includes transfers between two on-budget accounts
   - `includeAllTransfers = true`: Includes transfers between on-budget and off-budget accounts (on→off or off→on). Automatically enables `includeOnBudgetTransfers`
+- **Transfer Labeling**: When transfers are included:
+  - **Categories**: Transfers without categories are automatically labeled with the destination account name (e.g., "Transfer: Savings Account") instead of showing as "Uncategorized"
+  - **Payees**: Transfer payees are automatically labeled with the destination account name (e.g., "Transfer: Savings Account") instead of showing as "Unknown"
+  - Multiple transfers to the same account are grouped together in both categories and payees
 - **Off-Budget Filtering**: Excludes off-budget transactions by default. Set `includeOffBudget = true` to include them
 - Excludes starting balance transactions (transactions where payee name is "Starting Balance")
 - Handles deleted categories/payees (marks with "deleted: " prefix)

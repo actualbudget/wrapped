@@ -65,6 +65,8 @@ function calculateBudgetComparison(
   accountOffbudgetMap: Map<string, boolean>,
   categoryIdToName: Map<string, string>,
   categoryIdToGroup: Map<string, string>,
+  payeeIdToTransferAcct: Map<string, string>,
+  accountIdToName: Map<string, string>,
 ): BudgetComparisonData | undefined {
   if (!budgetData || budgetData.length === 0) {
     return undefined;
@@ -91,7 +93,21 @@ function calculateBudgetComparison(
 
     let categoryId: string;
     if (!t.category || t.category === '') {
-      categoryId = isOffBudget ? 'off-budget' : 'uncategorized';
+      // Check if this is a transfer
+      const isTransfer = t.payee && payeeIdToTransferAcct.has(t.payee);
+      if (isTransfer && t.payee) {
+        const destinationAccountId = payeeIdToTransferAcct.get(t.payee);
+        const destinationAccountName = destinationAccountId
+          ? accountIdToName.get(destinationAccountId) || destinationAccountId
+          : 'Unknown Account';
+        categoryId = `transfer:${destinationAccountId || 'unknown'}`;
+        // Store the display name in the categoryIdToName map for later use
+        categoryIdToName.set(categoryId, `Transfer: ${destinationAccountName}`);
+      } else if (isOffBudget) {
+        categoryId = 'off-budget';
+      } else {
+        categoryId = 'uncategorized';
+      }
     } else {
       categoryId = t.category;
     }
@@ -115,7 +131,19 @@ function calculateBudgetComparison(
 
     let categoryId: string;
     if (!t.category || t.category === '') {
-      categoryId = isOffBudget ? 'off-budget' : 'uncategorized';
+      // This is a transfer, get the destination account name
+      const destinationAccountId = t.payee ? payeeIdToTransferAcct.get(t.payee) : undefined;
+      if (destinationAccountId) {
+        const destinationAccountName =
+          accountIdToName.get(destinationAccountId) || destinationAccountId;
+        categoryId = `transfer:${destinationAccountId}`;
+        // Store the display name in the categoryIdToName map for later use
+        categoryIdToName.set(categoryId, `Transfer: ${destinationAccountName}`);
+      } else if (isOffBudget) {
+        categoryId = 'off-budget';
+      } else {
+        categoryId = 'uncategorized';
+      }
     } else {
       categoryId = t.category;
     }
@@ -315,7 +343,8 @@ export function transformToWrappedData(
         }
 
         // Apply includeAllTransfers filter
-        // If includeAllTransfers is false and transfer is between on-budget and off-budget, exclude the transfer
+        // When includeAllTransfers is true, include ALL transfers (on->on, on->off, off->on, off->off)
+        // When includeAllTransfers is false, only exclude transfers between on-budget and off-budget
         if (!includeAllTransfers && isOnBudgetToOffBudget) {
           return false;
         }
@@ -328,8 +357,10 @@ export function transformToWrappedData(
         }
 
         // Include transfer in transferTransactions for budget comparison if applicable
-        // Include transfer if: (includeOffBudget is true) OR (source account is not off-budget)
-        if (includeOffBudget || !sourceIsOffBudget) {
+        // Include transfer if:
+        // - (includeOffBudget is true) OR (source account is not off-budget) OR
+        // - (includeAllTransfers is true - includes ALL transfers regardless of off-budget status)
+        if (includeOffBudget || !sourceIsOffBudget || includeAllTransfers) {
           transferTransactions.push(t);
         }
 
@@ -337,13 +368,20 @@ export function transformToWrappedData(
         // Continue processing (don't return false) so it's included in yearTransactions
         // The transfer will be processed as a regular transaction below
         // Note: We've already checked the toggles above, so if we reach here, the transfer should be included
+        // The off-budget check below will handle transfers with includeAllTransfers enabled
       }
-      // Exclude off-budget transactions (unless includeOffBudget is true)
-      // Note: This also applies to transfers that passed the toggle checks above
+      // Exclude off-budget transactions (unless includeOffBudget is true OR it's a transfer with includeAllTransfers enabled)
+      // When includeAllTransfers is true, ALL transfers should be included regardless of off-budget status
       if (!includeOffBudget) {
         const isOffBudget = accountOffbudgetMap.get(t.account) || false;
         if (isOffBudget) {
-          return false;
+          // Check if this is a transfer and includeAllTransfers is enabled
+          const isTransfer = t.payee && payeeIdToTransferAcct.has(t.payee);
+          if (!isTransfer || !includeAllTransfers) {
+            // Not a transfer, or transfer but includeAllTransfers is false - apply normal off-budget exclusion
+            return false;
+          }
+          // It's a transfer and includeAllTransfers is true - include it even if from off-budget account
         }
       }
       // Exclude starting balance transactions
@@ -419,11 +457,25 @@ export function transformToWrappedData(
 
       // If transaction has no category and account is off-budget, use "off budget"
       // Otherwise, use "uncategorized" for transactions without category
+      // If it's a transfer, show "Transfer: {accountName}"
       let categoryId: string;
       let categoryName: string;
 
       if (!t.category || t.category === '') {
-        if (isOffBudget) {
+        // Check if this is a transfer
+        const isTransfer = t.payee && payeeIdToTransferAcct.has(t.payee);
+        if (isTransfer && t.payee) {
+          const destinationAccountId = payeeIdToTransferAcct.get(t.payee);
+          if (destinationAccountId) {
+            const destinationAccountName =
+              accountIdToName.get(destinationAccountId) || destinationAccountId;
+            categoryId = `transfer:${destinationAccountId}`;
+            categoryName = `Transfer: ${destinationAccountName}`;
+          } else {
+            categoryId = 'uncategorized';
+            categoryName = 'Uncategorized';
+          }
+        } else if (isOffBudget) {
           categoryId = 'off-budget';
           categoryName = 'Off Budget';
         } else {
@@ -503,37 +555,52 @@ export function transformToWrappedData(
 
     expenseTransactions.forEach(t => {
       const payeeId = t.payee;
-      // Get payee name - prioritize: mapping > transaction payee_name > "Unknown" (never use ID)
+
+      // Check if this is a transfer first
+      const isTransfer = payeeId && payeeIdToTransferAcct.has(payeeId);
       let basePayeeName: string;
-      if (payeeId && payeeIdToName.has(payeeId)) {
-        // Found in mapping
-        basePayeeName = payeeIdToName.get(payeeId)!;
-      } else if (t.payee_name && t.payee_name.trim() !== '') {
-        // Check if payee_name is "unknown" (case-insensitive)
-        if (t.payee_name.trim().toLowerCase() === 'unknown') {
-          basePayeeName = 'Unknown';
+
+      if (isTransfer && payeeId) {
+        // This is a transfer - get the RECEIVING (destination) account name
+        // Note: t.account is the SOURCE account, but we want the RECEIVING account name
+        // The payee's transfer_acct field points to the destination/receiving account
+        const receivingAccountId = payeeIdToTransferAcct.get(payeeId);
+        if (receivingAccountId) {
+          const receivingAccountName =
+            accountIdToName.get(receivingAccountId) || receivingAccountId;
+          basePayeeName = `Transfer: ${receivingAccountName}`;
         } else {
-          // Check if payee_name looks like an ID (exists in our mapping but as a key, not a name)
-          // If it's the same as payeeId, it's likely an ID, not a name
-          const looksLikeId = t.payee_name === payeeId || payeeIdToName.has(t.payee_name);
-          if (looksLikeId && payeeIdToName.has(t.payee_name)) {
-            // It's actually an ID, look it up
-            basePayeeName = payeeIdToName.get(t.payee_name)!;
-          } else if (!looksLikeId) {
-            // It's a real name, use it
-            basePayeeName = t.payee_name;
-          } else {
-            // It looks like an ID but we can't find it in mapping, use "Unknown"
-            basePayeeName = 'Unknown';
-          }
+          basePayeeName = 'Unknown';
         }
       } else {
-        // Fallback to "Unknown" instead of showing the ID
-        basePayeeName = 'Unknown';
+        // Regular payee - get payee name - prioritize: mapping > transaction payee_name > "Unknown" (never use ID)
+        if (payeeId && payeeIdToName.has(payeeId)) {
+          // Found in mapping
+          basePayeeName = payeeIdToName.get(payeeId)!;
+        } else if (t.payee_name && t.payee_name.trim() !== '') {
+          // Check if payee_name is "unknown" (case-insensitive)
+          if (t.payee_name.trim().toLowerCase() === 'unknown') {
+            basePayeeName = 'Unknown';
+          } else {
+            // Check if payee_name looks like an ID (exists in our mapping but as a key, not a name)
+            // If it's the same as payeeId, it's likely an ID, not a name
+            const looksLikeId = t.payee_name === payeeId || payeeIdToName.has(t.payee_name);
+            if (looksLikeId && payeeIdToName.has(t.payee_name)) {
+              // It's actually an ID, look it up
+              basePayeeName = payeeIdToName.get(t.payee_name)!;
+            } else if (!looksLikeId) {
+              // It's a real name, use it
+              basePayeeName = t.payee_name;
+            } else {
+              // It looks like an ID but we can't find it in mapping, use "Unknown"
+              basePayeeName = 'Unknown';
+            }
+          }
+        } else {
+          // Fallback to "Unknown" instead of showing the ID
+          basePayeeName = 'Unknown';
+        }
       }
-
-      // Note: Transfer transactions are already filtered out earlier,
-      // so we don't need to check for transfers here anymore
 
       // Check if payee is deleted (from mapping or transaction)
       const isDeleted = (payeeId && payeeIdToTombstone.get(payeeId)) || t.payee_tombstone || false;
@@ -1027,6 +1094,8 @@ export function transformToWrappedData(
       accountOffbudgetMap,
       categoryIdToName,
       categoryIdToGroup,
+      payeeIdToTransferAcct,
+      accountIdToName,
     );
 
     // Add group sort orders to budget comparison if available

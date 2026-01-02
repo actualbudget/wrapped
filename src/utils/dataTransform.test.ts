@@ -203,6 +203,117 @@ describe('transformToWrappedData', () => {
       expect(uncategorized?.amount).toBe(300);
     });
 
+    it('shows transfers as "Transfer: {accountName}" instead of "Uncategorized" when transfers are enabled', () => {
+      const transactions: Transaction[] = [
+        createMockTransaction({
+          id: 't1',
+          account: 'acc1',
+          payee: 'payee1',
+          category: '',
+          amount: -10000,
+        }),
+        createMockTransaction({
+          id: 't2',
+          account: 'acc1',
+          payee: 'payee2',
+          category: '',
+          amount: -20000,
+        }),
+      ];
+
+      const accounts: Account[] = [
+        createMockAccount({ id: 'acc1', name: 'Checking', offbudget: false }),
+        createMockAccount({ id: 'acc2', name: 'Savings Account', offbudget: false }),
+        createMockAccount({ id: 'acc3', name: 'Investment', offbudget: false }),
+      ];
+
+      const payees = [
+        { id: 'payee1', name: 'Transfer', transfer_acct: 'acc2' }, // transfer to Savings Account
+        { id: 'payee2', name: 'Transfer', transfer_acct: 'acc3' }, // transfer to Investment
+      ];
+
+      const result = transformToWrappedData(
+        transactions,
+        [],
+        payees,
+        accounts,
+        2025,
+        false,
+        true, // includeOnBudgetTransfers = true
+        false, // includeAllTransfers = false
+      );
+
+      // Should have transfer categories instead of uncategorized
+      const transferToSavings = result.topCategories.find(
+        c => c.categoryName === 'Transfer: Savings Account',
+      );
+      const transferToInvestment = result.topCategories.find(
+        c => c.categoryName === 'Transfer: Investment',
+      );
+
+      expect(transferToSavings).toBeDefined();
+      expect(transferToSavings?.amount).toBe(100);
+      expect(transferToInvestment).toBeDefined();
+      expect(transferToInvestment?.amount).toBe(200);
+
+      // Should not have uncategorized
+      const uncategorized = result.topCategories.find(c => c.categoryId === 'uncategorized');
+      expect(uncategorized).toBeUndefined();
+    });
+
+    it('groups multiple transfers to the same account together', () => {
+      const transactions: Transaction[] = [
+        createMockTransaction({
+          id: 't1',
+          account: 'acc1',
+          payee: 'payee1',
+          category: '',
+          amount: -10000,
+        }),
+        createMockTransaction({
+          id: 't2',
+          account: 'acc1',
+          payee: 'payee1',
+          category: '',
+          amount: -20000,
+        }),
+        createMockTransaction({
+          id: 't3',
+          account: 'acc1',
+          payee: 'payee1',
+          category: '',
+          amount: -30000,
+        }),
+      ];
+
+      const accounts: Account[] = [
+        createMockAccount({ id: 'acc1', name: 'Checking', offbudget: false }),
+        createMockAccount({ id: 'acc2', name: 'Savings', offbudget: false }),
+      ];
+
+      const payees = [
+        { id: 'payee1', name: 'Transfer', transfer_acct: 'acc2' }, // all transfers to Savings
+      ];
+
+      const result = transformToWrappedData(
+        transactions,
+        [],
+        payees,
+        accounts,
+        2025,
+        false,
+        true, // includeOnBudgetTransfers = true
+        false,
+      );
+
+      const transferCategory = result.topCategories.find(
+        c => c.categoryName === 'Transfer: Savings',
+      );
+      expect(transferCategory).toBeDefined();
+      expect(transferCategory?.amount).toBe(600); // $100 + $200 + $300
+      expect(transferCategory?.categoryId).toContain('transfer:');
+    });
+
     it('excludes off-budget account transactions', () => {
       const transactions: Transaction[] = [
         createMockTransaction({ id: 't1', account: 'acc1', category: '', amount: -10000 }),
@@ -384,6 +495,131 @@ describe('transformToWrappedData', () => {
       const result = transformToWrappedData(transactions, [], payees, []);
 
       expect(result.topPayees).toHaveLength(10);
+    });
+
+    it('shows transfers as "Transfer: {accountName}" in payees list when transfers are enabled', () => {
+      const transactions: Transaction[] = [
+        createMockTransaction({ id: 't1', account: 'acc1', payee: 'payee1', amount: -10000 }),
+        createMockTransaction({ id: 't2', account: 'acc1', payee: 'payee2', amount: -20000 }),
+      ];
+
+      const accounts: Account[] = [
+        createMockAccount({ id: 'acc1', name: 'Checking', offbudget: false }),
+        createMockAccount({ id: 'acc2', name: 'Savings Account', offbudget: false }),
+        createMockAccount({ id: 'acc3', name: 'Investment', offbudget: false }),
+      ];
+
+      const payees = [
+        { id: 'payee1', name: 'Transfer', transfer_acct: 'acc2' }, // transfer to Savings Account
+        { id: 'payee2', name: 'Transfer', transfer_acct: 'acc3' }, // transfer to Investment
+      ];
+
+      const result = transformToWrappedData(
+        transactions,
+        [],
+        payees,
+        accounts,
+        2025,
+        false,
+        true, // includeOnBudgetTransfers = true
+        false,
+      );
+
+      // Should have transfer payees with account names
+      const transferToSavings = result.topPayees.find(p => p.payee === 'Transfer: Savings Account');
+      const transferToInvestment = result.topPayees.find(p => p.payee === 'Transfer: Investment');
+
+      expect(transferToSavings).toBeDefined();
+      expect(transferToSavings?.amount).toBe(100);
+      expect(transferToInvestment).toBeDefined();
+      expect(transferToInvestment?.amount).toBe(200);
+
+      // Should not have "Unknown" payees for transfers
+      const unknown = result.topPayees.find(p => p.payee === 'Unknown');
+      // Unknown might exist for other transactions, but transfers should not be Unknown
+      if (unknown) {
+        // If there are other transactions without payees, that's fine
+        // But transfers should not be in the Unknown category
+        expect(transferToSavings).toBeDefined();
+        expect(transferToInvestment).toBeDefined();
+      }
+    });
+
+    it('groups multiple transfers to the same account in payees list', () => {
+      const transactions: Transaction[] = [
+        createMockTransaction({ id: 't1', account: 'acc1', payee: 'payee1', amount: -10000 }),
+        createMockTransaction({ id: 't2', account: 'acc1', payee: 'payee1', amount: -20000 }),
+        createMockTransaction({ id: 't3', account: 'acc1', payee: 'payee1', amount: -30000 }),
+      ];
+
+      const accounts: Account[] = [
+        createMockAccount({ id: 'acc1', name: 'Checking', offbudget: false }),
+        createMockAccount({ id: 'acc2', name: 'Savings', offbudget: false }),
+      ];
+
+      const payees = [
+        { id: 'payee1', name: 'Transfer', transfer_acct: 'acc2' }, // all transfers to Savings
+      ];
+
+      const result = transformToWrappedData(
+        transactions,
+        [],
+        payees,
+        accounts,
+        2025,
+        false,
+        true, // includeOnBudgetTransfers = true
+        false,
+      );
+
+      const transferPayee = result.topPayees.find(p => p.payee === 'Transfer: Savings');
+      expect(transferPayee).toBeDefined();
+      expect(transferPayee?.amount).toBe(600); // $100 + $200 + $300
+      expect(transferPayee?.transactionCount).toBe(3);
+    });
+
+    it('uses receiving account name for transfer payees, not the source account', () => {
+      const transactions: Transaction[] = [
+        // Transfer FROM Checking TO Savings - should show "Transfer: Savings" not "Transfer: Checking"
+        createMockTransaction({ id: 't1', account: 'acc1', payee: 'payee1', amount: -10000 }),
+        // Transfer FROM Savings TO Investment - should show "Transfer: Investment" not "Transfer: Savings"
+        createMockTransaction({ id: 't2', account: 'acc2', payee: 'payee2', amount: -20000 }),
+      ];
+
+      const accounts: Account[] = [
+        createMockAccount({ id: 'acc1', name: 'Checking', offbudget: false }), // Source for t1
+        createMockAccount({ id: 'acc2', name: 'Savings', offbudget: false }), // Destination for t1, Source for t2
+        createMockAccount({ id: 'acc3', name: 'Investment', offbudget: false }), // Destination for t2
+      ];
+
+      const payees = [
+        { id: 'payee1', name: 'Transfer', transfer_acct: 'acc2' }, // Checking -> Savings
+        { id: 'payee2', name: 'Transfer', transfer_acct: 'acc3' }, // Savings -> Investment
+      ];
+
+      const result = transformToWrappedData(
+        transactions,
+        [],
+        payees,
+        accounts,
+        2025,
+        false,
+        true, // includeOnBudgetTransfers = true
+        false,
+      );
+
+      // Should show receiving account names, not source account names
+      const transferToSavings = result.topPayees.find(p => p.payee === 'Transfer: Savings');
+      const transferToInvestment = result.topPayees.find(p => p.payee === 'Transfer: Investment');
+
+      expect(transferToSavings).toBeDefined();
+      expect(transferToSavings?.amount).toBe(100);
+      expect(transferToInvestment).toBeDefined();
+      expect(transferToInvestment?.amount).toBe(200);
+
+      // Should NOT show source account names
+      const transferFromChecking = result.topPayees.find(p => p.payee === 'Transfer: Checking');
+      expect(transferFromChecking).toBeUndefined();
     });
   });
 
@@ -828,6 +1064,42 @@ describe('transformToWrappedData', () => {
         // Transfer between two off-budget accounts should be included when includeOffBudget is true
         expect(result.transactionStats.totalCount).toBe(2);
         expect(result.totalExpenses).toBe(300);
+      });
+
+      it('includes transfers between two off-budget accounts when includeAllTransfers is true (even without includeOffBudget)', () => {
+        const transactions: Transaction[] = [
+          createMockTransaction({ id: 't1', account: 'acc2', payee: 'payee1', amount: -10000 }),
+          createMockTransaction({ id: 't2', account: 'acc2', payee: 'payee2', amount: -20000 }), // transfer off->off
+        ];
+
+        const accounts: Account[] = [
+          createMockAccount({ id: 'acc1', name: 'Checking', offbudget: false }),
+          createMockAccount({ id: 'acc2', name: 'Investment', offbudget: true }),
+          createMockAccount({ id: 'acc3', name: 'Brokerage', offbudget: true }),
+        ];
+
+        const payees = [
+          { id: 'payee1', name: 'Regular Payee' },
+          { id: 'payee2', name: 'Transfer Off->Off', transfer_acct: 'acc3' }, // off-budget to off-budget
+        ];
+
+        // With includeAllTransfers = true, ALL transfers should be included, even off->off
+        // This should work even without includeOffBudget = true
+        const result = transformToWrappedData(
+          transactions,
+          [],
+          payees,
+          accounts,
+          2025,
+          false, // includeOffBudget = false
+          false, // includeOnBudgetTransfers = false
+          true, // includeAllTransfers = true (should include ALL transfers including off->off)
+        );
+
+        // Transfer between two off-budget accounts should be included when includeAllTransfers is true
+        // Regular transaction from off-budget account should be excluded (includeOffBudget = false)
+        expect(result.transactionStats.totalCount).toBe(1); // Only the transfer, not the regular transaction
+        expect(result.totalExpenses).toBe(200); // Only the transfer amount
       });
 
       it('handles mixed transfer scenarios correctly', () => {

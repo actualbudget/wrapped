@@ -18,6 +18,7 @@ A beautiful year-in-review application for your Actual Budget data, styled like 
 - 🧪 **Well Tested**: Unit tests with Vitest and E2E tests with Playwright
 - ⚙️ **Flexible Filtering**: Toggle to include/exclude off-budget transactions, on-budget transfers, and cross-account transfers
 - 💱 **Currency Override**: Change currency display without modifying your budget data
+- 🔄 **Smart Transfer Labeling**: Transfers are automatically labeled with destination account names (e.g., "Transfer: Savings Account") in both categories and payees lists, instead of showing as uncategorized or unknown
 
 ## Prerequisites
 
