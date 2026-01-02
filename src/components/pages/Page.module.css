@@ -141,6 +141,45 @@
   text-align: center;
 }
 
+.categorySelect {
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  min-width: 300px;
+  max-width: 500px;
+  width: 100%;
+  transition: background-color 0.2s;
+}
+
+.categorySelect:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.categorySelect:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.3);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.categorySelect option {
+  background: #1a1a1a;
+  color: #ffffff;
+  padding: 0.5rem;
+}
+
+.categorySelect optgroup {
+  background: #1a1a1a;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 600;
+}
+
 @media (max-width: 768px) {
   .title {
     font-size: 3rem;
@@ -170,5 +209,9 @@
   .exportButton {
     top: 1rem;
     right: 1rem;
+  }
+
+  .categorySelect {
+    min-width: 250px;
   }
 }

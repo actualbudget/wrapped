@@ -335,28 +335,9 @@ export function BudgetVsActualPage({ data }: BudgetVsActualPageProps) {
             transition={{ delay: 0.8 }}
           >
             <select
+              className={styles.categorySelect}
               value={selectedCategoryId || ''}
               onChange={e => setSelectedCategoryId(e.target.value)}
-              style={{
-                padding: '0.75rem 1.5rem',
-                borderRadius: '12px',
-                border: '2px solid rgba(255, 255, 255, 0.2)',
-                background: 'rgba(255, 255, 255, 0.1)',
-                backdropFilter: 'blur(10px)',
-                color: '#ffffff',
-                fontSize: '1rem',
-                fontWeight: '500',
-                cursor: 'pointer',
-                minWidth: '300px',
-                maxWidth: '500px',
-                width: '100%',
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
-              }}
             >
               {groupedCategories.map(([groupName, categories]) => (
                 <optgroup key={groupName} label={groupName}>
