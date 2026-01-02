@@ -16,6 +16,8 @@ A beautiful year-in-review application for your Actual Budget data, styled like 
 - ⌨️ **Keyboard Navigation**: Navigate with arrow keys (← →)
 - 📱 **Responsive Design**: Works on desktop and mobile devices
 - 🧪 **Well Tested**: Unit tests with Vitest and E2E tests with Playwright
+- ⚙️ **Flexible Filtering**: Toggle to include/exclude off-budget transactions, on-budget transfers, and cross-account transfers
+- 💱 **Currency Override**: Change currency display without modifying your budget data
 
 ## Prerequisites
 
@@ -80,7 +82,12 @@ yarn preview
 
 1. **Upload Your Budget**: Click "Choose File" and select your exported Actual Budget `.zip` file
 2. **Wait for Processing**: The app will extract and process your 2025 budget data (this happens entirely in your browser)
-3. **Navigate Through Pages**: Use the Next/Previous buttons or arrow keys (← →) to navigate through the wrapped pages
+3. **Adjust Settings** (optional): Click the settings menu (☰) in the top-right corner to:
+   - Include/exclude off-budget transactions
+   - Include/exclude transfers between on-budget accounts
+   - Include/exclude transfers between on-budget and off-budget accounts
+   - Override currency display
+4. **Navigate Through Pages**: Use the Next/Previous buttons or arrow keys (← →) to navigate through the wrapped pages
 
 ## Technology Stack
 

@@ -173,8 +173,9 @@ A React hook that manages loading and processing Actual Budget data from a zip f
 - `loading`: `boolean` - Loading state
 - `error`: `string | null` - Error message if loading failed
 - `progress`: `number` - Loading progress (0-100)
-- `fetchData`: `(file: File) => Promise<void>` - Function to load data from a file
-- `refreshData`: `() => Promise<void>` - Function to reload data from the last loaded file
+- `fetchData`: `(file: File, includeOffBudget?: boolean, includeOnBudgetTransfers?: boolean, includeAllTransfers?: boolean, overrideCurrencySymbol?: string) => Promise<void>` - Function to load data from a file
+- `refreshData`: `(includeOffBudget?: boolean, includeOnBudgetTransfers?: boolean, includeAllTransfers?: boolean, overrideCurrencySymbol?: string) => Promise<void>` - Function to reload data from the last loaded file
+- `retransformData`: `(includeOffBudget: boolean, includeOnBudgetTransfers: boolean, includeAllTransfers: boolean, overrideCurrencySymbol?: string) => void` - Function to re-transform data with new filter settings
 - `retry`: `() => Promise<void> | undefined` - Function to retry loading the last file
 
 **Example:**
@@ -199,10 +200,18 @@ function MyComponent() {
 
 **Usage Pattern:**
 
-1. Call `fetchData(file)` when a user uploads a budget zip file
+1. Call `fetchData(file, includeOffBudget, includeOnBudgetTransfers, includeAllTransfers, overrideCurrencySymbol)` when a user uploads a budget zip file
 2. The hook automatically initializes the database, fetches all data, and transforms it
 3. Access the processed `data` once loading completes
-4. The hook automatically cleans up the database on component unmount
+4. Use `retransformData()` to re-process data when filter toggles change (without reloading from file)
+5. The hook automatically cleans up the database on component unmount
+
+**Filter Parameters:**
+
+- `includeOffBudget`: Include transactions from off-budget accounts (default: `false`)
+- `includeOnBudgetTransfers`: Include transfers between two on-budget accounts (default: `false`)
+- `includeAllTransfers`: Include transfers between on-budget and off-budget accounts (default: `false`). When enabled, automatically enables `includeOnBudgetTransfers`
+- `overrideCurrencySymbol`: Override the currency symbol from the database (optional)
 
 ### `useAnimatedNumber(target: number, duration?: number, decimals?: number): number`
 
@@ -271,7 +280,7 @@ function Settings() {
 
 ## Data Transformation Utilities
 
-### `transformToWrappedData(transactions, categories, payees, accounts, year?): WrappedData`
+### `transformToWrappedData(transactions, categories, payees, accounts, year?, includeOffBudget?, includeOnBudgetTransfers?, includeAllTransfers?, currencySymbol?, budgetData?, groupSortOrders?): WrappedData`
 
 Transforms raw transaction data into a structured `WrappedData` object with all calculated metrics and aggregations.
 
@@ -282,6 +291,12 @@ Transforms raw transaction data into a structured `WrappedData` object with all 
 - `payees`: Array of Payee objects
 - `accounts`: Array of Account objects
 - `year`: Optional year number (defaults to 2025)
+- `includeOffBudget`: Optional boolean to include off-budget transactions (defaults to `false`)
+- `includeOnBudgetTransfers`: Optional boolean to include transfers between two on-budget accounts (defaults to `false`)
+- `includeAllTransfers`: Optional boolean to include transfers between on-budget and off-budget accounts (defaults to `false`). When `true`, automatically enables `includeOnBudgetTransfers`
+- `currencySymbol`: Optional currency symbol string (defaults to `'$'`)
+- `budgetData`: Optional array of budget data for budget comparison
+- `groupSortOrders`: Optional map of category group sort orders
 
 **Returns:** `WrappedData` object containing:
 
@@ -312,7 +327,17 @@ const categories = await getCategories();
 const payees = await getPayees();
 const accounts = await getAccounts();
 
-const wrappedData = transformToWrappedData(transactions, categories, payees, accounts, 2025);
+const wrappedData = transformToWrappedData(
+  transactions,
+  categories,
+  payees,
+  accounts,
+  2025,
+  false, // includeOffBudget
+  false, // includeOnBudgetTransfers
+  false, // includeAllTransfers
+  '$'    // currencySymbol
+);
 
 console.log(wrappedData.totalIncome);
 console.log(wrappedData.topCategories);
@@ -322,8 +347,10 @@ console.log(wrappedData.monthlyData);
 **Important Notes:**
 
 - Automatically filters transactions to the specified year (defaults to 2025)
-- Excludes transfer transactions (transactions where the payee has a `transfer_acct` field)
-- Excludes off-budget transactions (transactions from accounts where `offbudget` is true)
+- **Transfer Filtering**: By default, excludes all transfer transactions. Use `includeOnBudgetTransfers` and `includeAllTransfers` to include specific types:
+  - `includeOnBudgetTransfers = true`: Includes transfers between two on-budget accounts
+  - `includeAllTransfers = true`: Includes transfers between on-budget and off-budget accounts (on→off or off→on). Automatically enables `includeOnBudgetTransfers`
+- **Off-Budget Filtering**: Excludes off-budget transactions by default. Set `includeOffBudget = true` to include them
 - Excludes starting balance transactions (transactions where payee name is "Starting Balance")
 - Handles deleted categories/payees (marks with "deleted: " prefix)
 - Converts amounts from cents to dollars
