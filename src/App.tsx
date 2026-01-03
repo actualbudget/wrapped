@@ -5,6 +5,8 @@ import { ConnectionForm } from './components/ConnectionForm';
 import { CurrencySelector } from './components/CurrencySelector';
 import { Navigation } from './components/Navigation';
 import { OffBudgetToggle } from './components/OffBudgetToggle';
+import { AllTransfersToggle } from './components/OffBudgetTransfersToggle';
+import { OnBudgetTransfersToggle } from './components/OnBudgetTransfersToggle';
 import { AccountBreakdownPage } from './components/pages/AccountBreakdownPage';
 import { BudgetVsActualPage } from './components/pages/BudgetVsActualPage';
 import { CalendarHeatmapPage } from './components/pages/CalendarHeatmapPage';
@@ -17,6 +19,7 @@ import { SavingsRatePage } from './components/pages/SavingsRatePage';
 import { SpendingVelocityPage } from './components/pages/SpendingVelocityPage';
 import { TopCategoriesPage } from './components/pages/TopCategoriesPage';
 import { TopPayeesPage } from './components/pages/TopPayeesPage';
+import { SettingsMenu } from './components/SettingsMenu';
 import { useActualData } from './hooks/useActualData';
 import { useLocalStorage } from './hooks/useLocalStorage';
 
@@ -38,6 +41,14 @@ const PAGES = [
 function App() {
   const [currentPage, setCurrentPage] = useState(0);
   const [includeOffBudget, setIncludeOffBudget] = useLocalStorage('includeOffBudget', false);
+  const [includeOnBudgetTransfers, setIncludeOnBudgetTransfers] = useLocalStorage(
+    'includeOnBudgetTransfers',
+    true, // Default to true (on by default)
+  );
+  const [includeAllTransfers, setIncludeAllTransfers] = useLocalStorage(
+    'includeAllTransfers',
+    false,
+  );
   const [overrideCurrency, setOverrideCurrency] = useLocalStorage<string | null>(
     'overrideCurrency',
     null,
@@ -45,12 +56,43 @@ function App() {
   const { data, loading, error, progress, fetchData, retransformData, retry } = useActualData();
 
   const handleConnect = async (file: File) => {
-    await fetchData(file, includeOffBudget, overrideCurrency || undefined);
+    await fetchData(
+      file,
+      includeOffBudget,
+      includeOnBudgetTransfers,
+      includeAllTransfers,
+      overrideCurrency || undefined,
+    );
   };
 
-  const handleToggle = (value: boolean) => {
+  const handleOffBudgetToggle = (value: boolean) => {
     setIncludeOffBudget(value);
-    retransformData(value, overrideCurrency || undefined);
+    retransformData(
+      value,
+      includeOnBudgetTransfers,
+      includeAllTransfers,
+      overrideCurrency || undefined,
+    );
+  };
+
+  const handleOnBudgetTransfersToggle = (value: boolean) => {
+    setIncludeOnBudgetTransfers(value);
+    retransformData(includeOffBudget, value, includeAllTransfers, overrideCurrency || undefined);
+  };
+
+  const handleAllTransfersToggle = (value: boolean) => {
+    setIncludeAllTransfers(value);
+    // When "Include All Transfers" is enabled, automatically enable "Include Budgeted Transfers"
+    const effectiveIncludeOnBudgetTransfers = value ? true : includeOnBudgetTransfers;
+    if (value && !includeOnBudgetTransfers) {
+      setIncludeOnBudgetTransfers(true);
+    }
+    retransformData(
+      includeOffBudget,
+      effectiveIncludeOnBudgetTransfers, // If includeAllTransfers is true, also enable on-budget transfers
+      value,
+      overrideCurrency || undefined,
+    );
   };
 
   const handleCurrencyChange = (currencySymbol: string) => {
@@ -58,10 +100,15 @@ function App() {
     const defaultCurrency = data?.currencySymbol || '$';
     if (currencySymbol === defaultCurrency) {
       setOverrideCurrency(null);
-      retransformData(includeOffBudget, undefined);
+      retransformData(includeOffBudget, includeOnBudgetTransfers, includeAllTransfers, undefined);
     } else {
       setOverrideCurrency(currencySymbol);
-      retransformData(includeOffBudget, currencySymbol);
+      retransformData(
+        includeOffBudget,
+        includeOnBudgetTransfers,
+        includeAllTransfers,
+        currencySymbol,
+      );
     }
   };
 
@@ -116,12 +163,23 @@ function App() {
 
     return (
       <div className={styles.app}>
-        <OffBudgetToggle includeOffBudget={includeOffBudget} onToggle={handleToggle} />
-        <CurrencySelector
-          selectedCurrency={effectiveCurrency}
-          defaultCurrency={data.currencySymbol || '$'}
-          onCurrencyChange={handleCurrencyChange}
-        />
+        <SettingsMenu>
+          <OffBudgetToggle includeOffBudget={includeOffBudget} onToggle={handleOffBudgetToggle} />
+          <OnBudgetTransfersToggle
+            includeOnBudgetTransfers={includeAllTransfers || includeOnBudgetTransfers}
+            onToggle={handleOnBudgetTransfersToggle}
+            disabled={includeAllTransfers} // Disable when "Include All Transfers" is enabled
+          />
+          <AllTransfersToggle
+            includeAllTransfers={includeAllTransfers}
+            onToggle={handleAllTransfersToggle}
+          />
+          <CurrencySelector
+            selectedCurrency={effectiveCurrency}
+            defaultCurrency={data.currencySymbol || '$'}
+            onCurrencyChange={handleCurrencyChange}
+          />
+        </SettingsMenu>
         {isIntroPage ? (
           <IntroPage
             data={

@@ -1,6 +1,6 @@
 .toggle {
   position: fixed;
-  top: 2rem;
+  top: calc(2rem + 3.5rem); /* Position below OffBudgetToggle (2rem top + ~3.5rem height) */
   right: 2rem;
   z-index: 1001;
   background: rgba(0, 0, 0, 0.8);
@@ -55,6 +55,11 @@
 
 .toggleSwitch.active .toggleSlider {
   transform: translateX(20px);
+}
+
+.toggleSwitch.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .toggleText {

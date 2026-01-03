@@ -1,6 +1,8 @@
 .selector {
   position: fixed;
-  top: calc(2rem + 3.5rem); /* Position below OffBudgetToggle (2rem + ~3.5rem height) */
+  top: calc(
+    2rem + 7rem
+  ); /* Position below OffBudgetToggle and OnBudgetTransfersToggle (2rem + ~3.5rem + ~3.5rem) */
   right: 2rem;
   z-index: 1001;
   background: rgba(0, 0, 0, 0.8);
@@ -16,6 +18,8 @@
 .label {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  width: 100%;
   gap: 0.75rem;
 }
 
@@ -23,6 +27,8 @@
   font-size: 0.85rem;
   opacity: 0.9;
   white-space: nowrap;
+  text-align: left;
+  flex: 1;
 }
 
 .select {
@@ -36,6 +42,8 @@
   outline: none;
   transition: all 0.2s;
   min-width: 120px;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .select:hover {
