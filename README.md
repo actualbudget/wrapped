@@ -20,6 +20,8 @@ A beautiful year-in-review application for your Actual Budget data, styled like 
 - 💱 **Currency Override**: Change currency display without modifying your budget data
 - 🔄 **Smart Transfer Labeling**: Transfers are automatically labeled with destination account names (e.g., "Transfer: Savings Account") in both categories and payees lists, instead of showing as uncategorized or unknown
 
+See [CHANGELOG.md](CHANGELOG.md) for a detailed history of changes.
+
 ## Prerequisites
 
 - Node.js 20+ and Yarn 4.12.0+
