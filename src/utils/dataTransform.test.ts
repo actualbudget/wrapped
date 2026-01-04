@@ -1816,4 +1816,114 @@ describe('transformToWrappedData', () => {
       expect(result.futureProjection.projectedYearEndSavings).toBe(lastMonth.cumulativeSavings);
     });
   });
+
+  describe('Budget Comparison with Deleted Categories', () => {
+    it('formats deleted category names with "Deleted: " prefix', () => {
+      const transactions: Transaction[] = [
+        createMockTransaction({ id: 't1', date: '2025-01-15', category: 'cat1', amount: -10000 }),
+      ];
+
+      const categories: Category[] = [
+        createMockCategory({ id: 'cat1', name: 'Old Category', tombstone: true }),
+      ];
+
+      const budgetData = [{ categoryId: 'cat1', month: 'January', budgetedAmount: 500 }];
+
+      const groupTombstones = new Map<string, boolean>();
+
+      const result = transformToWrappedData(
+        transactions,
+        categories,
+        [],
+        [],
+        2025,
+        false,
+        true,
+        false,
+        '$',
+        budgetData,
+        new Map(),
+        groupTombstones,
+      );
+
+      expect(result.budgetComparison).toBeDefined();
+      const deletedCategory = result.budgetComparison?.categoryBudgets.find(
+        cat => cat.categoryId === 'cat1',
+      );
+      expect(deletedCategory?.categoryName).toBe('Deleted: Old Category');
+    });
+
+    it('includes group tombstone map in budget comparison', () => {
+      const transactions: Transaction[] = [
+        createMockTransaction({ id: 't1', date: '2025-01-15', category: 'cat1', amount: -10000 }),
+      ];
+
+      const categories: Category[] = [
+        createMockCategory({
+          id: 'cat1',
+          name: 'Category',
+          group: 'Deleted Group',
+          tombstone: false,
+        }),
+      ];
+
+      const budgetData = [{ categoryId: 'cat1', month: 'January', budgetedAmount: 500 }];
+
+      const groupTombstones = new Map<string, boolean>([['Deleted Group', true]]);
+
+      const result = transformToWrappedData(
+        transactions,
+        categories,
+        [],
+        [],
+        2025,
+        false,
+        true,
+        false,
+        '$',
+        budgetData,
+        new Map(),
+        groupTombstones,
+      );
+
+      expect(result.budgetComparison).toBeDefined();
+      expect(result.budgetComparison?.groupTombstones).toBeDefined();
+      expect(result.budgetComparison?.groupTombstones?.get('Deleted Group')).toBe(true);
+    });
+
+    it('handles non-deleted categories normally', () => {
+      const transactions: Transaction[] = [
+        createMockTransaction({ id: 't1', date: '2025-01-15', category: 'cat1', amount: -10000 }),
+      ];
+
+      const categories: Category[] = [
+        createMockCategory({ id: 'cat1', name: 'Active Category', tombstone: false }),
+      ];
+
+      const budgetData = [{ categoryId: 'cat1', month: 'January', budgetedAmount: 500 }];
+
+      const groupTombstones = new Map<string, boolean>();
+
+      const result = transformToWrappedData(
+        transactions,
+        categories,
+        [],
+        [],
+        2025,
+        false,
+        true,
+        false,
+        '$',
+        budgetData,
+        new Map(),
+        groupTombstones,
+      );
+
+      expect(result.budgetComparison).toBeDefined();
+      const category = result.budgetComparison?.categoryBudgets.find(
+        cat => cat.categoryId === 'cat1',
+      );
+      expect(category?.categoryName).toBe('Active Category');
+    });
+  });
 });

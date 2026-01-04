@@ -169,6 +169,27 @@ export async function getCategoryGroupSortOrders(): Promise<Map<string, number>>
 }
 
 /**
+ * Get category group tombstone status (group name -> tombstone boolean)
+ */
+export async function getCategoryGroupTombstones(): Promise<Map<string, boolean>> {
+  if (!db) {
+    throw new DatabaseError('Database not loaded. Call initialize() first.');
+  }
+
+  const groupTombstoneMap = new Map<string, boolean>();
+  try {
+    const groups = query('SELECT id, name, tombstone FROM category_groups');
+    groups.forEach(g => {
+      const name = String(g.name);
+      groupTombstoneMap.set(name, (g.tombstone as number) === 1);
+    });
+  } catch {
+    // No category_groups table, that's okay
+  }
+  return groupTombstoneMap;
+}
+
+/**
  * Get categories from database
  */
 export async function getCategories(): Promise<Category[]> {
@@ -181,10 +202,10 @@ export async function getCategories(): Promise<Category[]> {
     // Fetch both active and deleted categories
     const categories = query('SELECT id, name, is_income, cat_group, tombstone FROM categories');
 
-    // Get category groups
+    // Get category groups (including deleted ones to properly map categories)
     let groupMap = new Map<string, string>();
     try {
-      const groups = query('SELECT id, name FROM category_groups WHERE tombstone = 0');
+      const groups = query('SELECT id, name FROM category_groups');
       groupMap = new Map(groups.map(g => [String(g.id), String(g.name)]));
     } catch {
       // No category_groups table, that's okay

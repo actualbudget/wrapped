@@ -67,6 +67,8 @@ function calculateBudgetComparison(
   categoryIdToGroup: Map<string, string>,
   payeeIdToTransferAcct: Map<string, string>,
   accountIdToName: Map<string, string>,
+  categoryIdToTombstone: Map<string, boolean>,
+  groupNameToTombstone: Map<string, boolean>,
 ): BudgetComparisonData | undefined {
   if (!budgetData || budgetData.length === 0) {
     return undefined;
@@ -170,12 +172,18 @@ function calculateBudgetComparison(
 
   // Build category budgets
   const categoryBudgets: CategoryBudget[] = Array.from(allCategoryIds).map(categoryId => {
-    const categoryName =
-      categoryId === 'uncategorized'
-        ? 'Uncategorized'
-        : categoryId === 'off-budget'
-          ? 'Off Budget'
-          : categoryIdToName.get(categoryId) || categoryId;
+    let baseCategoryName: string;
+    if (categoryId === 'uncategorized') {
+      baseCategoryName = 'Uncategorized';
+    } else if (categoryId === 'off-budget') {
+      baseCategoryName = 'Off Budget';
+    } else {
+      baseCategoryName = categoryIdToName.get(categoryId) || categoryId;
+    }
+
+    // Check if category is deleted and prefix with "Deleted: "
+    const isDeleted = categoryIdToTombstone.get(categoryId) || false;
+    const categoryName = isDeleted ? `Deleted: ${baseCategoryName}` : baseCategoryName;
 
     const categoryGroup = categoryIdToGroup.get(categoryId);
 
@@ -271,6 +279,7 @@ function calculateBudgetComparison(
     overallVariance,
     overallVariancePercentage,
     groupSortOrder: undefined, // Will be set by transformToWrappedData
+    groupTombstones: groupNameToTombstone,
   };
 }
 
@@ -286,6 +295,7 @@ export function transformToWrappedData(
   currencySymbol: string = '$',
   budgetData?: Array<{ categoryId: string; month: string; budgetedAmount: number }>,
   groupSortOrders: Map<string, number> = new Map(),
+  groupTombstones: Map<string, boolean> = new Map(),
 ): WrappedData {
   try {
     const yearStart = startOfYear(new Date(year, 0, 1));
@@ -1113,6 +1123,8 @@ export function transformToWrappedData(
       categoryIdToGroup,
       payeeIdToTransferAcct,
       accountIdToName,
+      categoryIdToTombstone,
+      groupTombstones,
     );
 
     // Add group sort orders to budget comparison if available

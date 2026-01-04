@@ -13,6 +13,7 @@ import {
   getCategories,
   getPayees,
   getAllTransactionsForYear,
+  getCategoryGroupTombstones,
   shutdown,
   clearBudget,
   integerToAmount,
@@ -272,6 +273,95 @@ describe('fileApi', () => {
 
       expect(categories.length).toBeGreaterThan(0);
       expect(mockDatabase.prepare).toHaveBeenCalled();
+    });
+
+    it('returns categories with deleted groups', async () => {
+      const file = createMockFile();
+      Object.defineProperty(file, 'size', { value: 1000, writable: false });
+
+      await initialize(file);
+
+      // Mock categories query - need separate prepare calls for categories and groups
+      let stepCallCount = 0;
+      mockDatabase.prepare.mockImplementation((query: string) => {
+        if (query.includes('FROM categories')) {
+          // Categories query
+          stepCallCount = 0;
+          mockStatement.step.mockImplementation(() => {
+            stepCallCount++;
+            return stepCallCount <= 1;
+          });
+          mockStatement.getAsObject.mockReturnValueOnce({
+            id: '1',
+            name: 'Groceries',
+            is_income: 0,
+            cat_group: '1',
+            tombstone: 0,
+          });
+        } else if (query.includes('FROM category_groups')) {
+          // Groups query - return all groups including deleted
+          stepCallCount = 0;
+          mockStatement.step.mockImplementation(() => {
+            stepCallCount++;
+            return stepCallCount <= 1;
+          });
+          mockStatement.getAsObject.mockReturnValueOnce({
+            id: '1',
+            name: 'Deleted Group',
+          });
+        }
+        return mockStatement;
+      });
+
+      const categories = await getCategories();
+
+      expect(categories.length).toBeGreaterThan(0);
+      // Category should still have group name even if group is deleted
+      expect(categories[0].group).toBe('Deleted Group');
+    });
+  });
+
+  describe('getCategoryGroupTombstones', () => {
+    it('throws DatabaseError when database is not initialized', async () => {
+      await expect(getCategoryGroupTombstones()).rejects.toThrow(DatabaseError);
+    });
+
+    it('returns map of group names to tombstone status', async () => {
+      const file = createMockFile();
+      Object.defineProperty(file, 'size', { value: 1000, writable: false });
+
+      await initialize(file);
+
+      mockStatement.step
+        .mockReturnValueOnce(true)
+        .mockReturnValueOnce(true)
+        .mockReturnValueOnce(false);
+      mockStatement.getAsObject
+        .mockReturnValueOnce({ id: '1', name: 'Food', tombstone: 0 })
+        .mockReturnValueOnce({ id: '2', name: 'Deleted Group', tombstone: 1 });
+
+      const groupTombstones = await getCategoryGroupTombstones();
+
+      expect(groupTombstones.size).toBe(2);
+      expect(groupTombstones.get('Food')).toBe(false);
+      expect(groupTombstones.get('Deleted Group')).toBe(true);
+      expect(mockDatabase.prepare).toHaveBeenCalledWith(
+        'SELECT id, name, tombstone FROM category_groups',
+      );
+    });
+
+    it('returns empty map when category_groups table does not exist', async () => {
+      const file = createMockFile();
+      Object.defineProperty(file, 'size', { value: 1000, writable: false });
+
+      await initialize(file);
+      mockDatabase.prepare.mockImplementation(() => {
+        throw new Error('no such table: category_groups');
+      });
+
+      const groupTombstones = await getCategoryGroupTombstones();
+
+      expect(groupTombstones.size).toBe(0);
     });
   });
 

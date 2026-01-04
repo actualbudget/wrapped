@@ -10,6 +10,7 @@ import {
   getAccounts,
   getBudgetedAmounts,
   getCategoryGroupSortOrders,
+  getCategoryGroupTombstones,
   getCurrencySymbol,
   shutdown,
   clearBudget,
@@ -32,6 +33,7 @@ export function useActualData() {
     Array<{ categoryId: string; month: string; budgetedAmount: number }> | undefined
   >(undefined);
   const [groupSortOrders, setGroupSortOrders] = useState<Map<string, number>>(new Map());
+  const [groupTombstones, setGroupTombstones] = useState<Map<string, boolean>>(new Map());
   const [currencySymbol, setCurrencySymbol] = useState<string>('$');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +49,7 @@ export function useActualData() {
       currencySymbol: string,
       budgetData?: Array<{ categoryId: string; month: string; budgetedAmount: number }>,
       groupSortOrders: Map<string, number> = new Map(),
+      groupTombstones: Map<string, boolean> = new Map(),
     ) => {
       const wrappedData = transformToWrappedData(
         raw.transactions,
@@ -60,6 +63,7 @@ export function useActualData() {
         currencySymbol,
         budgetData,
         groupSortOrders,
+        groupTombstones,
       );
       setData(wrappedData);
     },
@@ -117,9 +121,11 @@ export function useActualData() {
           budgetedAmount: number;
         }> = [];
         let fetchedGroupSortOrders = new Map<string, number>();
+        let fetchedGroupTombstones = new Map<string, boolean>();
         try {
           fetchedBudgetData = await getBudgetedAmounts(DEFAULT_YEAR);
           fetchedGroupSortOrders = await getCategoryGroupSortOrders();
+          fetchedGroupTombstones = await getCategoryGroupTombstones();
         } catch (error) {
           // Budget data or group sort order fetch failed, continue without it
           console.warn('Failed to fetch budget data or group sort orders:', error);
@@ -128,6 +134,7 @@ export function useActualData() {
         // Store budget data, group sort orders, and currency symbol for retransformData
         setBudgetData(fetchedBudgetData.length > 0 ? fetchedBudgetData : undefined);
         setGroupSortOrders(fetchedGroupSortOrders);
+        setGroupTombstones(fetchedGroupTombstones);
         setCurrencySymbol(currencySymbol);
 
         // Use override currency if provided, otherwise use the currency from the database
@@ -143,6 +150,7 @@ export function useActualData() {
           effectiveCurrency,
           fetchedBudgetData.length > 0 ? fetchedBudgetData : undefined,
           fetchedGroupSortOrders,
+          fetchedGroupTombstones,
         );
 
         setProgress(100);
@@ -200,10 +208,11 @@ export function useActualData() {
           effectiveCurrency,
           budgetData,
           groupSortOrders,
+          groupTombstones,
         );
       }
     },
-    [rawData, transformData, currencySymbol, budgetData, groupSortOrders],
+    [rawData, transformData, currencySymbol, budgetData, groupSortOrders, groupTombstones],
   );
 
   // Cleanup on unmount

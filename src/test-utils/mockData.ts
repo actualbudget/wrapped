@@ -324,6 +324,7 @@ export function createMockBudgetComparison(
       ['Food', 1],
       ['Housing', 2],
     ]),
+    groupTombstones: new Map<string, boolean>(),
     ...overrides,
   };
 }

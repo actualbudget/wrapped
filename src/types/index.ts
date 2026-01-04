@@ -186,6 +186,7 @@ export interface BudgetComparisonData {
   overallVariance: number;
   overallVariancePercentage: number;
   groupSortOrder?: Map<string, number>; // Map of group name to sort_order
+  groupTombstones?: Map<string, boolean>; // Map of group name to tombstone status
 }
 
 export interface WrappedData {

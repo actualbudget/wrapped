@@ -292,4 +292,162 @@ describe('BudgetVsActualPage', () => {
     expect(incomeIndex).toBeGreaterThanOrEqual(0);
     expect(incomeIndex).toBeGreaterThan(groceriesIndex);
   });
+
+  it('sorts deleted categories last within their group', () => {
+    const mockData = createMockWrappedData({
+      budgetComparison: createMockBudgetComparison({
+        categoryBudgets: [
+          {
+            categoryId: 'cat1',
+            categoryName: 'Active Category',
+            categoryGroup: 'Food',
+            monthlyBudgets: [],
+            totalBudgeted: 1000,
+            totalActual: 800,
+            totalVariance: -200,
+            totalVariancePercentage: -20,
+          },
+          {
+            categoryId: 'cat2',
+            categoryName: 'Deleted: Old Category',
+            categoryGroup: 'Food',
+            monthlyBudgets: [],
+            totalBudgeted: 500,
+            totalActual: 400,
+            totalVariance: -100,
+            totalVariancePercentage: -20,
+          },
+          {
+            categoryId: 'cat3',
+            categoryName: 'Another Active',
+            categoryGroup: 'Food',
+            monthlyBudgets: [],
+            totalBudgeted: 800,
+            totalActual: 700,
+            totalVariance: -100,
+            totalVariancePercentage: -12.5,
+          },
+        ],
+        groupSortOrder: new Map([['Food', 1]]),
+      }),
+    });
+    render(<BudgetVsActualPage data={mockData} />);
+    const select = screen.getByRole('combobox') as HTMLSelectElement;
+    const options = Array.from(select.options);
+    const activeIndex = options.findIndex(opt => opt.text === 'Active Category');
+    const anotherActiveIndex = options.findIndex(opt => opt.text === 'Another Active');
+    const deletedIndex = options.findIndex(opt => opt.text === 'Deleted: Old Category');
+
+    // Deleted category should appear last
+    expect(deletedIndex).toBeGreaterThan(activeIndex);
+    expect(deletedIndex).toBeGreaterThan(anotherActiveIndex);
+  });
+
+  it('sorts deleted groups last in the group list', () => {
+    const mockData = createMockWrappedData({
+      budgetComparison: createMockBudgetComparison({
+        categoryBudgets: [
+          {
+            categoryId: 'cat1',
+            categoryName: 'Category in Active Group',
+            categoryGroup: 'Active Group',
+            monthlyBudgets: [],
+            totalBudgeted: 1000,
+            totalActual: 800,
+            totalVariance: -200,
+            totalVariancePercentage: -20,
+          },
+          {
+            categoryId: 'cat2',
+            categoryName: 'Deleted: Category in Deleted Group',
+            categoryGroup: 'Deleted Group',
+            monthlyBudgets: [],
+            totalBudgeted: 500,
+            totalActual: 400,
+            totalVariance: -100,
+            totalVariancePercentage: -20,
+          },
+        ],
+        groupSortOrder: new Map([
+          ['Active Group', 1],
+          ['Deleted Group', 2],
+        ]),
+        groupTombstones: new Map([['Deleted Group', true]]),
+      }),
+    });
+    render(<BudgetVsActualPage data={mockData} />);
+    const select = screen.getByRole('combobox') as HTMLSelectElement;
+    const options = Array.from(select.options);
+
+    // Find the optgroups
+    const activeGroupOption = options.find(opt => opt.text === 'Category in Active Group');
+    const deletedGroupOption = options.find(
+      opt => opt.text === 'Deleted: Category in Deleted Group',
+    );
+
+    // Both should exist
+    expect(activeGroupOption).toBeDefined();
+    expect(deletedGroupOption).toBeDefined();
+
+    // The deleted group category should appear after the active group category
+    // (since groups are sorted and deleted groups go last)
+    const activeIndex = options.findIndex(opt => opt === activeGroupOption);
+    const deletedIndex = options.findIndex(opt => opt === deletedGroupOption);
+    expect(deletedIndex).toBeGreaterThan(activeIndex);
+  });
+
+  it('handles groups with all deleted categories as deleted groups', () => {
+    const mockData = createMockWrappedData({
+      budgetComparison: createMockBudgetComparison({
+        categoryBudgets: [
+          {
+            categoryId: 'cat1',
+            categoryName: 'Active Category',
+            categoryGroup: 'Active Group',
+            monthlyBudgets: [],
+            totalBudgeted: 1000,
+            totalActual: 800,
+            totalVariance: -200,
+            totalVariancePercentage: -20,
+          },
+          {
+            categoryId: 'cat2',
+            categoryName: 'Deleted: Category 1',
+            categoryGroup: 'All Deleted Group',
+            monthlyBudgets: [],
+            totalBudgeted: 500,
+            totalActual: 400,
+            totalVariance: -100,
+            totalVariancePercentage: -20,
+          },
+          {
+            categoryId: 'cat3',
+            categoryName: 'Deleted: Category 2',
+            categoryGroup: 'All Deleted Group',
+            monthlyBudgets: [],
+            totalBudgeted: 300,
+            totalActual: 250,
+            totalVariance: -50,
+            totalVariancePercentage: -16.67,
+          },
+        ],
+        groupSortOrder: new Map([
+          ['Active Group', 1],
+          ['All Deleted Group', 2],
+        ]),
+        groupTombstones: new Map(),
+      }),
+    });
+    render(<BudgetVsActualPage data={mockData} />);
+    const select = screen.getByRole('combobox') as HTMLSelectElement;
+    const options = Array.from(select.options);
+
+    const activeIndex = options.findIndex(opt => opt.text === 'Active Category');
+    const deleted1Index = options.findIndex(opt => opt.text === 'Deleted: Category 1');
+    const deleted2Index = options.findIndex(opt => opt.text === 'Deleted: Category 2');
+
+    // All deleted group should appear after active group
+    expect(deleted1Index).toBeGreaterThan(activeIndex);
+    expect(deleted2Index).toBeGreaterThan(activeIndex);
+  });
 });
