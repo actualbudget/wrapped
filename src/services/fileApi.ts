@@ -190,6 +190,32 @@ export async function getCategoryGroupTombstones(): Promise<Map<string, boolean>
 }
 
 /**
+ * Get category mappings (category ID -> merged category ID)
+ * Maps deleted/merged categories to the categories they were merged into
+ */
+export async function getCategoryMappings(): Promise<Map<string, string>> {
+  if (!db) {
+    throw new DatabaseError('Database not loaded. Call initialize() first.');
+  }
+
+  const categoryMapping = new Map<string, string>();
+  try {
+    const mappings = query('SELECT id, transferId FROM category_mapping');
+    mappings.forEach(m => {
+      const oldId = String(m.id);
+      const newId = String(m.transferId);
+      // Only include actual merges (where id != transferId)
+      if (oldId !== newId) {
+        categoryMapping.set(oldId, newId);
+      }
+    });
+  } catch {
+    // No category_mapping table, that's okay
+  }
+  return categoryMapping;
+}
+
+/**
  * Get categories from database
  */
 export async function getCategories(): Promise<Category[]> {
@@ -295,6 +321,22 @@ async function getTransactions(
       categories.map(c => [String(c.id), { name: String(c.name), tombstone: c.tombstone === 1 }]),
     );
 
+    // Get category mappings for resolving merged categories
+    let categoryMappings = new Map<string, string>();
+    try {
+      const mappings = query('SELECT id, transferId FROM category_mapping');
+      mappings.forEach(m => {
+        const oldId = String(m.id);
+        const newId = String(m.transferId);
+        // Only include actual merges (where id != transferId)
+        if (oldId !== newId) {
+          categoryMappings.set(oldId, newId);
+        }
+      });
+    } catch {
+      // No category_mapping table, that's okay
+    }
+
     const result: Transaction[] = [];
 
     for (const t of transactions) {
@@ -314,8 +356,20 @@ async function getTransactions(
       const payeeInfo = payeeId && payeeInfoMap ? payeeInfoMap.get(payeeId) : undefined;
       const payeeTombstone = payeeInfo ? payeeInfo.tombstone : false;
 
-      // Get category info (name and tombstone status)
-      const categoryInfo = t.category ? categoryMap.get(String(t.category)) : undefined;
+      // Resolve category ID through merge chain (handle transitive merges A -> B -> C)
+      let resolvedCategoryId = t.category ? String(t.category) : undefined;
+
+      if (resolvedCategoryId && categoryMappings.has(resolvedCategoryId)) {
+        // Follow the merge chain until we reach the final target
+        const visited = new Set<string>(); // Prevent infinite loops in case of circular references
+        while (categoryMappings.has(resolvedCategoryId) && !visited.has(resolvedCategoryId)) {
+          visited.add(resolvedCategoryId);
+          resolvedCategoryId = categoryMappings.get(resolvedCategoryId)!;
+        }
+      }
+
+      // Get category info from the resolved (merged) category
+      const categoryInfo = resolvedCategoryId ? categoryMap.get(resolvedCategoryId) : undefined;
       const categoryName = categoryInfo ? categoryInfo.name : undefined;
       const categoryTombstone = categoryInfo ? categoryInfo.tombstone : false;
 
@@ -328,7 +382,7 @@ async function getTransactions(
         payee_name: payeeName,
         payee_tombstone: payeeTombstone,
         notes: t.notes ? String(t.notes) : undefined,
-        category: t.category ? String(t.category) : undefined,
+        category: resolvedCategoryId, // Use resolved category ID
         category_name: categoryName,
         category_tombstone: categoryTombstone,
         cleared: t.cleared === 1 || false,
@@ -465,17 +519,43 @@ export async function getBudgetedAmounts(
       'December',
     ];
 
-    // Convert to structured format
-    const result: Array<{ categoryId: string; month: string; budgetedAmount: number }> = [];
+    // Get category mappings for resolving merged categories
+    let categoryMappings = new Map<string, string>();
+    try {
+      const mappings = query('SELECT id, transferId FROM category_mapping');
+      mappings.forEach(m => {
+        const oldId = String(m.id);
+        const newId = String(m.transferId);
+        // Only include actual merges (where id != transferId)
+        if (oldId !== newId) {
+          categoryMappings.set(oldId, newId);
+        }
+      });
+    } catch {
+      // No category_mapping table, that's okay
+    }
+
+    // Resolve category IDs through merge chain and accumulate budgets
+    // Use a map to combine budgets from merged categories
+    const budgetMap = new Map<string, Map<string, number>>(); // resolvedCategoryId -> month -> amount
 
     for (const row of budgetRows) {
-      const categoryId = String(row.category || '');
+      let categoryId = String(row.category || '');
       const monthInt = Number(row.month || 0);
       const amount = Number(row.amount || 0);
 
       // Skip if missing required data
       if (!categoryId || !monthInt || amount === 0) {
         continue;
+      }
+
+      // Resolve category ID through merge chain (handle transitive merges A -> B -> C)
+      if (categoryMappings.has(categoryId)) {
+        const visited = new Set<string>(); // Prevent infinite loops
+        while (categoryMappings.has(categoryId) && !visited.has(categoryId)) {
+          visited.add(categoryId);
+          categoryId = categoryMappings.get(categoryId)!;
+        }
       }
 
       // Convert month INTEGER (YYYYMM format) to month name
@@ -488,12 +568,26 @@ export async function getBudgetedAmounts(
       const monthStr = monthNames[monthNum - 1];
       const budgetedAmount = integerToAmount(amount);
 
-      result.push({
-        categoryId,
-        month: monthStr,
-        budgetedAmount,
-      });
+      // Accumulate budgets for the same resolved category and month
+      if (!budgetMap.has(categoryId)) {
+        budgetMap.set(categoryId, new Map());
+      }
+      const monthMap = budgetMap.get(categoryId)!;
+      const currentAmount = monthMap.get(monthStr) || 0;
+      monthMap.set(monthStr, currentAmount + budgetedAmount);
     }
+
+    // Convert map back to array format
+    const result: Array<{ categoryId: string; month: string; budgetedAmount: number }> = [];
+    budgetMap.forEach((monthMap, categoryId) => {
+      monthMap.forEach((budgetedAmount, month) => {
+        result.push({
+          categoryId,
+          month,
+          budgetedAmount,
+        });
+      });
+    });
 
     return result;
   } catch (error) {
