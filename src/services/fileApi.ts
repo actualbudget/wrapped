@@ -519,43 +519,19 @@ export async function getBudgetedAmounts(
       'December',
     ];
 
-    // Get category mappings for resolving merged categories
-    let categoryMappings = new Map<string, string>();
-    try {
-      const mappings = query('SELECT id, transferId FROM category_mapping');
-      mappings.forEach(m => {
-        const oldId = String(m.id);
-        const newId = String(m.transferId);
-        // Only include actual merges (where id != transferId)
-        if (oldId !== newId) {
-          categoryMappings.set(oldId, newId);
-        }
-      });
-    } catch {
-      // No category_mapping table, that's okay
-    }
-
-    // Resolve category IDs through merge chain and accumulate budgets
-    // Use a map to combine budgets from merged categories
-    const budgetMap = new Map<string, Map<string, number>>(); // resolvedCategoryId -> month -> amount
+    // Accumulate budgets by category and month
+    // Note: Budget amounts are physically transferred in zero_budgets when categories are deleted,
+    // so we use category IDs directly (no category_mapping resolution needed for budgets)
+    const budgetMap = new Map<string, Map<string, number>>(); // categoryId -> month -> amount
 
     for (const row of budgetRows) {
-      let categoryId = String(row.category || '');
+      const categoryId = String(row.category || '');
       const monthInt = Number(row.month || 0);
       const amount = Number(row.amount || 0);
 
       // Skip if missing required data
       if (!categoryId || !monthInt || amount === 0) {
         continue;
-      }
-
-      // Resolve category ID through merge chain (handle transitive merges A -> B -> C)
-      if (categoryMappings.has(categoryId)) {
-        const visited = new Set<string>(); // Prevent infinite loops
-        while (categoryMappings.has(categoryId) && !visited.has(categoryId)) {
-          visited.add(categoryId);
-          categoryId = categoryMappings.get(categoryId)!;
-        }
       }
 
       // Convert month INTEGER (YYYYMM format) to month name
@@ -568,7 +544,7 @@ export async function getBudgetedAmounts(
       const monthStr = monthNames[monthNum - 1];
       const budgetedAmount = integerToAmount(amount);
 
-      // Accumulate budgets for the same resolved category and month
+      // Accumulate budgets for the same category and month
       if (!budgetMap.has(categoryId)) {
         budgetMap.set(categoryId, new Map());
       }
