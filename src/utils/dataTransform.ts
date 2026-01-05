@@ -171,70 +171,84 @@ function calculateBudgetComparison(
   actualSpendingMap.forEach((_, categoryId) => allCategoryIds.add(categoryId));
 
   // Build category budgets
-  const categoryBudgets: CategoryBudget[] = Array.from(allCategoryIds).map(categoryId => {
-    let baseCategoryName: string;
-    if (categoryId === 'uncategorized') {
-      baseCategoryName = 'Uncategorized';
-    } else if (categoryId === 'off-budget') {
-      baseCategoryName = 'Off Budget';
-    } else {
-      baseCategoryName = categoryIdToName.get(categoryId) || categoryId;
-    }
+  // Filter out categories that don't exist in the database (unless they're special categories)
+  const categoryBudgets: CategoryBudget[] = Array.from(allCategoryIds)
+    .filter(categoryId => {
+      // Keep special categories (uncategorized, off-budget, transfers)
+      if (
+        categoryId === 'uncategorized' ||
+        categoryId === 'off-budget' ||
+        categoryId.startsWith('transfer:')
+      ) {
+        return true;
+      }
+      // Filter out categories that don't exist in the database
+      return categoryIdToName.has(categoryId);
+    })
+    .map(categoryId => {
+      let baseCategoryName: string;
+      if (categoryId === 'uncategorized') {
+        baseCategoryName = 'Uncategorized';
+      } else if (categoryId === 'off-budget') {
+        baseCategoryName = 'Off Budget';
+      } else {
+        baseCategoryName = categoryIdToName.get(categoryId) || categoryId;
+      }
 
-    // Check if category is deleted and prefix with "Deleted: "
-    const isDeleted = categoryIdToTombstone.get(categoryId) || false;
-    const categoryName = isDeleted ? `Deleted: ${baseCategoryName}` : baseCategoryName;
+      // Check if category is deleted and prefix with "Deleted: "
+      const isDeleted = categoryIdToTombstone.get(categoryId) || false;
+      const categoryName = isDeleted ? `Deleted: ${baseCategoryName}` : baseCategoryName;
 
-    const categoryGroup = categoryIdToGroup.get(categoryId);
+      const categoryGroup = categoryIdToGroup.get(categoryId);
 
-    const budgetMapForCategory = budgetMap.get(categoryId) || new Map();
-    const actualMapForCategory = actualSpendingMap.get(categoryId) || new Map();
+      const budgetMapForCategory = budgetMap.get(categoryId) || new Map();
+      const actualMapForCategory = actualSpendingMap.get(categoryId) || new Map();
 
-    // Calculate monthly budgets with carry forward logic
-    let carryForwardFromPrevious = 0; // Carry forward from previous month
-    const monthlyBudgets = MONTHS.map(monthName => {
-      const budgetedAmount = budgetMapForCategory.get(monthName) || 0;
-      const actualAmount = actualMapForCategory.get(monthName) || 0;
-      const carryForward = carryForwardFromPrevious;
-      const effectiveBudget = budgetedAmount + carryForward; // Available to spend this month
-      const remaining = effectiveBudget - actualAmount; // What's left after spending
-      const variance = actualAmount - effectiveBudget; // Variance against effective budget
-      const variancePercentage = effectiveBudget !== 0 ? (variance / effectiveBudget) * 100 : 0;
+      // Calculate monthly budgets with carry forward logic
+      let carryForwardFromPrevious = 0; // Carry forward from previous month
+      const monthlyBudgets = MONTHS.map(monthName => {
+        const budgetedAmount = budgetMapForCategory.get(monthName) || 0;
+        const actualAmount = actualMapForCategory.get(monthName) || 0;
+        const carryForward = carryForwardFromPrevious;
+        const effectiveBudget = budgetedAmount + carryForward; // Available to spend this month
+        const remaining = effectiveBudget - actualAmount; // What's left after spending
+        const variance = actualAmount - effectiveBudget; // Variance against effective budget
+        const variancePercentage = effectiveBudget !== 0 ? (variance / effectiveBudget) * 100 : 0;
 
-      // Update carry forward for next month (only positive remaining amounts carry forward)
-      carryForwardFromPrevious = remaining > 0 ? remaining : 0;
+        // Update carry forward for next month (only positive remaining amounts carry forward)
+        carryForwardFromPrevious = remaining > 0 ? remaining : 0;
+
+        return {
+          month: monthName,
+          budgetedAmount,
+          actualAmount,
+          carryForward,
+          effectiveBudget,
+          remaining,
+          variance,
+          variancePercentage,
+        };
+      });
+
+      const totalBudgeted = monthlyBudgets.reduce((sum, m) => sum + m.budgetedAmount, 0);
+      const totalActual = monthlyBudgets.reduce((sum, m) => sum + m.actualAmount, 0);
+      // Total variance should use effective budgets (which include carry forward)
+      const totalEffectiveBudget = monthlyBudgets.reduce((sum, m) => sum + m.effectiveBudget, 0);
+      const totalVariance = totalActual - totalEffectiveBudget;
+      const totalVariancePercentage =
+        totalEffectiveBudget !== 0 ? (totalVariance / totalEffectiveBudget) * 100 : 0;
 
       return {
-        month: monthName,
-        budgetedAmount,
-        actualAmount,
-        carryForward,
-        effectiveBudget,
-        remaining,
-        variance,
-        variancePercentage,
+        categoryId,
+        categoryName,
+        categoryGroup,
+        monthlyBudgets,
+        totalBudgeted,
+        totalActual,
+        totalVariance,
+        totalVariancePercentage,
       };
     });
-
-    const totalBudgeted = monthlyBudgets.reduce((sum, m) => sum + m.budgetedAmount, 0);
-    const totalActual = monthlyBudgets.reduce((sum, m) => sum + m.actualAmount, 0);
-    // Total variance should use effective budgets (which include carry forward)
-    const totalEffectiveBudget = monthlyBudgets.reduce((sum, m) => sum + m.effectiveBudget, 0);
-    const totalVariance = totalActual - totalEffectiveBudget;
-    const totalVariancePercentage =
-      totalEffectiveBudget !== 0 ? (totalVariance / totalEffectiveBudget) * 100 : 0;
-
-    return {
-      categoryId,
-      categoryName,
-      categoryGroup,
-      monthlyBudgets,
-      totalBudgeted,
-      totalActual,
-      totalVariance,
-      totalVariancePercentage,
-    };
-  });
 
   // Calculate monthly totals (using effective budgets which include carry forward)
   const monthlyTotals = MONTHS.map(monthName => {

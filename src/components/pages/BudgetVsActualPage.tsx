@@ -76,8 +76,30 @@ export function BudgetVsActualPage({ data }: BudgetVsActualPageProps) {
   const groupedCategories = useMemo(() => {
     const groups = new Map<string, typeof budgetComparison.categoryBudgets>();
 
+    // Filter out:
+    // 1. Deleted categories (categories with names starting with "deleted: ")
+    // 2. Categories that cannot be matched (deleted entirely from DB - category name is just the UUID)
+    const activeCategories = budgetComparison.categoryBudgets.filter(cat => {
+      // Filter out deleted categories
+      if (cat.categoryName.toLowerCase().startsWith('deleted: ')) {
+        return false;
+      }
+      // Filter out categories that cannot be matched (category name is just the UUID)
+      // Special categories (uncategorized, off-budget, transfers) are always valid
+      if (
+        cat.categoryId === 'uncategorized' ||
+        cat.categoryId === 'off-budget' ||
+        cat.categoryId.startsWith('transfer:')
+      ) {
+        return true;
+      }
+      // If category name matches the category ID (UUID format), it means the category doesn't exist in DB
+      // UUIDs are typically long strings with hyphens (e.g., "123e4567-e89b-12d3-a456-426614174000")
+      return cat.categoryName !== cat.categoryId;
+    });
+
     // Group all categories by their group (undefined group goes to "Other")
-    budgetComparison.categoryBudgets.forEach(cat => {
+    activeCategories.forEach(cat => {
       const groupName = cat.categoryGroup || 'Other';
       if (!groups.has(groupName)) {
         groups.set(groupName, []);
@@ -85,19 +107,13 @@ export function BudgetVsActualPage({ data }: BudgetVsActualPageProps) {
       groups.get(groupName)!.push(cat);
     });
 
-    // Sort categories alphabetically within each group, but put deleted and income categories last
+    // Sort categories alphabetically within each group, but put income categories last
     groups.forEach(categories => {
       categories.sort((a, b) => {
-        const aIsDeleted = a.categoryName.toLowerCase().startsWith('deleted: ');
-        const bIsDeleted = b.categoryName.toLowerCase().startsWith('deleted: ');
         const aIsIncome = a.categoryName.toLowerCase().includes('income');
         const bIsIncome = b.categoryName.toLowerCase().includes('income');
 
-        // Deleted categories go last
-        if (aIsDeleted && !bIsDeleted) return 1;
-        if (!aIsDeleted && bIsDeleted) return -1;
-
-        // Income categories go last (but before deleted)
+        // Income categories go last
         if (aIsIncome && !bIsIncome) return 1;
         if (!aIsIncome && bIsIncome) return -1;
 
@@ -110,18 +126,12 @@ export function BudgetVsActualPage({ data }: BudgetVsActualPageProps) {
     const groupSortOrder = budgetComparison.groupSortOrder || new Map<string, number>();
     const groupTombstones = budgetComparison.groupTombstones || new Map<string, boolean>();
     return Array.from(groups.entries()).sort((a, b) => {
-      const [groupA, categoriesA] = [a[0], a[1]];
-      const [groupB, categoriesB] = [b[0], b[1]];
+      const [groupA] = [a[0]];
+      const [groupB] = [b[0]];
 
-      // Check if groups are deleted (either from tombstone map or if all categories are deleted)
-      const aIsDeleted =
-        groupTombstones.get(groupA) === true ||
-        (categoriesA.length > 0 &&
-          categoriesA.every(cat => cat.categoryName.toLowerCase().startsWith('deleted: ')));
-      const bIsDeleted =
-        groupTombstones.get(groupB) === true ||
-        (categoriesB.length > 0 &&
-          categoriesB.every(cat => cat.categoryName.toLowerCase().startsWith('deleted: ')));
+      // Check if groups are deleted (from tombstone map)
+      const aIsDeleted = groupTombstones.get(groupA) === true;
+      const bIsDeleted = groupTombstones.get(groupB) === true;
 
       const aIsIncome = groupA.toLowerCase().includes('income');
       const bIsIncome = groupB.toLowerCase().includes('income');

@@ -293,7 +293,7 @@ describe('BudgetVsActualPage', () => {
     expect(incomeIndex).toBeGreaterThan(groceriesIndex);
   });
 
-  it('sorts deleted categories last within their group', () => {
+  it('filters out deleted categories', () => {
     const mockData = createMockWrappedData({
       budgetComparison: createMockBudgetComparison({
         categoryBudgets: [
@@ -338,12 +338,14 @@ describe('BudgetVsActualPage', () => {
     const anotherActiveIndex = options.findIndex(opt => opt.text === 'Another Active');
     const deletedIndex = options.findIndex(opt => opt.text === 'Deleted: Old Category');
 
-    // Deleted category should appear last
-    expect(deletedIndex).toBeGreaterThan(activeIndex);
-    expect(deletedIndex).toBeGreaterThan(anotherActiveIndex);
+    // Active categories should be present
+    expect(activeIndex).toBeGreaterThan(-1);
+    expect(anotherActiveIndex).toBeGreaterThan(-1);
+    // Deleted category should be filtered out
+    expect(deletedIndex).toBe(-1);
   });
 
-  it('sorts deleted groups last in the group list', () => {
+  it('filters out deleted categories even in deleted groups', () => {
     const mockData = createMockWrappedData({
       budgetComparison: createMockBudgetComparison({
         categoryBudgets: [
@@ -356,6 +358,16 @@ describe('BudgetVsActualPage', () => {
             totalActual: 800,
             totalVariance: -200,
             totalVariancePercentage: -20,
+          },
+          {
+            categoryId: 'cat1b',
+            categoryName: 'Another Category in Active Group',
+            categoryGroup: 'Active Group',
+            monthlyBudgets: [],
+            totalBudgeted: 800,
+            totalActual: 700,
+            totalVariance: -100,
+            totalVariancePercentage: -12.5,
           },
           {
             categoryId: 'cat2',
@@ -381,22 +393,21 @@ describe('BudgetVsActualPage', () => {
 
     // Find the optgroups
     const activeGroupOption = options.find(opt => opt.text === 'Category in Active Group');
+    const anotherActiveOption = options.find(
+      opt => opt.text === 'Another Category in Active Group',
+    );
     const deletedGroupOption = options.find(
       opt => opt.text === 'Deleted: Category in Deleted Group',
     );
 
-    // Both should exist
+    // Active categories should exist
     expect(activeGroupOption).toBeDefined();
-    expect(deletedGroupOption).toBeDefined();
-
-    // The deleted group category should appear after the active group category
-    // (since groups are sorted and deleted groups go last)
-    const activeIndex = options.findIndex(opt => opt === activeGroupOption);
-    const deletedIndex = options.findIndex(opt => opt === deletedGroupOption);
-    expect(deletedIndex).toBeGreaterThan(activeIndex);
+    expect(anotherActiveOption).toBeDefined();
+    // Deleted category should be filtered out
+    expect(deletedGroupOption).toBeUndefined();
   });
 
-  it('handles groups with all deleted categories as deleted groups', () => {
+  it('filters out groups with all deleted categories', () => {
     const mockData = createMockWrappedData({
       budgetComparison: createMockBudgetComparison({
         categoryBudgets: [
@@ -412,8 +423,8 @@ describe('BudgetVsActualPage', () => {
           },
           {
             categoryId: 'cat2',
-            categoryName: 'Deleted: Category 1',
-            categoryGroup: 'All Deleted Group',
+            categoryName: 'Another Active',
+            categoryGroup: 'Active Group',
             monthlyBudgets: [],
             totalBudgeted: 500,
             totalActual: 400,
@@ -422,13 +433,23 @@ describe('BudgetVsActualPage', () => {
           },
           {
             categoryId: 'cat3',
-            categoryName: 'Deleted: Category 2',
+            categoryName: 'Deleted: Category 1',
             categoryGroup: 'All Deleted Group',
             monthlyBudgets: [],
             totalBudgeted: 300,
             totalActual: 250,
             totalVariance: -50,
             totalVariancePercentage: -16.67,
+          },
+          {
+            categoryId: 'cat4',
+            categoryName: 'Deleted: Category 2',
+            categoryGroup: 'All Deleted Group',
+            monthlyBudgets: [],
+            totalBudgeted: 200,
+            totalActual: 150,
+            totalVariance: -50,
+            totalVariancePercentage: -25,
           },
         ],
         groupSortOrder: new Map([
@@ -443,11 +464,15 @@ describe('BudgetVsActualPage', () => {
     const options = Array.from(select.options);
 
     const activeIndex = options.findIndex(opt => opt.text === 'Active Category');
+    const anotherActiveIndex = options.findIndex(opt => opt.text === 'Another Active');
     const deleted1Index = options.findIndex(opt => opt.text === 'Deleted: Category 1');
     const deleted2Index = options.findIndex(opt => opt.text === 'Deleted: Category 2');
 
-    // All deleted group should appear after active group
-    expect(deleted1Index).toBeGreaterThan(activeIndex);
-    expect(deleted2Index).toBeGreaterThan(activeIndex);
+    // Active categories should be present
+    expect(activeIndex).toBeGreaterThan(-1);
+    expect(anotherActiveIndex).toBeGreaterThan(-1);
+    // Deleted categories should be filtered out
+    expect(deleted1Index).toBe(-1);
+    expect(deleted2Index).toBe(-1);
   });
 });
