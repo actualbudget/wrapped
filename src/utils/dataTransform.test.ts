@@ -344,6 +344,43 @@ describe('transformToWrappedData', () => {
       expect(deleted?.categoryName).toBe('deleted: Old Category');
     });
 
+    it('handles merged categories - transactions appear under merged category', () => {
+      // Category cat1 was merged into cat2
+      // Transaction originally had category 'cat1', but after resolution should use 'cat2'
+      const transactions: Transaction[] = [
+        createMockTransaction({ id: 't1', category: 'cat2', amount: -10000 }), // Already resolved to cat2
+      ];
+
+      const categories: Category[] = [
+        createMockCategory({ id: 'cat1', name: 'Old Category', tombstone: true }),
+        createMockCategory({ id: 'cat2', name: 'New Category', tombstone: false }),
+      ];
+
+      const result = transformToWrappedData(transactions, categories, [], []);
+
+      // Transaction should appear under merged category (cat2), not as "deleted: Old Category"
+      const merged = result.topCategories.find(c => c.categoryId === 'cat2');
+      expect(merged?.categoryName).toBe('New Category'); // Should show merged category name
+      expect(merged?.amount).toBe(100);
+      expect(result.topCategories.find(c => c.categoryId === 'cat1')).toBeUndefined();
+    });
+
+    it('handles merged categories - non-merged deleted categories still show deleted prefix', () => {
+      const transactions: Transaction[] = [
+        createMockTransaction({ id: 't1', category: 'cat1', amount: -10000 }),
+      ];
+
+      const categories: Category[] = [
+        createMockCategory({ id: 'cat1', name: 'Deleted Category', tombstone: true }),
+      ];
+
+      const result = transformToWrappedData(transactions, categories, [], []);
+
+      // Non-merged deleted category should still show "deleted: " prefix
+      const deleted = result.topCategories.find(c => c.categoryId === 'cat1');
+      expect(deleted?.categoryName).toBe('deleted: Deleted Category');
+    });
+
     it('sorts categories by amount descending', () => {
       const transactions: Transaction[] = [
         createMockTransaction({ id: 't1', category: 'cat1', amount: -10000 }),

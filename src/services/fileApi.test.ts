@@ -14,6 +14,7 @@ import {
   getPayees,
   getAllTransactionsForYear,
   getCategoryGroupTombstones,
+  getCategoryMappings,
   shutdown,
   clearBudget,
   integerToAmount,
@@ -362,6 +363,50 @@ describe('fileApi', () => {
       const groupTombstones = await getCategoryGroupTombstones();
 
       expect(groupTombstones.size).toBe(0);
+    });
+  });
+
+  describe('getCategoryMappings', () => {
+    it('throws DatabaseError when database is not initialized', async () => {
+      await expect(getCategoryMappings()).rejects.toThrow(DatabaseError);
+    });
+
+    it('returns map of old category IDs to merged category IDs', async () => {
+      const file = createMockFile();
+      Object.defineProperty(file, 'size', { value: 1000, writable: false });
+
+      await initialize(file);
+
+      mockStatement.step
+        .mockReturnValueOnce(true)
+        .mockReturnValueOnce(true)
+        .mockReturnValueOnce(false);
+      mockStatement.getAsObject
+        .mockReturnValueOnce({ id: 'cat1', transferId: 'cat2' }) // Merged: cat1 -> cat2
+        .mockReturnValueOnce({ id: 'cat3', transferId: 'cat3' }); // Self-reference (not merged)
+
+      const categoryMappings = await getCategoryMappings();
+
+      expect(categoryMappings.size).toBe(1);
+      expect(categoryMappings.get('cat1')).toBe('cat2');
+      expect(categoryMappings.has('cat3')).toBe(false); // Self-references excluded
+      expect(mockDatabase.prepare).toHaveBeenCalledWith(
+        'SELECT id, transferId FROM category_mapping',
+      );
+    });
+
+    it('returns empty map when category_mapping table does not exist', async () => {
+      const file = createMockFile();
+      Object.defineProperty(file, 'size', { value: 1000, writable: false });
+
+      await initialize(file);
+      mockDatabase.prepare.mockImplementation(() => {
+        throw new Error('no such table: category_mapping');
+      });
+
+      const categoryMappings = await getCategoryMappings();
+
+      expect(categoryMappings.size).toBe(0);
     });
   });
 
