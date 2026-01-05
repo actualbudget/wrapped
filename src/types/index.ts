@@ -12,6 +12,7 @@ export interface Transaction {
   category_tombstone?: boolean; // Whether the category is deleted
   cleared?: boolean;
   reconciled?: boolean;
+  parent_id?: string; // ID of parent transaction for split transactions
 }
 
 export interface Category {

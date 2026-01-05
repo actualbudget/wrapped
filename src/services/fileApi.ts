@@ -288,7 +288,7 @@ async function getTransactions(
       params.push(endDateInt);
     }
 
-    let sql = `SELECT id, acct as account, date, amount, category, notes, description, cleared, reconciled FROM transactions WHERE acct = ? AND tombstone = 0${dateFilter}`;
+    let sql = `SELECT id, acct as account, date, amount, category, notes, description, cleared, reconciled, parent_id FROM transactions WHERE acct = ? AND tombstone = 0${dateFilter}`;
     const transactions = query(sql, params);
 
     // Get payee information - payees are linked via payee_mapping table
@@ -387,6 +387,7 @@ async function getTransactions(
         category_tombstone: categoryTombstone,
         cleared: t.cleared === 1 || false,
         reconciled: t.reconciled === 1 || false,
+        parent_id: t.parent_id ? String(t.parent_id) : undefined,
       });
     }
 

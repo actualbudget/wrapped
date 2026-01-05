@@ -1335,6 +1335,193 @@ describe('transformToWrappedData', () => {
     });
   });
 
+  describe('Split Transaction Filtering', () => {
+    it('excludes parent split transactions (no category, no parent_id)', () => {
+      const transactions: Transaction[] = [
+        createMockTransaction({
+          id: 'parent1',
+          date: '2025-01-15',
+          category: undefined,
+          parent_id: undefined,
+          amount: -10000, // Parent split - should be excluded
+        }),
+        createMockTransaction({
+          id: 'child1',
+          date: '2025-01-15',
+          category: 'cat1',
+          parent_id: 'parent1',
+          amount: -5000, // Child split - should be included
+        }),
+        createMockTransaction({
+          id: 'child2',
+          date: '2025-01-15',
+          category: 'cat2',
+          parent_id: 'parent1',
+          amount: -5000, // Child split - should be included
+        }),
+      ];
+
+      const categories: Category[] = [
+        createMockCategory({ id: 'cat1', name: 'Groceries' }),
+        createMockCategory({ id: 'cat2', name: 'Gas' }),
+      ];
+
+      const result = transformToWrappedData(transactions, categories, [], []);
+
+      // Parent split should be excluded, only child splits included
+      expect(result.transactionStats.totalCount).toBe(2);
+      expect(result.totalExpenses).toBe(100); // $50 + $50 from child splits
+      expect(result.topCategories).toHaveLength(2);
+    });
+
+    it('includes child split transactions (has category, has parent_id)', () => {
+      const transactions: Transaction[] = [
+        createMockTransaction({
+          id: 'child1',
+          date: '2025-01-15',
+          category: 'cat1',
+          parent_id: 'parent1',
+          amount: -10000,
+        }),
+        createMockTransaction({
+          id: 'child2',
+          date: '2025-01-15',
+          category: 'cat1',
+          parent_id: 'parent1',
+          amount: -20000,
+        }),
+      ];
+
+      const categories: Category[] = [createMockCategory({ id: 'cat1', name: 'Groceries' })];
+
+      const result = transformToWrappedData(transactions, categories, [], []);
+
+      expect(result.transactionStats.totalCount).toBe(2);
+      expect(result.totalExpenses).toBe(300); // $100 + $200
+      expect(result.topCategories).toHaveLength(1);
+      expect(result.topCategories[0].amount).toBe(300);
+    });
+
+    it('includes regular transactions (has category, no parent_id)', () => {
+      const transactions: Transaction[] = [
+        createMockTransaction({
+          id: 'regular1',
+          date: '2025-01-15',
+          category: 'cat1',
+          parent_id: undefined,
+          amount: -10000,
+        }),
+        createMockTransaction({
+          id: 'regular2',
+          date: '2025-01-15',
+          category: 'cat2',
+          parent_id: undefined,
+          amount: -20000,
+        }),
+      ];
+
+      const categories: Category[] = [
+        createMockCategory({ id: 'cat1', name: 'Groceries' }),
+        createMockCategory({ id: 'cat2', name: 'Gas' }),
+      ];
+
+      const result = transformToWrappedData(transactions, categories, [], []);
+
+      expect(result.transactionStats.totalCount).toBe(2);
+      expect(result.totalExpenses).toBe(300); // $100 + $200
+      expect(result.topCategories).toHaveLength(2);
+    });
+
+    it('handles mixed split and regular transactions correctly', () => {
+      const transactions: Transaction[] = [
+        // Parent split - should be excluded
+        createMockTransaction({
+          id: 'parent1',
+          date: '2025-01-15',
+          category: undefined,
+          parent_id: undefined,
+          amount: -30000,
+        }),
+        // Child splits - should be included
+        createMockTransaction({
+          id: 'child1',
+          date: '2025-01-15',
+          category: 'cat1',
+          parent_id: 'parent1',
+          amount: -10000,
+        }),
+        createMockTransaction({
+          id: 'child2',
+          date: '2025-01-15',
+          category: 'cat2',
+          parent_id: 'parent1',
+          amount: -20000,
+        }),
+        // Regular transaction - should be included
+        createMockTransaction({
+          id: 'regular1',
+          date: '2025-01-15',
+          category: 'cat1',
+          parent_id: undefined,
+          amount: -15000,
+        }),
+      ];
+
+      const categories: Category[] = [
+        createMockCategory({ id: 'cat1', name: 'Groceries' }),
+        createMockCategory({ id: 'cat2', name: 'Gas' }),
+      ];
+
+      const result = transformToWrappedData(transactions, categories, [], []);
+
+      // Parent split excluded, 2 child splits + 1 regular = 3 transactions
+      expect(result.transactionStats.totalCount).toBe(3);
+      expect(result.totalExpenses).toBe(450); // $100 + $200 + $150
+      expect(result.topCategories).toHaveLength(2);
+      // cat1 should have $100 (child) + $150 (regular) = $250
+      const cat1 = result.topCategories.find(c => c.categoryId === 'cat1');
+      expect(cat1?.amount).toBe(250);
+    });
+
+    it('handles split transactions with income categories', () => {
+      const transactions: Transaction[] = [
+        // Parent split - should be excluded
+        createMockTransaction({
+          id: 'parent1',
+          date: '2025-01-15',
+          category: undefined,
+          parent_id: undefined,
+          amount: 50000,
+        }),
+        // Child split income - should be included
+        createMockTransaction({
+          id: 'child1',
+          date: '2025-01-15',
+          category: 'cat1',
+          parent_id: 'parent1',
+          amount: 30000,
+        }),
+        createMockTransaction({
+          id: 'child2',
+          date: '2025-01-15',
+          category: 'cat2',
+          parent_id: 'parent1',
+          amount: 20000,
+        }),
+      ];
+
+      const categories: Category[] = [
+        createMockCategory({ id: 'cat1', name: 'Salary', is_income: true }),
+        createMockCategory({ id: 'cat2', name: 'Freelance', is_income: true }),
+      ];
+
+      const result = transformToWrappedData(transactions, categories, [], []);
+
+      expect(result.transactionStats.totalCount).toBe(2);
+      expect(result.totalIncome).toBe(500); // $300 + $200 from child splits
+    });
+  });
+
   describe('Combined Filtering', () => {
     it('excludes transfers, off-budget, and starting balance together', () => {
       const transactions: Transaction[] = [

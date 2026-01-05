@@ -339,14 +339,34 @@ export function transformToWrappedData(
     // Collect transfer transactions separately for budget comparison
     const transferTransactions: Transaction[] = [];
 
+    // Build a set of parent transaction IDs that have child splits
+    // A parent split is identified by having child transactions pointing to it
+    const parentSplitIds = new Set<string>();
+    transactions.forEach(t => {
+      if (t.parent_id) {
+        parentSplitIds.add(t.parent_id);
+      }
+    });
+
     // Filter transactions for 2025 and exclude transfers, off-budget (conditionally), and starting balance
     const yearTransactions = transactions.filter(t => {
       const date = parseISO(t.date);
       if (date < yearStart || date > yearEnd) {
         return false;
       }
-      // Collect transfer transactions (payees with transfer_acct field)
+      // Collect transfer transactions (payees with transfer_acct field) - check early for parent split logic
       const isTransfer = t.payee && payeeIdToTransferAcct.has(t.payee);
+
+      // Exclude parent split transactions (no category AND no parent_id AND has child splits AND not a transfer)
+      // Parent split transactions represent the total but don't have categories themselves
+      // We identify them by checking if any child transactions point to this transaction's ID
+      // Child split transactions have parent_id and should be included
+      // Regular transactions have category and no parent_id and should be included
+      // Uncategorized transactions (no category, no parent_id, no children) should be included
+      // Transfers don't have categories but should be included (if toggles allow)
+      if (!t.parent_id && parentSplitIds.has(t.id) && !isTransfer) {
+        return false;
+      }
       if (isTransfer) {
         // Check off-budget status of source account (needed for transferTransactions collection)
         const sourceIsOffBudget = accountOffbudgetMap.get(t.account) || false;
