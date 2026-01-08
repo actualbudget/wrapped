@@ -310,6 +310,7 @@ export function transformToWrappedData(
   budgetData?: Array<{ categoryId: string; month: string; budgetedAmount: number }>,
   groupSortOrders: Map<string, number> = new Map(),
   groupTombstones: Map<string, boolean> = new Map(),
+  includeIncome: boolean = false,
 ): WrappedData {
   try {
     const yearStart = startOfYear(new Date(year, 0, 1));
@@ -454,6 +455,12 @@ export function transformToWrappedData(
       return true;
     });
 
+    // Filter out income transactions if includeIncome is false
+    let filteredYearTransactions = yearTransactions;
+    if (!includeIncome) {
+      filteredYearTransactions = yearTransactions.filter(t => t.amount < 0);
+    }
+
     // Calculate income and expenses
     let totalIncome = 0;
     let totalExpenses = 0;
@@ -461,7 +468,7 @@ export function transformToWrappedData(
     const incomeTransactions: Transaction[] = [];
     const expenseTransactions: Transaction[] = [];
 
-    yearTransactions.forEach(t => {
+    filteredYearTransactions.forEach(t => {
       const amount = integerToAmount(Math.abs(t.amount));
       if (t.amount < 0) {
         totalExpenses += amount;
@@ -472,12 +479,19 @@ export function transformToWrappedData(
       }
     });
 
-    const netSavings = totalIncome - totalExpenses;
-    const savingsRate = totalIncome > 0 ? (netSavings / totalIncome) * 100 : 0;
+    // If income is excluded, set income-related values to 0
+    if (!includeIncome) {
+      totalIncome = 0;
+      // Clear income transactions array (already filtered out above, but ensure it's empty)
+      incomeTransactions.length = 0;
+    }
+
+    const netSavings = includeIncome ? totalIncome - totalExpenses : -totalExpenses;
+    const savingsRate = includeIncome && totalIncome > 0 ? (netSavings / totalIncome) * 100 : 0;
 
     // Monthly breakdown
     const monthlyData: MonthlyData[] = MONTHS.map((monthName, index) => {
-      const monthTransactions = yearTransactions.filter(t => {
+      const monthTransactions = filteredYearTransactions.filter(t => {
         const date = parseISO(t.date);
         return date.getMonth() === index;
       });
@@ -494,11 +508,16 @@ export function transformToWrappedData(
         }
       });
 
+      // If income is excluded, set monthIncome to 0
+      if (!includeIncome) {
+        monthIncome = 0;
+      }
+
       return {
         month: monthName,
         income: monthIncome,
         expenses: monthExpenses,
-        netSavings: monthIncome - monthExpenses,
+        netSavings: includeIncome ? monthIncome - monthExpenses : -monthExpenses,
       };
     });
 
@@ -691,19 +710,19 @@ export function transformToWrappedData(
 
     // Transaction stats
     const transactionStats: TransactionStats = {
-      totalCount: yearTransactions.length,
+      totalCount: filteredYearTransactions.length,
       averageAmount:
-        yearTransactions.length > 0
+        filteredYearTransactions.length > 0
           ? integerToAmount(
               Math.abs(
-                yearTransactions.reduce((sum, t) => sum + Math.abs(t.amount), 0) /
-                  yearTransactions.length,
+                filteredYearTransactions.reduce((sum, t) => sum + Math.abs(t.amount), 0) /
+                  filteredYearTransactions.length,
               ),
             )
           : 0,
       largestTransaction:
-        yearTransactions.length > 0
-          ? yearTransactions.reduce((max, t) =>
+        filteredYearTransactions.length > 0
+          ? filteredYearTransactions.reduce((max, t) =>
               Math.abs(t.amount) > Math.abs(max.amount) ? t : max,
             )
           : null,
@@ -719,7 +738,7 @@ export function transformToWrappedData(
     const allDays = eachDayOfInterval({ start: yearStart, end: yearEnd });
     const calendarData: CalendarDay[] = allDays.map(day => {
       const dayStr = format(day, 'yyyy-MM-dd');
-      const dayTransactions = yearTransactions.filter(t => t.date === dayStr);
+      const dayTransactions = filteredYearTransactions.filter(t => t.date === dayStr);
 
       return {
         date: dayStr,
@@ -1061,7 +1080,7 @@ export function transformToWrappedData(
 
     // Future Projection
     // Reuse totalDays from Spending Velocity calculation above
-    const dailyAverageIncome = totalDays > 0 ? totalIncome / totalDays : 0;
+    const dailyAverageIncome = includeIncome && totalDays > 0 ? totalIncome / totalDays : 0;
     const dailyAverageExpenses = totalDays > 0 ? totalExpenses / totalDays : 0;
     const dailyNetSavings = dailyAverageIncome - dailyAverageExpenses;
 
@@ -1181,7 +1200,7 @@ export function transformToWrappedData(
       topMonths,
       calendarData,
       fetchedAt: new Date(),
-      allTransactions: yearTransactions, // Store transactions for filtering (2025 only)
+      allTransactions: filteredYearTransactions, // Store transactions for filtering (2025 only)
       allCategories: categories, // Store all categories for transfer detection
       spendingVelocity,
       dayOfWeekSpending,

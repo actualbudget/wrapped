@@ -50,6 +50,7 @@ export function useActualData() {
       budgetData?: Array<{ categoryId: string; month: string; budgetedAmount: number }>,
       groupSortOrders: Map<string, number> = new Map(),
       groupTombstones: Map<string, boolean> = new Map(),
+      includeIncome: boolean = false,
     ) => {
       const wrappedData = transformToWrappedData(
         raw.transactions,
@@ -64,6 +65,7 @@ export function useActualData() {
         budgetData,
         groupSortOrders,
         groupTombstones,
+        includeIncome,
       );
       setData(wrappedData);
     },
@@ -77,6 +79,7 @@ export function useActualData() {
       includeOnBudgetTransfers: boolean = true, // Default to true (on by default)
       includeAllTransfers: boolean = false,
       overrideCurrencySymbol?: string,
+      includeIncome: boolean = false,
     ) => {
       setLoading(true);
       setError(null);
@@ -151,6 +154,7 @@ export function useActualData() {
           fetchedBudgetData.length > 0 ? fetchedBudgetData : undefined,
           fetchedGroupSortOrders,
           fetchedGroupTombstones,
+          includeIncome,
         );
 
         setProgress(100);
@@ -176,6 +180,7 @@ export function useActualData() {
       includeOnBudgetTransfers: boolean = true, // Default to true (on by default)
       includeAllTransfers: boolean = false,
       overrideCurrencySymbol?: string,
+      includeIncome: boolean = false,
     ) => {
       if (!file) {
         throw new Error('No file available');
@@ -186,6 +191,7 @@ export function useActualData() {
         includeOnBudgetTransfers,
         includeAllTransfers,
         overrideCurrencySymbol,
+        includeIncome,
       );
     },
     [file, fetchData],
@@ -197,6 +203,7 @@ export function useActualData() {
       includeOnBudgetTransfers: boolean,
       includeAllTransfers: boolean,
       overrideCurrencySymbol?: string,
+      includeIncome: boolean = false,
     ) => {
       if (rawData) {
         const effectiveCurrency = overrideCurrencySymbol || currencySymbol;
@@ -209,6 +216,7 @@ export function useActualData() {
           budgetData,
           groupSortOrders,
           groupTombstones,
+          includeIncome,
         );
       }
     },

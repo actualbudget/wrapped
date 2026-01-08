@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to date-based versioning with entries grouped by date.
 
+## 2026-01-08
+
+### Added
+
+- Add toggle to include/exclude income transactions from calculations (default: expenses only)
+- Add CLI command instructions to AGENTS.md for getting today's date when updating CHANGELOG
+
 ## 2026-01-05
 
 ### Added

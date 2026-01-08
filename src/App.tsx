@@ -3,6 +3,7 @@ import { useState } from 'react';
 import styles from './App.module.css';
 import { ConnectionForm } from './components/ConnectionForm';
 import { CurrencySelector } from './components/CurrencySelector';
+import { IncludeIncomeToggle } from './components/IncludeIncomeToggle';
 import { Navigation } from './components/Navigation';
 import { OffBudgetToggle } from './components/OffBudgetToggle';
 import { AllTransfersToggle } from './components/OffBudgetTransfersToggle';
@@ -40,6 +41,7 @@ const PAGES = [
 
 function App() {
   const [currentPage, setCurrentPage] = useState(0);
+  const [includeIncome, setIncludeIncome] = useLocalStorage('includeIncome', false);
   const [includeOffBudget, setIncludeOffBudget] = useLocalStorage('includeOffBudget', false);
   const [includeOnBudgetTransfers, setIncludeOnBudgetTransfers] = useLocalStorage(
     'includeOnBudgetTransfers',
@@ -62,6 +64,18 @@ function App() {
       includeOnBudgetTransfers,
       includeAllTransfers,
       overrideCurrency || undefined,
+      includeIncome,
+    );
+  };
+
+  const handleIncludeIncomeToggle = (value: boolean) => {
+    setIncludeIncome(value);
+    retransformData(
+      includeOffBudget,
+      includeOnBudgetTransfers,
+      includeAllTransfers,
+      overrideCurrency || undefined,
+      value,
     );
   };
 
@@ -72,12 +86,19 @@ function App() {
       includeOnBudgetTransfers,
       includeAllTransfers,
       overrideCurrency || undefined,
+      includeIncome,
     );
   };
 
   const handleOnBudgetTransfersToggle = (value: boolean) => {
     setIncludeOnBudgetTransfers(value);
-    retransformData(includeOffBudget, value, includeAllTransfers, overrideCurrency || undefined);
+    retransformData(
+      includeOffBudget,
+      value,
+      includeAllTransfers,
+      overrideCurrency || undefined,
+      includeIncome,
+    );
   };
 
   const handleAllTransfersToggle = (value: boolean) => {
@@ -92,6 +113,7 @@ function App() {
       effectiveIncludeOnBudgetTransfers, // If includeAllTransfers is true, also enable on-budget transfers
       value,
       overrideCurrency || undefined,
+      includeIncome,
     );
   };
 
@@ -100,7 +122,13 @@ function App() {
     const defaultCurrency = data?.currencySymbol || '$';
     if (currencySymbol === defaultCurrency) {
       setOverrideCurrency(null);
-      retransformData(includeOffBudget, includeOnBudgetTransfers, includeAllTransfers, undefined);
+      retransformData(
+        includeOffBudget,
+        includeOnBudgetTransfers,
+        includeAllTransfers,
+        undefined,
+        includeIncome,
+      );
     } else {
       setOverrideCurrency(currencySymbol);
       retransformData(
@@ -108,6 +136,7 @@ function App() {
         includeOnBudgetTransfers,
         includeAllTransfers,
         currencySymbol,
+        includeIncome,
       );
     }
   };
@@ -164,6 +193,7 @@ function App() {
     return (
       <div className={styles.app}>
         <SettingsMenu>
+          <IncludeIncomeToggle includeIncome={includeIncome} onToggle={handleIncludeIncomeToggle} />
           <OffBudgetToggle includeOffBudget={includeOffBudget} onToggle={handleOffBudgetToggle} />
           <OnBudgetTransfersToggle
             includeOnBudgetTransfers={includeAllTransfers || includeOnBudgetTransfers}
