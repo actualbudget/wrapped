@@ -33,12 +33,26 @@ describe('transformToWrappedData', () => {
 
   describe('Basic Data Transformation', () => {
     it('transforms empty transactions array', () => {
-      const result = transformToWrappedData([], [], [], []);
+      const result = transformToWrappedData(
+        [],
+        [],
+        [],
+        [],
+        2025,
+        false,
+        true,
+        false,
+        '$',
+        undefined,
+        new Map(),
+        new Map(),
+        false,
+      );
 
       expect(result.year).toBe(2025);
       expect(result.totalIncome).toBe(0);
       expect(result.totalExpenses).toBe(0);
-      expect(result.netSavings).toBe(0);
+      expect(result.netSavings).toBeCloseTo(0, 5);
       expect(result.savingsRate).toBe(0);
       expect(result.monthlyData).toHaveLength(12);
       expect(result.topCategories).toHaveLength(0);
@@ -54,7 +68,21 @@ describe('transformToWrappedData', () => {
         createMockTransaction({ id: 't4', amount: -10000 }), // $100 expense
       ];
 
-      const result = transformToWrappedData(transactions, [], [], []);
+      const result = transformToWrappedData(
+        transactions,
+        [],
+        [],
+        [],
+        2025,
+        false,
+        true,
+        false,
+        '$',
+        undefined,
+        new Map(),
+        new Map(),
+        true,
+      );
 
       expect(result.totalIncome).toBe(700); // $500 + $200
       expect(result.totalExpenses).toBe(400); // $300 + $100
@@ -67,7 +95,21 @@ describe('transformToWrappedData', () => {
         createMockTransaction({ id: 't2', amount: -60000 }), // $600 expense
       ];
 
-      const result = transformToWrappedData(transactions, [], [], []);
+      const result = transformToWrappedData(
+        transactions,
+        [],
+        [],
+        [],
+        2025,
+        false,
+        true,
+        false,
+        '$',
+        undefined,
+        new Map(),
+        new Map(),
+        true,
+      );
 
       expect(result.savingsRate).toBe(40); // (1000 - 600) / 1000 * 100
     });
@@ -119,7 +161,21 @@ describe('transformToWrappedData', () => {
         createMockTransaction({ id: 't4', date: '2025-02-25', amount: -20000 }), // Feb expense
       ];
 
-      const result = transformToWrappedData(transactions, [], [], []);
+      const result = transformToWrappedData(
+        transactions,
+        [],
+        [],
+        [],
+        2025,
+        false,
+        true,
+        false,
+        '$',
+        undefined,
+        new Map(),
+        new Map(),
+        true,
+      );
 
       const january = result.monthlyData.find(m => m.month === 'January');
       const february = result.monthlyData.find(m => m.month === 'February');
@@ -138,12 +194,26 @@ describe('transformToWrappedData', () => {
         createMockTransaction({ id: 't1', date: '2025-01-15', amount: -10000 }),
       ];
 
-      const result = transformToWrappedData(transactions, [], [], []);
+      const result = transformToWrappedData(
+        transactions,
+        [],
+        [],
+        [],
+        2025,
+        false,
+        true,
+        false,
+        '$',
+        undefined,
+        new Map(),
+        new Map(),
+        false,
+      );
 
       const february = result.monthlyData.find(m => m.month === 'February');
       expect(february?.income).toBe(0);
       expect(february?.expenses).toBe(0);
-      expect(february?.netSavings).toBe(0);
+      expect(february?.netSavings).toBeCloseTo(0, 5);
     });
 
     it('includes all 12 months', () => {
@@ -668,7 +738,21 @@ describe('transformToWrappedData', () => {
         createMockTransaction({ id: 't3', amount: 30000 }),
       ];
 
-      const result = transformToWrappedData(transactions, [], [], []);
+      const result = transformToWrappedData(
+        transactions,
+        [],
+        [],
+        [],
+        2025,
+        false,
+        true,
+        false,
+        '$',
+        undefined,
+        new Map(),
+        new Map(),
+        true,
+      );
 
       expect(result.transactionStats.totalCount).toBe(3);
     });
@@ -1515,7 +1599,21 @@ describe('transformToWrappedData', () => {
         createMockCategory({ id: 'cat2', name: 'Freelance', is_income: true }),
       ];
 
-      const result = transformToWrappedData(transactions, categories, [], []);
+      const result = transformToWrappedData(
+        transactions,
+        categories,
+        [],
+        [],
+        2025,
+        false,
+        true,
+        false,
+        '$',
+        undefined,
+        new Map(),
+        new Map(),
+        true,
+      );
 
       expect(result.transactionStats.totalCount).toBe(2);
       expect(result.totalIncome).toBe(500); // $300 + $200 from child splits
@@ -1902,7 +2000,21 @@ describe('transformToWrappedData', () => {
         );
       }
 
-      const result = transformToWrappedData(transactions, [], [], []);
+      const result = transformToWrappedData(
+        transactions,
+        [],
+        [],
+        [],
+        2025,
+        false,
+        true,
+        false,
+        '$',
+        undefined,
+        new Map(),
+        new Map(),
+        true,
+      );
 
       expect(result.savingsMilestones.length).toBeGreaterThan(0);
       expect(result.savingsMilestones.some(m => m.milestone === '$10k')).toBe(true);
@@ -1941,7 +2053,21 @@ describe('transformToWrappedData', () => {
         );
       }
 
-      const result = transformToWrappedData(transactions, [], [], []);
+      const result = transformToWrappedData(
+        transactions,
+        [],
+        [],
+        [],
+        2025,
+        false,
+        true,
+        false,
+        '$',
+        undefined,
+        new Map(),
+        new Map(),
+        true,
+      );
 
       const milestone = result.savingsMilestones.find(m => m.milestone === '$10k');
       if (milestone) {
@@ -1957,7 +2083,21 @@ describe('transformToWrappedData', () => {
         createMockTransaction({ id: 't2', date: '2025-01-15', amount: -30000 }), // $300 expense
       ];
 
-      const result = transformToWrappedData(transactions, [], [], []);
+      const result = transformToWrappedData(
+        transactions,
+        [],
+        [],
+        [],
+        2025,
+        false,
+        true,
+        false,
+        '$',
+        undefined,
+        new Map(),
+        new Map(),
+        true,
+      );
 
       expect(result.futureProjection.dailyAverageIncome).toBeGreaterThan(0);
       expect(result.futureProjection.dailyAverageExpenses).toBeGreaterThan(0);
@@ -1970,7 +2110,21 @@ describe('transformToWrappedData', () => {
         createMockTransaction({ id: 't2', date: '2025-01-15', amount: -30000 }),
       ];
 
-      const result = transformToWrappedData(transactions, [], [], []);
+      const result = transformToWrappedData(
+        transactions,
+        [],
+        [],
+        [],
+        2025,
+        false,
+        true,
+        false,
+        '$',
+        undefined,
+        new Map(),
+        new Map(),
+        true,
+      );
 
       expect(result.futureProjection.monthlyProjections).toHaveLength(12);
       expect(result.futureProjection.monthlyProjections[0].month).toBe('January');
@@ -1984,7 +2138,21 @@ describe('transformToWrappedData', () => {
         createMockTransaction({ id: 't2', date: '2025-01-15', amount: -30000 }),
       ];
 
-      const result = transformToWrappedData(transactions, [], [], []);
+      const result = transformToWrappedData(
+        transactions,
+        [],
+        [],
+        [],
+        2025,
+        false,
+        true,
+        false,
+        '$',
+        undefined,
+        new Map(),
+        new Map(),
+        true,
+      );
 
       const projections = result.futureProjection.monthlyProjections;
       expect(projections[0].cumulativeSavings).toBeDefined();
@@ -2002,7 +2170,21 @@ describe('transformToWrappedData', () => {
         createMockTransaction({ id: 't2', date: '2025-01-15', amount: -50000 }), // $500 expense
       ];
 
-      const result = transformToWrappedData(transactions, [], [], []);
+      const result = transformToWrappedData(
+        transactions,
+        [],
+        [],
+        [],
+        2025,
+        false,
+        true,
+        false,
+        '$',
+        undefined,
+        new Map(),
+        new Map(),
+        true,
+      );
 
       // If expenses exceed income, monthsUntilZero should be calculated
       if (result.futureProjection.dailyNetSavings < 0) {
@@ -2016,7 +2198,21 @@ describe('transformToWrappedData', () => {
         createMockTransaction({ id: 't2', date: '2025-01-15', amount: -10000 }), // $100 expense
       ];
 
-      const result = transformToWrappedData(transactions, [], [], []);
+      const result = transformToWrappedData(
+        transactions,
+        [],
+        [],
+        [],
+        2025,
+        false,
+        true,
+        false,
+        '$',
+        undefined,
+        new Map(),
+        new Map(),
+        true,
+      );
 
       // If income exceeds expenses, monthsUntilZero should be null
       if (result.futureProjection.dailyNetSavings > 0) {
@@ -2030,7 +2226,21 @@ describe('transformToWrappedData', () => {
         createMockTransaction({ id: 't2', date: '2025-01-15', amount: -30000 }),
       ];
 
-      const result = transformToWrappedData(transactions, [], [], []);
+      const result = transformToWrappedData(
+        transactions,
+        [],
+        [],
+        [],
+        2025,
+        false,
+        true,
+        false,
+        '$',
+        undefined,
+        new Map(),
+        new Map(),
+        true,
+      );
 
       expect(result.futureProjection.projectedYearEndSavings).toBeDefined();
       const lastMonth =

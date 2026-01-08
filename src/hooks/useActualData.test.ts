@@ -12,6 +12,10 @@ const mockGetPayees = vi.fn();
 const mockGetAccounts = vi.fn();
 const mockShutdown = vi.fn(() => Promise.resolve());
 const mockClearBudget = vi.fn();
+const mockGetCurrencySymbol = vi.fn();
+const mockGetBudgetedAmounts = vi.fn();
+const mockGetCategoryGroupSortOrders = vi.fn();
+const mockGetCategoryGroupTombstones = vi.fn();
 
 vi.mock('../services/fileApi', () => ({
   initialize: (file: File) => mockInitialize(file),
@@ -21,6 +25,10 @@ vi.mock('../services/fileApi', () => ({
   getAccounts: () => mockGetAccounts(),
   shutdown: () => mockShutdown(),
   clearBudget: () => mockClearBudget(),
+  getCurrencySymbol: () => mockGetCurrencySymbol(),
+  getBudgetedAmounts: (year: number) => mockGetBudgetedAmounts(year),
+  getCategoryGroupSortOrders: () => mockGetCategoryGroupSortOrders(),
+  getCategoryGroupTombstones: () => mockGetCategoryGroupTombstones(),
 }));
 
 // Mock transformToWrappedData
@@ -32,7 +40,30 @@ vi.mock('../utils/dataTransform', () => ({
     payees: unknown[],
     accounts: unknown[],
     year?: number,
-  ) => mockTransformToWrappedData(transactions, categories, payees, accounts, year),
+    includeOffBudget?: boolean,
+    includeOnBudgetTransfers?: boolean,
+    includeAllTransfers?: boolean,
+    currencySymbol?: string,
+    budgetData?: unknown,
+    groupSortOrders?: unknown,
+    groupTombstones?: unknown,
+    includeIncome?: boolean,
+  ) =>
+    mockTransformToWrappedData(
+      transactions,
+      categories,
+      payees,
+      accounts,
+      year,
+      includeOffBudget,
+      includeOnBudgetTransfers,
+      includeAllTransfers,
+      currencySymbol,
+      budgetData,
+      groupSortOrders,
+      groupTombstones,
+      includeIncome,
+    ),
 }));
 
 describe('useActualData', () => {
@@ -49,6 +80,10 @@ describe('useActualData', () => {
     mockGetAccounts.mockResolvedValue([]);
     // mockShutdown already returns a promise from the mock definition
     mockClearBudget.mockResolvedValue(undefined);
+    mockGetCurrencySymbol.mockResolvedValue('$');
+    mockGetBudgetedAmounts.mockResolvedValue([]);
+    mockGetCategoryGroupSortOrders.mockResolvedValue(new Map());
+    mockGetCategoryGroupTombstones.mockResolvedValue(new Map());
     mockTransformToWrappedData.mockReturnValue(createMockWrappedData());
   });
 
@@ -169,6 +204,14 @@ describe('useActualData', () => {
         mockPayees,
         mockAccounts,
         2025, // DEFAULT_YEAR
+        false, // includeOffBudget
+        true, // includeOnBudgetTransfers
+        false, // includeAllTransfers
+        '$', // currencySymbol
+        undefined, // budgetData
+        expect.any(Map), // groupSortOrders
+        expect.any(Map), // groupTombstones
+        false, // includeIncome
       );
     });
 
