@@ -967,18 +967,27 @@ export function transformToWrappedData(
       }
     });
 
-    const accountBreakdown: AccountBreakdown[] = Array.from(accountMap.entries())
-      .map(([accountId, data]) => ({
-        accountId,
-        accountName: accountIdToName.get(accountId) || accountId,
-        totalSpending: data.totalSpending,
-        transactionCount: data.transactionCount,
-        percentage: 0, // Will calculate after sorting
-      }))
+    const accountBreakdownUnsorted = Array.from(accountMap.entries()).map(([accountId, data]) => ({
+      accountId,
+      accountName: accountIdToName.get(accountId) || accountId,
+      totalSpending: data.totalSpending,
+      transactionCount: data.transactionCount,
+      percentage: 0, // Will calculate after sorting
+    }));
+
+    // Calculate the correct denominator for percentages
+    // When includeIncomeInCategories is true (net totals mode), use sum of absolute values of net spending
+    // When false (absolute mode), use totalExpenses
+    const totalForPercentage = includeIncomeInCategories
+      ? accountBreakdownUnsorted.reduce((sum, acc) => sum + Math.abs(acc.totalSpending), 0)
+      : totalExpenses;
+
+    const accountBreakdown: AccountBreakdown[] = accountBreakdownUnsorted
       .sort((a, b) => b.totalSpending - a.totalSpending)
       .map(acc => ({
         ...acc,
-        percentage: totalExpenses > 0 ? (acc.totalSpending / totalExpenses) * 100 : 0,
+        percentage:
+          totalForPercentage > 0 ? (Math.abs(acc.totalSpending) / totalForPercentage) * 100 : 0,
       }));
 
     // Spending Streaks

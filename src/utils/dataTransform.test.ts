@@ -1931,6 +1931,119 @@ describe('transformToWrappedData', () => {
       expect(checking?.totalSpending).toBe(100); // Only $100 (absolute spending, ignores income)
       expect(checking?.transactionCount).toBe(2); // Count still includes both
     });
+
+    it('calculates account breakdown percentages correctly when includeIncomeInCategories is true (net totals mode)', () => {
+      const transactions: Transaction[] = [
+        createMockTransaction({ id: 't1', account: 'acc1', amount: -10000 }), // -$100 expense
+        createMockTransaction({ id: 't2', account: 'acc1', amount: 5000 }), // +$50 income (refund) → net = $50
+        createMockTransaction({ id: 't3', account: 'acc2', amount: -20000 }), // -$200 expense → net = $200
+      ];
+
+      const accounts: Account[] = [
+        createMockAccount({ id: 'acc1', name: 'Checking' }),
+        createMockAccount({ id: 'acc2', name: 'Savings' }),
+      ];
+
+      // New mode: includeIncomeInCategories = true (default)
+      const result = transformToWrappedData(transactions, [], [], accounts);
+
+      const checking = result.accountBreakdown.find(a => a.accountId === 'acc1');
+      const savings = result.accountBreakdown.find(a => a.accountId === 'acc2');
+
+      expect(checking).toBeDefined();
+      expect(checking?.totalSpending).toBe(50); // $100 - $50 = $50 (net spending)
+      expect(savings).toBeDefined();
+      expect(savings?.totalSpending).toBe(200); // $200 (net spending)
+
+      // Percentages should use sum of absolute values: $50 + $200 = $250
+      // Account 1: $50 / $250 = 20%
+      // Account 2: $200 / $250 = 80%
+      // Total should be approximately 100%
+      const totalPercentage = result.accountBreakdown.reduce((sum, acc) => sum + acc.percentage, 0);
+      expect(totalPercentage).toBeCloseTo(100, 1);
+      expect(checking?.percentage).toBeCloseTo(20, 1);
+      expect(savings?.percentage).toBeCloseTo(80, 1);
+    });
+
+    it('calculates account breakdown percentages correctly when includeIncomeInCategories is false (absolute mode)', () => {
+      const transactions: Transaction[] = [
+        createMockTransaction({ id: 't1', account: 'acc1', amount: -10000 }), // -$100 expense
+        createMockTransaction({ id: 't2', account: 'acc1', amount: 5000 }), // +$50 income (ignored)
+        createMockTransaction({ id: 't3', account: 'acc2', amount: -20000 }), // -$200 expense
+      ];
+
+      const accounts: Account[] = [
+        createMockAccount({ id: 'acc1', name: 'Checking' }),
+        createMockAccount({ id: 'acc2', name: 'Savings' }),
+      ];
+
+      // Old mode: includeIncomeInCategories = false
+      const result = transformToWrappedData(
+        transactions,
+        [],
+        [],
+        accounts,
+        2025,
+        false,
+        true,
+        false,
+        '$',
+        undefined,
+        new Map(),
+        new Map(),
+        false, // includeIncomeInCategories = false
+      );
+
+      const checking = result.accountBreakdown.find(a => a.accountId === 'acc1');
+      const savings = result.accountBreakdown.find(a => a.accountId === 'acc2');
+
+      expect(checking).toBeDefined();
+      expect(checking?.totalSpending).toBe(100); // Only $100 (absolute spending, ignores income)
+      expect(savings).toBeDefined();
+      expect(savings?.totalSpending).toBe(200); // $200 (absolute spending)
+
+      // Percentages should use totalExpenses: $100 + $200 = $300
+      // Account 1: $100 / $300 = 33.33%
+      // Account 2: $200 / $300 = 66.67%
+      // Total should be approximately 100%
+      const totalPercentage = result.accountBreakdown.reduce((sum, acc) => sum + acc.percentage, 0);
+      expect(totalPercentage).toBeCloseTo(100, 1);
+      expect(checking?.percentage).toBeCloseTo(33.33, 1);
+      expect(savings?.percentage).toBeCloseTo(66.67, 1);
+    });
+
+    it('handles negative net spending in account breakdown percentages correctly', () => {
+      const transactions: Transaction[] = [
+        createMockTransaction({ id: 't1', account: 'acc1', amount: -10000 }), // -$100 expense
+        createMockTransaction({ id: 't2', account: 'acc1', amount: 15000 }), // +$150 income → net = -$50 (negative)
+        createMockTransaction({ id: 't3', account: 'acc2', amount: -20000 }), // -$200 expense → net = $200
+      ];
+
+      const accounts: Account[] = [
+        createMockAccount({ id: 'acc1', name: 'Checking' }),
+        createMockAccount({ id: 'acc2', name: 'Savings' }),
+      ];
+
+      // New mode: includeIncomeInCategories = true (default)
+      const result = transformToWrappedData(transactions, [], [], accounts);
+
+      const checking = result.accountBreakdown.find(a => a.accountId === 'acc1');
+      const savings = result.accountBreakdown.find(a => a.accountId === 'acc2');
+
+      expect(checking).toBeDefined();
+      expect(checking?.totalSpending).toBe(-50); // $100 - $150 = -$50 (negative net spending)
+      expect(savings).toBeDefined();
+      expect(savings?.totalSpending).toBe(200); // $200 (net spending)
+
+      // Percentages should use sum of absolute values: |-$50| + $200 = $250
+      // Account 1: $50 / $250 = 20%
+      // Account 2: $200 / $250 = 80%
+      // Total should be approximately 100%
+      const totalPercentage = result.accountBreakdown.reduce((sum, acc) => sum + acc.percentage, 0);
+      expect(totalPercentage).toBeCloseTo(100, 1);
+      expect(checking?.percentage).toBeCloseTo(20, 1);
+      expect(savings?.percentage).toBeCloseTo(80, 1);
+    });
   });
 
   describe('Spending Streaks', () => {

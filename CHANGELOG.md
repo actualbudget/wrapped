@@ -26,11 +26,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Fixed category totals calculation bug where income transactions (e.g., refunds) in the same category as expenses were not reducing the category total. Now correctly shows net spending (e.g., -$100 expense + $50 income = $50 net spending)
 - Fixed payee totals calculation: Income transactions (e.g., refunds) now reduce payee totals when net totals mode is enabled
 - Fixed account breakdown totals: Income transactions now reduce account totals when net totals mode is enabled
+- Fixed account breakdown percentage calculation: Account breakdown percentages now use the correct denominator when net totals mode is enabled (sum of absolute values of net spending) instead of total expenses, fixing incorrect percentages that didn't sum to 100% and could be negative
 - Fixed day of week spending totals: Income transactions now reduce day totals when net totals mode is enabled
 
 ### Tests
 
 - Added comprehensive unit tests for net totals calculation mode, covering categories, payees, and account breakdown in both new mode (with income) and old mode (expenses only), including scenarios with multiple income and expense transactions
+- Added unit tests for account breakdown percentage calculation in both net totals mode and absolute mode, including edge cases with negative net spending
 
 ## 2026-01-05
 
