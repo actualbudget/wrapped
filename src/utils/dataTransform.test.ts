@@ -437,6 +437,86 @@ describe('transformToWrappedData', () => {
       expect(result.topCategories[0].percentage).toBe(70); // $700 / $1000 * 100
       expect(result.topCategories[1].percentage).toBe(30); // $300 / $1000 * 100
     });
+
+    it('includes income transactions in category totals when includeIncomeInCategories is true (new mode)', () => {
+      const transactions: Transaction[] = [
+        createMockTransaction({ id: 't1', category: 'cat1', amount: -10000 }), // -$100 expense
+        createMockTransaction({ id: 't2', category: 'cat1', amount: 5000 }), // +$50 income (refund)
+      ];
+
+      const categories: Category[] = [createMockCategory({ id: 'cat1', name: 'Food' })];
+
+      // New mode: includeIncomeInCategories = true (default)
+      const result = transformToWrappedData(transactions, categories, [], []);
+
+      const foodCategory = result.topCategories.find(c => c.categoryId === 'cat1');
+      expect(foodCategory).toBeDefined();
+      expect(foodCategory?.amount).toBe(50); // $100 - $50 = $50 (net spending)
+    });
+
+    it('excludes income transactions from category totals when includeIncomeInCategories is false (old mode)', () => {
+      const transactions: Transaction[] = [
+        createMockTransaction({ id: 't1', category: 'cat1', amount: -10000 }), // -$100 expense
+        createMockTransaction({ id: 't2', category: 'cat1', amount: 5000 }), // +$50 income (refund)
+      ];
+
+      const categories: Category[] = [createMockCategory({ id: 'cat1', name: 'Food' })];
+
+      // Old mode: includeIncomeInCategories = false
+      const result = transformToWrappedData(
+        transactions,
+        categories,
+        [],
+        [],
+        2025,
+        false,
+        true,
+        false,
+        '$',
+        undefined,
+        new Map(),
+        new Map(),
+        false, // includeIncomeInCategories = false
+      );
+
+      const foodCategory = result.topCategories.find(c => c.categoryId === 'cat1');
+      expect(foodCategory).toBeDefined();
+      expect(foodCategory?.amount).toBe(100); // Only $100 (absolute spending, ignores income)
+    });
+
+    it('handles multiple income and expense transactions in same category (new mode)', () => {
+      const transactions: Transaction[] = [
+        createMockTransaction({ id: 't1', category: 'cat1', amount: -10000 }), // -$100 expense
+        createMockTransaction({ id: 't2', category: 'cat1', amount: -5000 }), // -$50 expense
+        createMockTransaction({ id: 't3', category: 'cat1', amount: 3000 }), // +$30 income
+        createMockTransaction({ id: 't4', category: 'cat1', amount: 2000 }), // +$20 income
+      ];
+
+      const categories: Category[] = [createMockCategory({ id: 'cat1', name: 'Food' })];
+
+      // New mode: includeIncomeInCategories = true (default)
+      const result = transformToWrappedData(transactions, categories, [], []);
+
+      const foodCategory = result.topCategories.find(c => c.categoryId === 'cat1');
+      expect(foodCategory).toBeDefined();
+      expect(foodCategory?.amount).toBe(100); // ($100 + $50) - ($30 + $20) = $100 (net spending)
+    });
+
+    it('handles categories with only income transactions (new mode)', () => {
+      const transactions: Transaction[] = [
+        createMockTransaction({ id: 't1', category: 'cat1', amount: 5000 }), // +$50 income
+        createMockTransaction({ id: 't2', category: 'cat1', amount: 3000 }), // +$30 income
+      ];
+
+      const categories: Category[] = [createMockCategory({ id: 'cat1', name: 'Returns' })];
+
+      // New mode: includeIncomeInCategories = true (default)
+      const result = transformToWrappedData(transactions, categories, [], []);
+
+      const returnsCategory = result.topCategories.find(c => c.categoryId === 'cat1');
+      expect(returnsCategory).toBeDefined();
+      expect(returnsCategory?.amount).toBe(-80); // -($50 + $30) = -$80 (negative means net income)
+    });
   });
 
   describe('Category Trends', () => {
@@ -613,6 +693,54 @@ describe('transformToWrappedData', () => {
       expect(transferPayee).toBeDefined();
       expect(transferPayee?.amount).toBe(600); // $100 + $200 + $300
       expect(transferPayee?.transactionCount).toBe(3);
+    });
+
+    it('includes income transactions in payee totals when includeIncomeInCategories is true (new mode)', () => {
+      const transactions: Transaction[] = [
+        createMockTransaction({ id: 't1', payee: 'payee1', amount: -10000 }), // -$100 expense
+        createMockTransaction({ id: 't2', payee: 'payee1', amount: 5000 }), // +$50 income (refund)
+      ];
+
+      const payees = [{ id: 'payee1', name: 'Store A' }];
+
+      // New mode: includeIncomeInCategories = true (default)
+      const result = transformToWrappedData(transactions, [], payees, []);
+
+      const storeA = result.topPayees.find(p => p.payee === 'Store A');
+      expect(storeA).toBeDefined();
+      expect(storeA?.amount).toBe(50); // $100 - $50 = $50 (net spending)
+      expect(storeA?.transactionCount).toBe(2);
+    });
+
+    it('excludes income transactions from payee totals when includeIncomeInCategories is false (old mode)', () => {
+      const transactions: Transaction[] = [
+        createMockTransaction({ id: 't1', payee: 'payee1', amount: -10000 }), // -$100 expense
+        createMockTransaction({ id: 't2', payee: 'payee1', amount: 5000 }), // +$50 income (refund)
+      ];
+
+      const payees = [{ id: 'payee1', name: 'Store A' }];
+
+      // Old mode: includeIncomeInCategories = false
+      const result = transformToWrappedData(
+        transactions,
+        [],
+        payees,
+        [],
+        2025,
+        false,
+        true,
+        false,
+        '$',
+        undefined,
+        new Map(),
+        new Map(),
+        false, // includeIncomeInCategories = false
+      );
+
+      const storeA = result.topPayees.find(p => p.payee === 'Store A');
+      expect(storeA).toBeDefined();
+      expect(storeA?.amount).toBe(100); // Only $100 (absolute spending, ignores income)
+      expect(storeA?.transactionCount).toBe(2); // Count still includes both
     });
 
     it('uses receiving account name for transfer payees, not the source account', () => {
@@ -1754,6 +1882,54 @@ describe('transformToWrappedData', () => {
 
       expect(result.accountBreakdown[0].percentage).toBe(50);
       expect(result.accountBreakdown[1].percentage).toBe(50);
+    });
+
+    it('includes income transactions in account breakdown when includeIncomeInCategories is true (new mode)', () => {
+      const transactions: Transaction[] = [
+        createMockTransaction({ id: 't1', account: 'acc1', amount: -10000 }), // -$100 expense
+        createMockTransaction({ id: 't2', account: 'acc1', amount: 5000 }), // +$50 income (refund)
+      ];
+
+      const accounts: Account[] = [createMockAccount({ id: 'acc1', name: 'Checking' })];
+
+      // New mode: includeIncomeInCategories = true (default)
+      const result = transformToWrappedData(transactions, [], [], accounts);
+
+      const checking = result.accountBreakdown.find(a => a.accountId === 'acc1');
+      expect(checking).toBeDefined();
+      expect(checking?.totalSpending).toBe(50); // $100 - $50 = $50 (net spending)
+      expect(checking?.transactionCount).toBe(2);
+    });
+
+    it('excludes income transactions from account breakdown when includeIncomeInCategories is false (old mode)', () => {
+      const transactions: Transaction[] = [
+        createMockTransaction({ id: 't1', account: 'acc1', amount: -10000 }), // -$100 expense
+        createMockTransaction({ id: 't2', account: 'acc1', amount: 5000 }), // +$50 income (refund)
+      ];
+
+      const accounts: Account[] = [createMockAccount({ id: 'acc1', name: 'Checking' })];
+
+      // Old mode: includeIncomeInCategories = false
+      const result = transformToWrappedData(
+        transactions,
+        [],
+        [],
+        accounts,
+        2025,
+        false,
+        true,
+        false,
+        '$',
+        undefined,
+        new Map(),
+        new Map(),
+        false, // includeIncomeInCategories = false
+      );
+
+      const checking = result.accountBreakdown.find(a => a.accountId === 'acc1');
+      expect(checking).toBeDefined();
+      expect(checking?.totalSpending).toBe(100); // Only $100 (absolute spending, ignores income)
+      expect(checking?.transactionCount).toBe(2); // Count still includes both
     });
   });
 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import styles from './App.module.css';
+import { CategoryIncomeToggle } from './components/CategoryIncomeToggle';
 import { ConnectionForm } from './components/ConnectionForm';
 import { CurrencySelector } from './components/CurrencySelector';
 import { Navigation } from './components/Navigation';
@@ -53,6 +54,10 @@ function App() {
     'overrideCurrency',
     null,
   );
+  const [includeIncomeInCategories, setIncludeIncomeInCategories] = useLocalStorage(
+    'includeIncomeInCategories',
+    true, // Default to true (new net calculation mode)
+  );
   const { data, loading, error, progress, fetchData, retransformData, retry } = useActualData();
 
   const handleConnect = async (file: File) => {
@@ -62,6 +67,7 @@ function App() {
       includeOnBudgetTransfers,
       includeAllTransfers,
       overrideCurrency || undefined,
+      includeIncomeInCategories,
     );
   };
 
@@ -72,12 +78,19 @@ function App() {
       includeOnBudgetTransfers,
       includeAllTransfers,
       overrideCurrency || undefined,
+      includeIncomeInCategories,
     );
   };
 
   const handleOnBudgetTransfersToggle = (value: boolean) => {
     setIncludeOnBudgetTransfers(value);
-    retransformData(includeOffBudget, value, includeAllTransfers, overrideCurrency || undefined);
+    retransformData(
+      includeOffBudget,
+      value,
+      includeAllTransfers,
+      overrideCurrency || undefined,
+      includeIncomeInCategories,
+    );
   };
 
   const handleAllTransfersToggle = (value: boolean) => {
@@ -92,6 +105,7 @@ function App() {
       effectiveIncludeOnBudgetTransfers, // If includeAllTransfers is true, also enable on-budget transfers
       value,
       overrideCurrency || undefined,
+      includeIncomeInCategories,
     );
   };
 
@@ -100,7 +114,13 @@ function App() {
     const defaultCurrency = data?.currencySymbol || '$';
     if (currencySymbol === defaultCurrency) {
       setOverrideCurrency(null);
-      retransformData(includeOffBudget, includeOnBudgetTransfers, includeAllTransfers, undefined);
+      retransformData(
+        includeOffBudget,
+        includeOnBudgetTransfers,
+        includeAllTransfers,
+        undefined,
+        includeIncomeInCategories,
+      );
     } else {
       setOverrideCurrency(currencySymbol);
       retransformData(
@@ -108,8 +128,20 @@ function App() {
         includeOnBudgetTransfers,
         includeAllTransfers,
         currencySymbol,
+        includeIncomeInCategories,
       );
     }
+  };
+
+  const handleCategoryIncomeToggle = (value: boolean) => {
+    setIncludeIncomeInCategories(value);
+    retransformData(
+      includeOffBudget,
+      includeOnBudgetTransfers,
+      includeAllTransfers,
+      overrideCurrency || undefined,
+      value,
+    );
   };
 
   const handleNext = () => {
@@ -164,6 +196,10 @@ function App() {
     return (
       <div className={styles.app}>
         <SettingsMenu>
+          <CategoryIncomeToggle
+            includeIncomeInCategories={includeIncomeInCategories}
+            onToggle={handleCategoryIncomeToggle}
+          />
           <OffBudgetToggle includeOffBudget={includeOffBudget} onToggle={handleOffBudgetToggle} />
           <OnBudgetTransfersToggle
             includeOnBudgetTransfers={includeAllTransfers || includeOnBudgetTransfers}

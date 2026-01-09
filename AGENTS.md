@@ -4,10 +4,77 @@ This document explains how to use the tools and utilities available in the Actua
 
 ## Table of Contents
 
+- [CHANGELOG Maintenance](#changelog-maintenance)
 - [File API Service](#file-api-service)
 - [React Hooks](#react-hooks)
 - [Data Transformation Utilities](#data-transformation-utilities)
 - [Type Definitions](#type-definitions)
+
+## CHANGELOG Maintenance
+
+**IMPORTANT**: Agents MUST update `CHANGELOG.md` after making any code changes to the project.
+
+### Update Requirements
+
+1. **When to Update**: Update `CHANGELOG.md` after making any changes to:
+   - Source code files (`.ts`, `.tsx`, `.js`, `.jsx`)
+   - Configuration files (e.g., `package.json`, `vite.config.ts`, `tsconfig.json`)
+   - Documentation files (e.g., `README.md`, `AGENTS.md`)
+   - Test files that represent new functionality
+   - Build or deployment configurations
+
+2. **Format**: Use date-based format with entries grouped by date (YYYY-MM-DD)
+   - Most recent entries appear at the top
+   - Each date section should be formatted as: `## YYYY-MM-DD`
+   - **Getting Today's Date**: Use the CLI command to get the current date in the correct format:
+     ```bash
+     date +%Y-%m-%d
+     ```
+     This will output the date in YYYY-MM-DD format (e.g., `2026-01-08`)
+
+3. **Categories**: Use appropriate categories under each date:
+   - **Added**: New features, components, utilities, or functionality
+   - **Changed**: Changes to existing functionality or behavior
+   - **Fixed**: Bug fixes or corrections
+   - **Removed**: Removed features, code, or functionality
+   - **Security**: Security-related updates
+
+4. **Entry Format**:
+   - Add entries under the current date (YYYY-MM-DD)
+   - If a date section doesn't exist for today, create it at the top of the file
+   - Each entry should be concise but descriptive
+   - Use bullet points for multiple entries under the same category
+   - Example:
+
+     ```
+     ## 2026-01-04
+
+     ### Added
+     - New feature description
+
+     ### Fixed
+     - Bug fix description
+     ```
+
+5. **Placement**: Always add new entries to the top of the file, under the current date. If today's date section already exists, add your entry to the appropriate category within that section.
+
+### Example
+
+```markdown
+## 2026-01-04
+
+### Added
+- New calendar heatmap visualization component
+- Support for currency override in settings
+
+### Changed
+- Updated data transformation logic to handle transfers more efficiently
+
+### Fixed
+- Resolved issue with off-budget transaction filtering
+```
+
+Remember: The CHANGELOG serves as a historical record of all project changes. Keep entries clear and meaningful for future reference.
 
 ## File API Service
 
@@ -357,7 +424,12 @@ console.log(wrappedData.monthlyData);
   - Multiple transfers to the same account are grouped together in both categories and payees
 - **Off-Budget Filtering**: Excludes off-budget transactions by default. Set `includeOffBudget = true` to include them
 - Excludes starting balance transactions (transactions where payee name is "Starting Balance")
-- Handles deleted categories/payees (marks with "deleted: " prefix)
+- **Category Merges**: When a category is deleted and merged into another category, transactions are automatically resolved through the `category_mapping` table:
+  - Transactions from merged categories appear under the merged (target) category name
+  - Handles transitive merges (Category A → B → C resolves to C)
+  - Budget data is also resolved through merge chains and combined for merged categories
+  - Only non-merged deleted categories show the "deleted: " prefix
+- Handles deleted categories/payees (marks with "deleted: " prefix for non-merged deleted categories)
 - Converts amounts from cents to dollars
 - Calculates all derived metrics automatically
 
