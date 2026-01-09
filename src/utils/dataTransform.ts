@@ -310,6 +310,7 @@ export function transformToWrappedData(
   budgetData?: Array<{ categoryId: string; month: string; budgetedAmount: number }>,
   groupSortOrders: Map<string, number> = new Map(),
   groupTombstones: Map<string, boolean> = new Map(),
+  includeIncomeInCategories: boolean = true, // Default to true (new net calculation mode)
 ): WrappedData {
   try {
     const yearStart = startOfYear(new Date(year, 0, 1));
@@ -512,7 +513,11 @@ export function transformToWrappedData(
 
     const categoryMap = new Map<string, { name: string; amount: number }>();
 
-    expenseTransactions.forEach(t => {
+    // Helper function to process a transaction and update category map
+    const processTransactionForCategory = (
+      t: Transaction,
+      isExpense: boolean, // true for expense (negative), false for income (positive)
+    ) => {
       // Check if account is off-budget
       const isOffBudget = accountOffbudgetMap.get(t.account) || false;
 
@@ -558,9 +563,23 @@ export function transformToWrappedData(
       const existing = categoryMap.get(categoryId) || { name: categoryName, amount: 0 };
       categoryMap.set(categoryId, {
         name: categoryName, // Always use the resolved name
-        amount: existing.amount + amount,
+        // For expenses (negative amounts): add to category total
+        // For income (positive amounts): subtract from category total (when includeIncomeInCategories is true)
+        amount: existing.amount + (isExpense ? amount : -amount),
       });
+    };
+
+    // Process expense transactions (always included)
+    expenseTransactions.forEach(t => {
+      processTransactionForCategory(t, true);
     });
+
+    // Process income transactions (only when includeIncomeInCategories is true)
+    if (includeIncomeInCategories) {
+      incomeTransactions.forEach(t => {
+        processTransactionForCategory(t, false);
+      });
+    }
 
     const topCategories: CategorySpending[] = Array.from(categoryMap.entries())
       .map(([id, data]) => ({
@@ -579,7 +598,8 @@ export function transformToWrappedData(
     // Category trends
     const categoryTrends: CategoryTrend[] = topCategories.slice(0, 10).map(cat => {
       const monthlyAmounts = MONTHS.map((monthName, monthIndex) => {
-        const monthTransactions = expenseTransactions.filter(t => {
+        // Process expense transactions for this category and month
+        const monthExpenseTransactions = expenseTransactions.filter(t => {
           const date = parseISO(t.date);
           const isOffBudget = accountOffbudgetMap.get(t.account) || false;
           let transactionCategoryId: string;
@@ -591,9 +611,31 @@ export function transformToWrappedData(
           return date.getMonth() === monthIndex && transactionCategoryId === cat.categoryId;
         });
 
-        const amount = monthTransactions.reduce((sum, t) => {
+        let amount = monthExpenseTransactions.reduce((sum, t) => {
           return sum + integerToAmount(Math.abs(t.amount));
         }, 0);
+
+        // Process income transactions for this category and month (only when includeIncomeInCategories is true)
+        if (includeIncomeInCategories) {
+          const monthIncomeTransactions = incomeTransactions.filter(t => {
+            const date = parseISO(t.date);
+            const isOffBudget = accountOffbudgetMap.get(t.account) || false;
+            let transactionCategoryId: string;
+            if (!t.category || t.category === '') {
+              transactionCategoryId = isOffBudget ? 'off-budget' : 'uncategorized';
+            } else {
+              transactionCategoryId = t.category;
+            }
+            return date.getMonth() === monthIndex && transactionCategoryId === cat.categoryId;
+          });
+
+          const incomeAmount = monthIncomeTransactions.reduce((sum, t) => {
+            return sum + integerToAmount(Math.abs(t.amount));
+          }, 0);
+
+          // Subtract income from expense total to get net spending
+          amount = amount - incomeAmount;
+        }
 
         return { month: monthName, amount };
       });
@@ -614,7 +656,8 @@ export function transformToWrappedData(
 
     const payeeMap = new Map<string, { amount: number; count: number; name: string }>();
 
-    expenseTransactions.forEach(t => {
+    // Helper function to process a transaction for payee aggregation
+    const processTransactionForPayee = (t: Transaction, isExpense: boolean) => {
       const payeeId = t.payee;
 
       // Check if this is a transfer first
@@ -672,9 +715,69 @@ export function transformToWrappedData(
       const existing = payeeMap.get(payeeName) || { amount: 0, count: 0, name: payeeName };
       payeeMap.set(payeeName, {
         ...existing,
-        amount: existing.amount + amount,
+        // For expenses (negative amounts): add to payee total
+        // For income (positive amounts): subtract from payee total (when includeIncomeInCategories is true)
+        amount: existing.amount + (isExpense ? amount : -amount),
         count: existing.count + 1,
       });
+    };
+
+    // Process expense transactions (always included)
+    expenseTransactions.forEach(t => {
+      processTransactionForPayee(t, true);
+    });
+
+    // Process income transactions
+    // When includeIncomeInCategories is true: subtract from amount and increment count
+    // When includeIncomeInCategories is false: only increment count (don't affect amount)
+    incomeTransactions.forEach(t => {
+      if (includeIncomeInCategories) {
+        processTransactionForPayee(t, false);
+      } else {
+        // Only count the transaction, don't affect amount
+        const payeeId = t.payee;
+        const isTransfer = payeeId && payeeIdToTransferAcct.has(payeeId);
+        let basePayeeName: string;
+
+        if (isTransfer && payeeId) {
+          const receivingAccountId = payeeIdToTransferAcct.get(payeeId);
+          if (receivingAccountId) {
+            const receivingAccountName =
+              accountIdToName.get(receivingAccountId) || receivingAccountId;
+            basePayeeName = `Transfer: ${receivingAccountName}`;
+          } else {
+            basePayeeName = 'Unknown';
+          }
+        } else {
+          if (payeeId && payeeIdToName.has(payeeId)) {
+            basePayeeName = payeeIdToName.get(payeeId)!;
+          } else if (t.payee_name && t.payee_name.trim() !== '') {
+            if (t.payee_name.trim().toLowerCase() === 'unknown') {
+              basePayeeName = 'Unknown';
+            } else {
+              const looksLikeId = t.payee_name === payeeId || payeeIdToName.has(t.payee_name);
+              if (looksLikeId && payeeIdToName.has(t.payee_name)) {
+                basePayeeName = payeeIdToName.get(t.payee_name)!;
+              } else if (!looksLikeId) {
+                basePayeeName = t.payee_name;
+              } else {
+                basePayeeName = 'Unknown';
+              }
+            }
+          } else {
+            basePayeeName = 'Unknown';
+          }
+        }
+
+        const isDeleted =
+          (payeeId && payeeIdToTombstone.get(payeeId)) || t.payee_tombstone || false;
+        const payeeName = isDeleted ? `deleted: ${basePayeeName}` : basePayeeName;
+        const existing = payeeMap.get(payeeName) || { amount: 0, count: 0, name: payeeName };
+        payeeMap.set(payeeName, {
+          ...existing,
+          count: existing.count + 1, // Only increment count, don't affect amount
+        });
+      }
     });
 
     // Create all payees list (sorted by amount for default display)
@@ -781,6 +884,7 @@ export function transformToWrappedData(
     const dayOfWeekMap = new Map<number, { totalSpending: number; transactionCount: number }>();
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
+    // Process expense transactions (always included)
     expenseTransactions.forEach(t => {
       const date = parseISO(t.date);
       const dayOfWeek = getDay(date);
@@ -790,6 +894,30 @@ export function transformToWrappedData(
         totalSpending: existing.totalSpending + amount,
         transactionCount: existing.transactionCount + 1,
       });
+    });
+
+    // Process income transactions
+    // When includeIncomeInCategories is true: subtract from amount and increment count
+    // When includeIncomeInCategories is false: only increment count (don't affect amount)
+    incomeTransactions.forEach(t => {
+      const date = parseISO(t.date);
+      const dayOfWeek = getDay(date);
+      const existing = dayOfWeekMap.get(dayOfWeek) || { totalSpending: 0, transactionCount: 0 };
+      if (includeIncomeInCategories) {
+        const amount = integerToAmount(Math.abs(t.amount));
+        dayOfWeekMap.set(dayOfWeek, {
+          // For expenses: add to day total
+          // For income: subtract from day total (when includeIncomeInCategories is true)
+          totalSpending: existing.totalSpending - amount,
+          transactionCount: existing.transactionCount + 1,
+        });
+      } else {
+        // Only increment count, don't affect amount
+        dayOfWeekMap.set(dayOfWeek, {
+          totalSpending: existing.totalSpending, // Keep amount unchanged
+          transactionCount: existing.transactionCount + 1,
+        });
+      }
     });
 
     const dayOfWeekSpending: DayOfWeekSpending[] = dayNames.map((dayName, index) => {
@@ -806,6 +934,8 @@ export function transformToWrappedData(
 
     // Account Breakdown
     const accountMap = new Map<string, { totalSpending: number; transactionCount: number }>();
+
+    // Process expense transactions (always included)
     expenseTransactions.forEach(t => {
       const amount = integerToAmount(Math.abs(t.amount));
       const existing = accountMap.get(t.account) || { totalSpending: 0, transactionCount: 0 };
@@ -813,6 +943,28 @@ export function transformToWrappedData(
         totalSpending: existing.totalSpending + amount,
         transactionCount: existing.transactionCount + 1,
       });
+    });
+
+    // Process income transactions
+    // When includeIncomeInCategories is true: subtract from amount and increment count
+    // When includeIncomeInCategories is false: only increment count (don't affect amount)
+    incomeTransactions.forEach(t => {
+      const existing = accountMap.get(t.account) || { totalSpending: 0, transactionCount: 0 };
+      if (includeIncomeInCategories) {
+        const amount = integerToAmount(Math.abs(t.amount));
+        accountMap.set(t.account, {
+          // For expenses: add to account total
+          // For income: subtract from account total (when includeIncomeInCategories is true)
+          totalSpending: existing.totalSpending - amount,
+          transactionCount: existing.transactionCount + 1,
+        });
+      } else {
+        // Only increment count, don't affect amount
+        accountMap.set(t.account, {
+          totalSpending: existing.totalSpending, // Keep amount unchanged
+          transactionCount: existing.transactionCount + 1,
+        });
+      }
     });
 
     const accountBreakdown: AccountBreakdown[] = Array.from(accountMap.entries())
