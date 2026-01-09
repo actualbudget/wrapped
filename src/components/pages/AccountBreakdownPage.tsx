@@ -31,7 +31,11 @@ const CustomTooltip = ({
     name?: string;
     value?: number;
     color?: string;
-    payload?: { transactionCount?: number; percentage?: number };
+    payload?: {
+      transactionCount?: number;
+      percentage?: number;
+      originalValue?: number;
+    };
   }>;
   currencySymbol?: string;
 }) => {
@@ -42,6 +46,8 @@ const CustomTooltip = ({
   const data = payload[0];
   const transactionCount = data.payload?.transactionCount;
   const percentage = data.payload?.percentage;
+  // Use originalValue if available (for net totals mode), otherwise use value (absolute value)
+  const displayValue = data.payload?.originalValue ?? data.value ?? 0;
 
   return (
     <div
@@ -59,7 +65,7 @@ const CustomTooltip = ({
       <p style={{ margin: '4px 0', color: data.color || '#ffffff' }}>
         <span style={{ marginRight: '8px' }}>Spending:</span>
         {currencySymbol || '$'}
-        {Math.round(data.value ?? 0).toLocaleString('en-US')}
+        {Math.round(displayValue).toLocaleString('en-US')}
       </p>
       {transactionCount !== undefined && (
         <p style={{ margin: '4px 0', color: 'rgba(255, 255, 255, 0.8)' }}>
@@ -75,14 +81,19 @@ export function AccountBreakdownPage({ data }: AccountBreakdownPageProps) {
   const [hiddenAccounts, setHiddenAccounts] = useState<Set<string>>(new Set());
 
   // Create full chart data with account IDs for tracking
+  // Use absolute value for pie chart (Recharts doesn't handle negative values well)
+  // but keep original totalSpending for display in tooltips/stats
   const fullChartData = useMemo(() => {
-    return data.accountBreakdown.map(account => ({
-      accountId: account.accountId,
-      name: account.accountName,
-      value: account.totalSpending,
-      transactionCount: account.transactionCount,
-      percentage: account.percentage,
-    }));
+    return data.accountBreakdown
+      .filter(account => Math.abs(account.totalSpending) > 0) // Filter out accounts with zero net spending
+      .map(account => ({
+        accountId: account.accountId,
+        name: account.accountName,
+        value: Math.abs(account.totalSpending), // Use absolute value for chart rendering
+        originalValue: account.totalSpending, // Keep original value for display
+        transactionCount: account.transactionCount,
+        percentage: account.percentage,
+      }));
   }, [data.accountBreakdown]);
 
   // Filter out hidden accounts for the pie chart
@@ -226,24 +237,27 @@ export function AccountBreakdownPage({ data }: AccountBreakdownPageProps) {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
         >
-          {data.accountBreakdown.slice(0, 3).map(account => (
-            <div key={account.accountId} className={styles.statCard}>
-              <div className={styles.statValue}>
-                {data.currencySymbol}
-                {account.totalSpending.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+          {data.accountBreakdown
+            .filter(account => Math.abs(account.totalSpending) > 0) // Match chart filter
+            .slice(0, 3)
+            .map(account => (
+              <div key={account.accountId} className={styles.statCard}>
+                <div className={styles.statValue}>
+                  {data.currencySymbol}
+                  {account.totalSpending.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                </div>
+                <div className={styles.statLabel}>{account.accountName}</div>
+                <div
+                  style={{
+                    fontSize: '0.9rem',
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    marginTop: '0.5rem',
+                  }}
+                >
+                  {account.transactionCount} transactions ({account.percentage.toFixed(1)}%)
+                </div>
               </div>
-              <div className={styles.statLabel}>{account.accountName}</div>
-              <div
-                style={{
-                  fontSize: '0.9rem',
-                  color: 'rgba(255, 255, 255, 0.6)',
-                  marginTop: '0.5rem',
-                }}
-              >
-                {account.transactionCount} transactions ({account.percentage.toFixed(1)}%)
-              </div>
-            </div>
-          ))}
+            ))}
         </motion.div>
       </motion.div>
     </PageContainer>

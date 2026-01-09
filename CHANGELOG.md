@@ -27,6 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Fixed payee totals calculation: Income transactions (e.g., refunds) now reduce payee totals when net totals mode is enabled
 - Fixed account breakdown totals: Income transactions now reduce account totals when net totals mode is enabled
 - Fixed account breakdown percentage calculation: Account breakdown percentages now use the correct denominator when net totals mode is enabled (sum of absolute values of net spending) instead of total expenses, fixing incorrect percentages that didn't sum to 100% and could be negative
+- Fixed account breakdown chart not rendering: Account breakdown pie chart now uses absolute values for rendering (Recharts doesn't handle negative values) while preserving original net spending values for display in tooltips and stats. Accounts with zero net spending are filtered out from the chart
 - Fixed day of week spending totals: Income transactions now reduce day totals when net totals mode is enabled
 
 ### Tests
